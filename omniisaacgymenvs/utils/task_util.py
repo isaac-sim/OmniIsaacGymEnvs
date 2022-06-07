@@ -33,6 +33,7 @@ def initialize_task(config, env, init_sim=True):
     from omniisaacgymenvs.tasks.cartpole import CartpoleTask
     from omniisaacgymenvs.tasks.humanoid import HumanoidLocomotionTask
     from omniisaacgymenvs.tasks.shadow_hand import ShadowHandTask
+    from omniisaacgymenvs.tasks.franka_cabinet import FrankaCabinetTask
 
     # Mappings from strings to environments
     task_map = {
@@ -41,6 +42,7 @@ def initialize_task(config, env, init_sim=True):
         "Cartpole": CartpoleTask,
         "Humanoid": HumanoidLocomotionTask,
         "ShadowHand": ShadowHandTask,
+        "FrankaCabinet": FrankaCabinetTask,
     }
 
     from .config_utils.sim_config import SimConfig
