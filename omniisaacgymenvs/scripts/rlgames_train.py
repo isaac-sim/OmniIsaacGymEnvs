@@ -97,7 +97,7 @@ def parse_hydra_configs(cfg: DictConfig):
 
     headless = cfg.headless
 
-    env = VecEnvRLGames(headless=headless)
+    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
     task = initialize_task(cfg_dict, env)
 
     # sets seed. if seed is -1 will pick a random one

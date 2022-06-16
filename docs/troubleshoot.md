@@ -13,9 +13,6 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 * At initial load up of Isaac Sim, the process may appear to be frozen at an `app ready` message. This is normal and may take a few minutes for everything to load on the first run of Isaac Sim. Subsequent runs should be faster to start up, but may still take some time.
 * Please note that once the Isaac Sim app loads, the environment creation time scales linearly with the number of environments. Please expect a longer load time if running with thousands of environments. We will be working on improving the time needed for this in future release.
 
-#### Multi-GPU Machines
-* The Isaac Sim GPU pipeline has mostly been tested with single-GPU setups. On machines with more than one GPU, it is possible to come across errors related to device mixing because we cannot guarantee the simulation device which physics runs on. To alleviate this issue, please try setting the `CUDA_VISIBLE_DEVICES=0` environment variable such that only one GPU is visible to Isaac Sim.
-* Note that the `sim_device` command line argument in OmniIsaacGymEnvs controls the device of which the task runs on, but cannot control the device which physics simulation runs on. In most cases, the two devices should be identical in order for things to run.
 
 #### Interaction with the Environment
 * During training mode, we have set `enable_scene_query_support=False` in our task config files by default. This will prevent certain interactions with the environments in the UI. If you wish to allow interaction during training, set `enable_scene_query_support=True`. This variable will always be set to `True` in inference/test mode.

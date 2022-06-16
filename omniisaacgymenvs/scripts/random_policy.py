@@ -47,7 +47,7 @@ def parse_hydra_configs(cfg: DictConfig):
     headless = cfg.headless
     render = not headless
 
-    env = VecEnvRLGames(headless=headless)
+    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
     task = initialize_task(cfg_dict, env)
 
     while env._simulation_app.is_running():
