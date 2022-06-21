@@ -1,0 +1,129 @@
+# used to create the object
+name: Anymal
+
+physics_engine: ${..physics_engine}
+
+env:
+  numEnvs: ${resolve_default:1024,${...num_envs}}
+  envSpacing: 4.  # [m]
+
+  clipObservations: 5.0
+  clipActions: 1.0
+
+  controlFrequencyInv: 2
+
+  baseInitState:
+    pos: [0.0, 0.0, 0.62] # x,y,z [m]
+    rot: [0.0, 0.0, 0.0, 1.0] # x,y,z,w [quat]
+    vLinear: [0.0, 0.0, 0.0]  # x,y,z [m/s]
+    vAngular: [0.0, 0.0, 0.0]  # x,y,z [rad/s]
+
+  randomCommandVelocityRanges:
+    linear_x: [-2., 2.] # min max [m/s]
+    linear_y: [-1., 1.]   # min max [m/s]
+    yaw: [-1., 1.]          # min max [rad/s]
+
+  control:
+    # PD Drive parameters:
+    stiffness: 85.0  # [N*m/rad]
+    damping: 2.0     # [N*m*s/rad]
+    actionScale: 0.5
+    controlFrequencyInv: 1 # 60 Hz
+
+  defaultJointAngles:  # = target angles when action = 0.0
+    LF_HAA: 0.03    # [rad]
+    LH_HAA: 0.03    # [rad]
+    RF_HAA: -0.03   # [rad]
+    RH_HAA: -0.03   # [rad]
+
+    LF_HFE: 0.4     # [rad]
+    LH_HFE: -0.4    # [rad]
+    RF_HFE: 0.4     # [rad]
+    RH_HFE: -0.4    # [rad]
+
+    LF_KFE: -0.8    # [rad]
+    LH_KFE: 0.8     # [rad]
+    RF_KFE: -0.8    # [rad]
+    RH_KFE: 0.8     # [rad]
+
+  urdfAsset:
+    collapseFixedJoints: True
+    fixBaseLink: False
+    defaultDofDriveMode: 4 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 4 effort)
+
+  learn:
+    # rewards
+    linearVelocityXYRewardScale: 1.0
+    angularVelocityZRewardScale: 0.5
+    torqueRewardScale: -0.000025 
+
+    # normalization
+    linearVelocityScale: 2.0
+    angularVelocityScale: 0.25
+    dofPositionScale: 1.0
+    dofVelocityScale: 0.05
+
+    # episode length in seconds
+    episodeLength_s: 50
+
+  # set to True if you use camera sensors in the environment
+  enableCameraSensors: False
+
+sim:
+  dt: 0.01
+  use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
+  gravity: [0.0, 0.0, -9.81]
+  add_ground_plane: True
+  use_flatcache: True
+  enable_scene_query_support: False
+
+  default_physics_material:
+    static_friction: 1.0
+    dynamic_friction: 1.0
+    restitution: 0.0
+
+  physx:
+    worker_thread_count: ${....num_threads}
+    solver_type: ${....solver_type}
+    use_gpu: ${eq:${....sim_device},"gpu"} # set to False to run on CPU
+    solver_position_iteration_count: 4
+    solver_velocity_iteration_count: 1
+    contact_offset: 0.02
+    rest_offset: 0.0
+    bounce_threshold_velocity: 0.2
+    friction_offset_threshold: 0.04
+    friction_correlation_distance: 0.025
+    enable_sleeping: True
+    enable_stabilization: True
+    max_depenetration_velocity: 100.0
+
+    # GPU buffers
+    gpu_max_rigid_contact_count: 524288
+    gpu_max_rigid_patch_count: 81920
+    gpu_found_lost_pairs_capacity: 2048
+    gpu_found_lost_aggregate_pairs_capacity: 262144
+    gpu_total_aggregate_pairs_capacity: 2048
+    gpu_max_soft_body_contacts: 1048576
+    gpu_max_particle_contacts: 1048576
+    gpu_heap_capacity: 67108864
+    gpu_temp_buffer_capacity: 16777216
+    gpu_max_num_partitions: 8
+
+  Anymal:
+    # -1 to use default values
+    override_usd_defaults: False
+    fixed_base: False
+    enable_self_collisions: False
+    enable_gyroscopic_forces: True
+    # also in stage params
+    # per-actor
+    solver_position_iteration_count: 4
+    solver_velocity_iteration_count: 1
+    sleep_threshold: 0.005
+    stabilization_threshold: 0.001
+    # per-body
+    density: -1
+    max_depenetration_velocity: 100.0
+    # per-shape
+    contact_offset: 0.02
+    rest_offset: 0.0

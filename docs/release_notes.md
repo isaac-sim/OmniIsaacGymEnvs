@@ -3,7 +3,7 @@ Release Notes
 
 1.1.0
 -----
-- Additional examples: FrankaCabinet
+- Additional examples: FrankaCabinet, Anymal
 - Correctly sets simulation device for GPU simulation
 
 1.0.0 - June 03, 2022
