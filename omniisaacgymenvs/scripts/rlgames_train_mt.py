@@ -155,6 +155,9 @@ class PPOTrainer(threading.Thread):
 @hydra.main(config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
+    headless = cfg.headless
+    env = VecEnvRLGamesMT(headless=headless, sim_device=cfg.device_id)
+
     # ensure checkpoints can be specified as relative paths
     if cfg.checkpoint:
         cfg.checkpoint = retrieve_checkpoint_path(cfg.checkpoint)
@@ -163,9 +166,6 @@ def parse_hydra_configs(cfg: DictConfig):
 
     cfg_dict = omegaconf_to_dict(cfg)
     print_dict(cfg_dict)
-
-    headless = cfg.headless
-    env = VecEnvRLGamesMT(headless=headless, sim_device=cfg.device_id)
 
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed

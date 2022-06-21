@@ -5,6 +5,7 @@ Release Notes
 -----
 - Additional examples: FrankaCabinet, Anymal
 - Correctly sets simulation device for GPU simulation
+- Fix omni.client import order
 
 1.0.0 - June 03, 2022
 ----------------------

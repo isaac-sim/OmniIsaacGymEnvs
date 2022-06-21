@@ -86,6 +86,9 @@ class RLGTrainer():
 @hydra.main(config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
+    headless = cfg.headless
+    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
+
     # ensure checkpoints can be specified as relative paths
     if cfg.checkpoint:
         cfg.checkpoint = retrieve_checkpoint_path(cfg.checkpoint)
@@ -95,9 +98,6 @@ def parse_hydra_configs(cfg: DictConfig):
     cfg_dict = omegaconf_to_dict(cfg)
     print_dict(cfg_dict)
 
-    headless = cfg.headless
-
-    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
     task = initialize_task(cfg_dict, env)
 
     # sets seed. if seed is -1 will pick a random one
