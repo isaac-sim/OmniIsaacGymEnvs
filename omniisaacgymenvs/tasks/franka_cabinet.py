@@ -36,9 +36,6 @@ class FrankaCabinetTask(RLTask):
         env,
         offset=None
     ) -> None:
-        """[summary]
-        """
-
         self._sim_config = sim_config
         self._cfg = sim_config.config
         self._task_cfg = sim_config.task_config
@@ -52,7 +49,6 @@ class FrankaCabinetTask(RLTask):
         self.start_position_noise = self._task_cfg["env"]["startPositionNoise"]
         self.start_rotation_noise = self._task_cfg["env"]["startRotationNoise"]
         self.num_props = self._task_cfg["env"]["numProps"]
-        self.aggregate_mode = self._task_cfg["env"]["aggregateMode"]
 
         self.dof_vel_scale = self._task_cfg["env"]["dofVelocityScale"]
         self.dist_reward_scale = self._task_cfg["env"]["distRewardScale"]
@@ -63,31 +59,17 @@ class FrankaCabinetTask(RLTask):
         self.action_penalty_scale = self._task_cfg["env"]["actionPenaltyScale"]
         self.finger_close_reward_scale = self._task_cfg["env"]["fingerCloseRewardScale"]
 
-        self.up_axis = "z"
-        self.up_axis_idx = 2
-
         self.distX_offset = 0.04
         self.dt = 1/60.
-
-        # prop dimensions
-        self.prop_width = 0.08
-        self.prop_height = 0.08
-        self.prop_length = 0.08
-        self.prop_spacing = 0.09
 
         self._num_observations = 23
         self._num_actions = 9
 
         RLTask.__init__(self, name, env)
-
         return
 
     def set_up_scene(self, scene) -> None:
-        """[summary]
 
-        Args:
-            scene (Scene): [description]
-        """
         self.get_franka()
         self.get_cabinet()
         if self.num_props > 0:
@@ -99,7 +81,12 @@ class FrankaCabinetTask(RLTask):
         self._cabinets = CabinetView(prim_paths_expr="/World/envs/.*/cabinet", name="cabinet_view")
 
         scene.add(self._frankas)
+        scene.add(self._frankas._grippers)
+        scene.add(self._frankas._hands)
+        scene.add(self._frankas._lfingers)
+        scene.add(self._frankas._rfingers)
         scene.add(self._cabinets)
+        scene.add(self._cabinets._drawers)
 
         if self.num_props > 0:
             self._props = RigidPrimView(prim_paths_expr="/World/envs/.*/prop/.*", name="prop_view")
@@ -154,6 +141,7 @@ class FrankaCabinetTask(RLTask):
             prim_paths=prop_paths, 
             positions=np.array(prop_pos)+drawer_pos.numpy()
         )
+
     def init_data(self) -> None:
         def get_env_local_pose(env_pos, xformable, device):
             """Compute pose in env-local coordinates"""
@@ -207,12 +195,6 @@ class FrankaCabinetTask(RLTask):
         self.actions = torch.zeros((self._num_envs, self.num_actions), device=self._device)
 
     def get_observations(self) -> dict:
-        """[summary]
-
-        Returns:
-            dict: [description]
-        """
-
         hand_pos, hand_rot = self._frankas._hands.get_world_poses()
         drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses()
         franka_dof_pos = self._frankas.get_joint_positions()
@@ -261,13 +243,6 @@ class FrankaCabinetTask(RLTask):
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        """[summary]
-
-        Args:
-            control_index (int): [description]
-            simulation_time (float): [description]
-        """
-
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(reset_env_ids) > 0:
             self.reset_idx(reset_env_ids)
@@ -340,9 +315,6 @@ class FrankaCabinetTask(RLTask):
         self.reset_idx(indices)
 
     def calculate_metrics(self) -> None:
-        """[summary]
-        """
-
         self.rew_buf[:] = self.compute_franka_reward(
             self.reset_buf, self.progress_buf, self.actions, self.cabinet_dof_pos,
             self.franka_grasp_pos, self.drawer_grasp_pos, self.franka_grasp_rot, self.drawer_grasp_rot,
@@ -354,8 +326,6 @@ class FrankaCabinetTask(RLTask):
         )
 
     def is_done(self) -> None:
-        """[summary]
-        """
         # reset if drawer is open or max length reached
         self.reset_buf = torch.where(self.cabinet_dof_pos[:, 3] > 0.39, torch.ones_like(self.reset_buf), self.reset_buf)
         self.reset_buf = torch.where(self.progress_buf >= self._max_episode_length - 1, torch.ones_like(self.reset_buf), self.reset_buf)

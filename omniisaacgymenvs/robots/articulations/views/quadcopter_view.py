@@ -27,16 +27,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import Optional
-
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.prims import RigidPrimView
 
 
-class AnymalView(ArticulationView):
+class QuadcopterView(ArticulationView):
     def __init__(
         self,
         prim_paths_expr: str,
-        name: Optional[str] = "AnymalView",
+        name: Optional[str] = "QuadcopterView"
     ) -> None:
         """[summary]
         """
@@ -45,21 +44,5 @@ class AnymalView(ArticulationView):
             prim_paths_expr=prim_paths_expr,
             name=name,
         )
-        self._knees = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/.*_SHANK", name="knees_view")
-        self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/base", name="base_view")
 
-    def get_knee_transforms(self):
-        return self._knees.get_world_poses()
-
-    def is_knee_below_threshold(self, threshold, ground_heights=None):
-        knee_pos, _ = self._knees.get_world_poses()
-        knee_heights = knee_pos.view((-1, 4, 3))[:, :, 2]
-        if ground_heights is not None:
-            knee_heights -= ground_heights
-        return (knee_heights[:, 0] < threshold) | (knee_heights[:, 1] < threshold) | (knee_heights[:, 2] < threshold) | (knee_heights[:, 3] < threshold)    
-
-    def is_base_below_threshold(self, threshold, ground_heights):
-        base_pos, _ = self.get_world_poses()
-        base_heights = base_pos[:, 2]
-        base_heights -= ground_heights
-        return (base_heights[:] < threshold)
+        self.rotors = RigidPrimView(prim_paths_expr=f"/World/envs/.*/Quadcopter/rotor[0-3]")

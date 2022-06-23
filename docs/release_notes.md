@@ -3,7 +3,7 @@ Release Notes
 
 1.1.0
 -----
-- Additional examples: FrankaCabinet, Anymal
+- Additional examples: Anymal, AnymalTerrain, BallBalance, FrankaCabinet, Ingenuity, Quadcopter
 - Correctly sets simulation device for GPU simulation
 - Fix omni.client import order
 

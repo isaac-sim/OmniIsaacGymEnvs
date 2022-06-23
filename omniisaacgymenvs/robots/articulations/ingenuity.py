@@ -26,40 +26,47 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 from typing import Optional
 
-from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.prims import RigidPrimView
+from omni.isaac.core.robots.robot import Robot
+from omni.isaac.core.utils.nucleus import get_assets_root_path
+from omni.isaac.core.utils.stage import add_reference_to_stage
+
+import numpy as np
+import torch
 
 
-class AnymalView(ArticulationView):
+class Ingenuity(Robot):
     def __init__(
         self,
-        prim_paths_expr: str,
-        name: Optional[str] = "AnymalView",
+        prim_path: str,
+        name: Optional[str] = "ingenuity",
+        usd_path: Optional[str] = None,
+        translation: Optional[np.ndarray] = None,
+        orientation: Optional[np.ndarray] = None,
+        scale: Optional[np.array] = None
     ) -> None:
         """[summary]
         """
+        
+        self._usd_path = usd_path
+        self._name = name
+
+        if self._usd_path is None:
+            assets_root_path = get_assets_root_path()
+            if assets_root_path is None:
+                carb.log_error("Could not find Isaac Sim assets folder")
+            self._usd_path = assets_root_path + "/Isaac/Robots/Ingenuity/ingenuity.usd"
+
+        add_reference_to_stage(self._usd_path, prim_path)
+        scale = torch.tensor([0.01, 0.01, 0.01])
 
         super().__init__(
-            prim_paths_expr=prim_paths_expr,
+            prim_path=prim_path,
             name=name,
+            translation=translation,
+            orientation=orientation,
+            scale=scale
         )
-        self._knees = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/.*_SHANK", name="knees_view")
-        self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/base", name="base_view")
-
-    def get_knee_transforms(self):
-        return self._knees.get_world_poses()
-
-    def is_knee_below_threshold(self, threshold, ground_heights=None):
-        knee_pos, _ = self._knees.get_world_poses()
-        knee_heights = knee_pos.view((-1, 4, 3))[:, :, 2]
-        if ground_heights is not None:
-            knee_heights -= ground_heights
-        return (knee_heights[:, 0] < threshold) | (knee_heights[:, 1] < threshold) | (knee_heights[:, 2] < threshold) | (knee_heights[:, 3] < threshold)    
-
-    def is_base_below_threshold(self, threshold, ground_heights):
-        base_pos, _ = self.get_world_poses()
-        base_heights = base_pos[:, 2]
-        base_heights -= ground_heights
-        return (base_heights[:] < threshold)

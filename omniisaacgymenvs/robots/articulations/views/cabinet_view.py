@@ -19,7 +19,4 @@ class CabinetView(ArticulationView):
             name=name,
         )
 
-    def initialize(self, physics_sim_view):
-        super().initialize(physics_sim_view)
-        self._drawers = RigidPrimView(prim_paths_expr="/World/envs/.*/cabinet/drawer_top")
-        self._drawers.initialize(physics_sim_view)
+        self._drawers = RigidPrimView(prim_paths_expr="/World/envs/.*/cabinet/drawer_top", name="drawers_view")

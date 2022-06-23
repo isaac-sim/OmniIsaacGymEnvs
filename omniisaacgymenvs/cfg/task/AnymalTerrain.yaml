@@ -1,0 +1,162 @@
+name: AnymalTerrain
+
+physics_engine: ${..physics_engine}
+
+env:
+  numEnvs: ${resolve_default:2048,${...num_envs}}
+  numObservations: 188
+  numActions: 12
+  envSpacing: 3.  # [m]
+
+  terrain:
+    staticFriction: 1.0  # [-]
+    dynamicFriction: 1.0  # [-]
+    restitution: 0.        # [-]
+    # rough terrain only:
+    curriculum: true
+    maxInitMapLevel: 0
+    mapLength: 8.
+    mapWidth: 8.
+    numLevels: 10
+    numTerrains: 20
+    # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
+    terrainProportions: [0.1, 0.1, 0.35, 0.25, 0.2]
+    # tri mesh only:
+    slopeTreshold: 0.5
+
+  baseInitState:
+    pos: [0.0, 0.0, 0.62] # x,y,z [m]
+    rot: [1.0, 0.0, 0.0, 0.0] # w,x,y,z [quat]
+    vLinear: [0.0, 0.0, 0.0]  # x,y,z [m/s]
+    vAngular: [0.0, 0.0, 0.0]  # x,y,z [rad/s]
+
+  randomCommandVelocityRanges:
+    # train
+    linear_x: [-1., 1.] # min max [m/s]
+    linear_y: [-1., 1.]   # min max [m/s]
+    yaw: [-3.14, 3.14]    # min max [rad/s]
+
+  control:
+    # PD Drive parameters:
+    stiffness: 80.0  # [N*m/rad]
+    damping: 2.0     # [N*m*s/rad]
+    # action scale: target angle = actionScale * action + defaultAngle
+    actionScale: 0.5
+    # decimation: Number of control action updates @ sim DT per policy DT
+    decimation: 4
+
+  defaultJointAngles:  # = target angles when action = 0.0
+    LF_HAA: 0.03    # [rad]
+    LH_HAA: 0.03    # [rad]
+    RF_HAA: -0.03   # [rad]
+    RH_HAA: -0.03   # [rad]
+
+    LF_HFE: 0.4     # [rad]
+    LH_HFE: -0.4    # [rad]
+    RF_HFE: 0.4     # [rad]
+    RH_HFE: -0.4    # [rad]
+
+    LF_KFE: -0.8    # [rad]
+    LH_KFE: 0.8     # [rad]
+    RF_KFE: -0.8    # [rad]
+    RH_KFE: 0.8     # [rad]
+
+
+  learn:
+    # rewards
+    terminalReward: 0.0
+    linearVelocityXYRewardScale: 1.0
+    linearVelocityZRewardScale: -4.0
+    angularVelocityXYRewardScale: -0.05
+    angularVelocityZRewardScale: 0.5
+    orientationRewardScale: -0.
+    torqueRewardScale: -0.00002 
+    jointAccRewardScale: -0.0005
+    baseHeightRewardScale: -0.0
+    actionRateRewardScale: -0.01
+    fallenOverRewardScale: -1.0
+    # cosmetics
+    hipRewardScale: -0. #25
+
+    # normalization
+    linearVelocityScale: 2.0
+    angularVelocityScale: 0.25
+    dofPositionScale: 1.0
+    dofVelocityScale: 0.05
+    heightMeasurementScale: 5.0
+
+    # noise 
+    addNoise: true
+    noiseLevel: 1.0 # scales other values
+    dofPositionNoise: 0.01
+    dofVelocityNoise: 1.5
+    linearVelocityNoise: 0.1
+    angularVelocityNoise: 0.2
+    gravityNoise: 0.05
+    heightMeasurementNoise: 0.06
+
+    #randomization
+    pushInterval_s: 15
+
+    # episode length in seconds
+    episodeLength_s: 20
+
+
+sim:
+  dt: 0.005
+  substeps: 1
+  up_axis: "z"
+  use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
+  gravity: [0.0, 0.0, -9.81]
+  add_ground_plane: False
+  use_flatcache: True
+  enable_scene_query_support: False
+
+  default_physics_material:
+    static_friction: 1.0
+    dynamic_friction: 1.0
+    restitution: 0.0
+
+  physx:
+    worker_thread_count: ${....num_threads}
+    solver_type: ${....solver_type}
+    use_gpu: ${eq:${....sim_device},"gpu"} # set to False to run on CPU
+    num_position_iterations: 4
+    num_velocity_iterations: 0
+    contact_offset: 0.02
+    rest_offset: 0.0
+    bounce_threshold_velocity: 0.2
+    friction_offset_threshold: 0.04
+    friction_correlation_distance: 0.025
+    enable_sleeping: True
+    enable_stabilization: True
+    max_depenetration_velocity: 100.0
+
+    # GPU buffers
+    gpu_max_rigid_contact_count: 524288
+    gpu_max_rigid_patch_count: 163840
+    gpu_found_lost_pairs_capacity: 4194304
+    gpu_found_lost_aggregate_pairs_capacity: 33554432
+    gpu_total_aggregate_pairs_capacity: 4194304
+    gpu_max_soft_body_contacts: 1048576
+    gpu_max_particle_contacts: 1048576
+    gpu_heap_capacity: 134217728
+    gpu_temp_buffer_capacity: 33554432
+    gpu_max_num_partitions: 8
+
+
+  anymal:
+    # -1 to use default values
+    override_usd_defaults: False
+    fixed_base: False
+    enable_self_collisions: True
+    enable_gyroscopic_forces: False
+    # also in stage params
+    # per-actor
+    solver_position_iteration_count: 4
+    solver_velocity_iteration_count: 0
+    sleep_threshold: 0.005
+    stabilization_threshold: 0.001
+    # per-body
+    density: -1
+    max_depenetration_velocity: 100.0

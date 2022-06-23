@@ -34,7 +34,7 @@ from scipy import interpolate
 from math import sqrt
 
 from omni.isaac.core.prims import XFormPrim
-from pxr import UsdPhysics, Sdf, Gf
+from pxr import UsdPhysics, Sdf, Gf, PhysxSchema
 
 
 def random_uniform_terrain(terrain, min_height, max_height, step=1, downsampled_scale=None,):
@@ -375,7 +375,13 @@ def add_terrain_to_stage(stage, vertices, triangles, position=None, orientation=
                         name="terrain",
                         position=position,
                         orientation=orientation)
+
     UsdPhysics.CollisionAPI.Apply(terrain.prim)
+    # collision_api = UsdPhysics.MeshCollisionAPI.Apply(terrain.prim)
+    # collision_api.CreateApproximationAttr().Set("meshSimplification")
+    physx_collision_api = PhysxSchema.PhysxCollisionAPI.Apply(terrain.prim)
+    physx_collision_api.GetContactOffsetAttr().Set(0.02)
+    physx_collision_api.GetRestOffsetAttr().Set(0.00)
 
 
 class SubTerrain:
