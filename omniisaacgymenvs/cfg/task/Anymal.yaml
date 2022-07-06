@@ -4,7 +4,7 @@ name: Anymal
 physics_engine: ${..physics_engine}
 
 env:
-  numEnvs: ${resolve_default:1024,${...num_envs}}
+  numEnvs: ${resolve_default:4096,${...num_envs}}
   envSpacing: 4.  # [m]
 
   clipObservations: 5.0
@@ -28,7 +28,6 @@ env:
     stiffness: 85.0  # [N*m/rad]
     damping: 2.0     # [N*m*s/rad]
     actionScale: 0.5
-    controlFrequencyInv: 1 # 60 Hz
 
   defaultJointAngles:  # = target angles when action = 0.0
     LF_HAA: 0.03    # [rad]
@@ -45,11 +44,6 @@ env:
     LH_KFE: 0.8     # [rad]
     RF_KFE: -0.8    # [rad]
     RH_KFE: 0.8     # [rad]
-
-  urdfAsset:
-    collapseFixedJoints: True
-    fixBaseLink: False
-    defaultDofDriveMode: 4 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 4 effort)
 
   learn:
     # rewards
@@ -99,14 +93,14 @@ sim:
 
     # GPU buffers
     gpu_max_rigid_contact_count: 524288
-    gpu_max_rigid_patch_count: 81920
-    gpu_found_lost_pairs_capacity: 2048
-    gpu_found_lost_aggregate_pairs_capacity: 262144
-    gpu_total_aggregate_pairs_capacity: 2048
+    gpu_max_rigid_patch_count: 163840
+    gpu_found_lost_pairs_capacity: 4194304
+    gpu_found_lost_aggregate_pairs_capacity: 33554432
+    gpu_total_aggregate_pairs_capacity: 4194304
     gpu_max_soft_body_contacts: 1048576
     gpu_max_particle_contacts: 1048576
-    gpu_heap_capacity: 67108864
-    gpu_temp_buffer_capacity: 16777216
+    gpu_heap_capacity: 134217728
+    gpu_temp_buffer_capacity: 33554432
     gpu_max_num_partitions: 8
 
   Anymal:

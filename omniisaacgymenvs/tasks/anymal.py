@@ -107,6 +107,8 @@ class AnymalTask(RLTask):
         super().set_up_scene(scene)
         self._anymals = AnymalView(prim_paths_expr="/World/envs/.*/anymal", name="anymalview")
         scene.add(self._anymals)
+        scene.add(self._anymals._knees)
+        scene.add(self._anymals._base)
 
         return
 

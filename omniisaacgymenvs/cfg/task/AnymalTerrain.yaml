@@ -104,7 +104,6 @@ env:
 
 sim:
   dt: 0.005
-  substeps: 1
   up_axis: "z"
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
@@ -121,8 +120,8 @@ sim:
     worker_thread_count: ${....num_threads}
     solver_type: ${....solver_type}
     use_gpu: ${eq:${....sim_device},"gpu"} # set to False to run on CPU
-    num_position_iterations: 4
-    num_velocity_iterations: 0
+    solver_position_iteration_count: 4
+    solver_velocity_iteration_count: 0
     contact_offset: 0.02
     rest_offset: 0.0
     bounce_threshold_velocity: 0.2
