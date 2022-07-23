@@ -109,7 +109,7 @@ class FrankaCabinetTask(RLTask):
         prop_color = torch.tensor([0.2, 0.4, 0.6])
 
         props_per_row = int(math.ceil(math.sqrt(self.num_props)))
-        prop_size = torch.tensor([0.08, 0.08, 0.08])
+        prop_size = 0.08
         prop_spacing = 0.09
         xmin = -0.5 * prop_spacing * (props_per_row - 1)
         zmin = -0.5 * prop_spacing * (props_per_row - 1)
