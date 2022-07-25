@@ -17,6 +17,7 @@ class CabinetView(ArticulationView):
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
+            reset_xform_properties=False
         )
 
-        self._drawers = RigidPrimView(prim_paths_expr="/World/envs/.*/cabinet/drawer_top", name="drawers_view")
+        self._drawers = RigidPrimView(prim_paths_expr="/World/envs/.*/cabinet/drawer_top", name="drawers_view", reset_xform_properties=False)

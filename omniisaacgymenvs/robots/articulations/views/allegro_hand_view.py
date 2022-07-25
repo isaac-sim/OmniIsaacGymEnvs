@@ -44,6 +44,7 @@ class AllegroHandView(ArticulationView):
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
+            reset_xform_properties=False
         )
         self._actuated_dof_indices = list()
 

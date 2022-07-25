@@ -79,9 +79,9 @@ class BallBalanceTask(RLTask):
         self.get_balance_table()
         self.add_ball()
         super().set_up_scene(scene)
-        self._balance_bots = ArticulationView(prim_paths_expr="/World/envs/.*/BalanceBot", name="balance_bot_view")
+        self._balance_bots = ArticulationView(prim_paths_expr="/World/envs/.*/BalanceBot", name="balance_bot_view", reset_xform_properties=False)
         scene.add(self._balance_bots)
-        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/Ball/ball", name="ball_view")
+        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/Ball/ball", name="ball_view", reset_xform_properties=False)
         scene.add(self._balls)
         return
 

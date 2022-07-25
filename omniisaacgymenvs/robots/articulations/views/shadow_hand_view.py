@@ -44,9 +44,10 @@ class ShadowHandView(ArticulationView):
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
+            reset_xform_properties=False
         )
 
-        self._fingers = RigidPrimView(prim_paths_expr="/World/envs/.*/shadow_hand/robot0.*distal", name="finger_view")
+        self._fingers = RigidPrimView(prim_paths_expr="/World/envs/.*/shadow_hand/robot0.*distal", name="finger_view", reset_xform_properties=False)
 
     @property
     def actuated_dof_indices(self):

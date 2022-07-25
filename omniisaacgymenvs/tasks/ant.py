@@ -65,7 +65,7 @@ class AntLocomotionTask(LocomotionTask):
     def set_up_scene(self, scene) -> None:
         self.get_ant()
         RLTask.set_up_scene(self, scene)
-        self._ants = ArticulationView(prim_paths_expr="/World/envs/.*/Ant/torso", name="ant_view")
+        self._ants = ArticulationView(prim_paths_expr="/World/envs/.*/Ant/torso", name="ant_view", reset_xform_properties=False)
         scene.add(self._ants)
         return
 

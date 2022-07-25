@@ -111,9 +111,9 @@ class InHandManipulationTask(RLTask):
    
         self._hands = self.get_hand_view(scene)
         scene.add(self._hands)
-        self._objects = RigidPrimView(prim_paths_expr="/World/envs/env_.*/object/object", name="object_view")
+        self._objects = RigidPrimView(prim_paths_expr="/World/envs/env_.*/object/object", name="object_view", reset_xform_properties=False)
         scene.add(self._objects)
-        self._goals = RigidPrimView(prim_paths_expr="/World/envs/env_.*/goal/object", name="goal_view")
+        self._goals = RigidPrimView(prim_paths_expr="/World/envs/env_.*/goal/object", name="goal_view", reset_xform_properties=False)
         scene.add(self._goals)
     
     @abstractmethod
@@ -140,7 +140,7 @@ class InHandManipulationTask(RLTask):
             name="object",
             translation=self.object_start_translation,
             orientation=self.object_start_orientation,
-            scale=self.object_scale
+            scale=self.object_scale,
         )
         self._sim_config.apply_articulation_settings("object", get_prim_at_path(obj.prim_path), self._sim_config.parse_actor_config("object"))
     

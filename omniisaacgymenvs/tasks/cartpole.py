@@ -68,7 +68,7 @@ class CartpoleTask(RLTask):
     def set_up_scene(self, scene) -> None:
         self.get_cartpole()
         super().set_up_scene(scene)
-        self._cartpoles = ArticulationView(prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view")
+        self._cartpoles = ArticulationView(prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False)
         scene.add(self._cartpoles)
         return
 

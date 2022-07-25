@@ -17,12 +17,13 @@ class FrankaView(ArticulationView):
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
+            reset_xform_properties=False
         )
 
-        self._grippers = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/.*finger", name="grippers_view")
-        self._hands = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/panda_link7", name="hands_view")
-        self._lfingers = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/panda_leftfinger", name="lfingers_view")
-        self._rfingers = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/panda_rightfinger",  name="rfingers_view")
+        self._grippers = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/.*finger", name="grippers_view", reset_xform_properties=False)
+        self._hands = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/panda_link7", name="hands_view", reset_xform_properties=False)
+        self._lfingers = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/panda_leftfinger", name="lfingers_view", reset_xform_properties=False)
+        self._rfingers = RigidPrimView(prim_paths_expr="/World/envs/.*/franka/panda_rightfinger",  name="rfingers_view", reset_xform_properties=False)
 
         self._gripper_indices = [self.get_dof_index("panda_finger_joint1"), self.get_dof_index("panda_finger_joint2")]
         

@@ -66,7 +66,7 @@ class HumanoidLocomotionTask(LocomotionTask):
     def set_up_scene(self, scene) -> None:
         self.get_humanoid()
         RLTask.set_up_scene(self, scene)
-        self._humanoids = ArticulationView(prim_paths_expr="/World/envs/.*/Humanoid/torso", name="humanoid_view")
+        self._humanoids = ArticulationView(prim_paths_expr="/World/envs/.*/Humanoid/torso", name="humanoid_view", reset_xform_properties=False)
         scene.add(self._humanoids)
         return
 

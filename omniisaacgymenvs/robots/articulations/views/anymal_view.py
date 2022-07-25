@@ -44,9 +44,10 @@ class AnymalView(ArticulationView):
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
+            reset_xform_properties=False
         )
-        self._knees = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/.*_SHANK", name="knees_view")
-        self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/base", name="base_view")
+        self._knees = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/.*_SHANK", name="knees_view", reset_xform_properties=False)
+        self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/base", name="base_view", reset_xform_properties=False)
 
     def get_knee_transforms(self):
         return self._knees.get_world_poses()

@@ -44,7 +44,8 @@ class IngenuityView(ArticulationView):
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
+            reset_xform_properties=False
         )
 
-        self.physics_rotors = [RigidPrimView(prim_paths_expr=f"/World/envs/.*/Ingenuity/rotor_physics_{i}", name=f"physics_rotor_{i}_view") for i in range(2)]
-        self.visual_rotors = [RigidPrimView(prim_paths_expr=f"/World/envs/.*/Ingenuity/rotor_visual_{i}", name=f"visual_rotor_{i}_view") for i in range(2)]
+        self.physics_rotors = [RigidPrimView(prim_paths_expr=f"/World/envs/.*/Ingenuity/rotor_physics_{i}", name=f"physics_rotor_{i}_view", reset_xform_properties=False) for i in range(2)]
+        self.visual_rotors = [RigidPrimView(prim_paths_expr=f"/World/envs/.*/Ingenuity/rotor_visual_{i}", name=f"visual_rotor_{i}_view", reset_xform_properties=False) for i in range(2)]
