@@ -176,7 +176,7 @@ class IngenuityTask(RLTask):
         self.dof_pos = self._copters.get_joint_positions(clone=False)
         self.dof_vel = self._copters.get_joint_velocities(clone=False)
 
-        self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses(clone=False)
+        self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses()
         self.initial_root_pos, self.initial_root_rot = self.root_pos.clone(), self.root_rot.clone()
 
         # control tensors

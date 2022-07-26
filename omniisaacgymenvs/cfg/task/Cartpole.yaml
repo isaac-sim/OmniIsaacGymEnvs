@@ -23,6 +23,9 @@ sim:
   use_flatcache: True
   enable_scene_query_support: False
 
+  # set to True if you use camera sensors in the environment
+  enable_cameras: False
+
   default_physics_material:
     static_friction: 1.0
     dynamic_friction: 1.0

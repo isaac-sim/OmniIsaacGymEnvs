@@ -31,17 +31,16 @@ env:
   actionPenaltyScale: 0.01
   fingerCloseRewardScale: 10.0
 
-  # set to True if you use camera sensors in the environment
-  enableCameraSensors: False
-
 sim:
   dt: 0.0083 # 1/120 s
-  substeps: 1
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
   add_ground_plane: True
   use_flatcache: True
   enable_scene_query_support: False
+
+  # set to True if you use camera sensors in the environment
+  enable_cameras: False
 
   default_physics_material:
     static_friction: 1.0
@@ -65,13 +64,13 @@ sim:
 
     # GPU buffers
     gpu_max_rigid_contact_count: 524288
-    gpu_max_rigid_patch_count: 81920
-    gpu_found_lost_pairs_capacity: 8192
+    gpu_max_rigid_patch_count: 33554432
+    gpu_found_lost_pairs_capacity: 524288
     gpu_found_lost_aggregate_pairs_capacity: 262144
-    gpu_total_aggregate_pairs_capacity: 8192
+    gpu_total_aggregate_pairs_capacity: 1048576
     gpu_max_soft_body_contacts: 1048576
     gpu_max_particle_contacts: 1048576
-    gpu_heap_capacity: 67108864
+    gpu_heap_capacity: 33554432
     gpu_temp_buffer_capacity: 16777216
     gpu_max_num_partitions: 8
 

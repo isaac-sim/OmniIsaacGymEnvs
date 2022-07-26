@@ -81,7 +81,6 @@ class FrankaCabinetTask(RLTask):
         self._cabinets = CabinetView(prim_paths_expr="/World/envs/.*/cabinet", name="cabinet_view")
 
         scene.add(self._frankas)
-        scene.add(self._frankas._grippers)
         scene.add(self._frankas._hands)
         scene.add(self._frankas._lfingers)
         scene.add(self._frankas._rfingers)
@@ -89,7 +88,7 @@ class FrankaCabinetTask(RLTask):
         scene.add(self._cabinets._drawers)
 
         if self.num_props > 0:
-            self._props = RigidPrimView(prim_paths_expr="/World/envs/.*/prop/.*", name="prop_view")
+            self._props = RigidPrimView(prim_paths_expr="/World/envs/.*/prop/.*", name="prop_view", reset_xform_properties=False)
             scene.add(self._props)
         
         self.init_data()
@@ -195,12 +194,12 @@ class FrankaCabinetTask(RLTask):
         self.actions = torch.zeros((self._num_envs, self.num_actions), device=self._device)
 
     def get_observations(self) -> dict:
-        hand_pos, hand_rot = self._frankas._hands.get_world_poses()
-        drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses()
-        franka_dof_pos = self._frankas.get_joint_positions()
-        franka_dof_vel = self._frankas.get_joint_velocities()
-        self.cabinet_dof_pos = self._cabinets.get_joint_positions()
-        self.cabinet_dof_vel = self._cabinets.get_joint_velocities()
+        hand_pos, hand_rot = self._frankas._hands.get_world_poses(clone=False)
+        drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses(clone=False)
+        franka_dof_pos = self._frankas.get_joint_positions(clone=False)
+        franka_dof_vel = self._frankas.get_joint_velocities(clone=False)
+        self.cabinet_dof_pos = self._cabinets.get_joint_positions(clone=False)
+        self.cabinet_dof_vel = self._cabinets.get_joint_velocities(clone=False)
         self.franka_dof_pos = franka_dof_pos
 
         self.franka_grasp_rot, self.franka_grasp_pos, self.drawer_grasp_rot, self.drawer_grasp_pos = self.compute_grasp_transforms(
@@ -214,8 +213,8 @@ class FrankaCabinetTask(RLTask):
             self.drawer_local_grasp_pos,
         )
 
-        self.franka_lfinger_pos, self.franka_lfinger_rot = self._frankas._lfingers.get_world_poses()
-        self.franka_rfinger_pos, self.franka_rfinger_rot = self._frankas._lfingers.get_world_poses()
+        self.franka_lfinger_pos, self.franka_lfinger_rot = self._frankas._lfingers.get_world_poses(clone=False)
+        self.franka_rfinger_pos, self.franka_rfinger_rot = self._frankas._lfingers.get_world_poses(clone=False)
 
         dof_pos_scaled = (
             2.0
@@ -272,8 +271,8 @@ class FrankaCabinetTask(RLTask):
         self.franka_dof_pos[env_ids, :] = pos
 
         # reset cabinet
-        self._cabinets.set_joint_positions(torch.zeros_like(self._cabinets.get_joint_positions()[env_ids]), indices=indices)
-        self._cabinets.set_joint_velocities(torch.zeros_like(self._cabinets.get_joint_velocities()[env_ids]), indices=indices)
+        self._cabinets.set_joint_positions(torch.zeros_like(self._cabinets.get_joint_positions(clone=False)[env_ids]), indices=indices)
+        self._cabinets.set_joint_velocities(torch.zeros_like(self._cabinets.get_joint_velocities(clone=False)[env_ids]), indices=indices)
 
         # reset props
         if self.num_props > 0:

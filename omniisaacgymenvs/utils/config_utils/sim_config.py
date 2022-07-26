@@ -44,9 +44,10 @@ class SimConfig():
         if self._config["test"] == True:
             self._sim_params["enable_scene_query_support"] = True
 
-        if self._config["headless"] == True:
+        if self._config["headless"] == True and not self._sim_params["enable_cameras"]:
             self._sim_params["use_flatcache"] = False
             self._sim_params["enable_viewport"] = False
+
 
     def _parse_config(self):
         # general sim parameter

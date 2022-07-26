@@ -60,9 +60,6 @@ env:
     # episode length in seconds
     episodeLength_s: 50
 
-  # set to True if you use camera sensors in the environment
-  enableCameraSensors: False
-
 sim:
   dt: 0.01
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
@@ -70,6 +67,9 @@ sim:
   add_ground_plane: True
   use_flatcache: True
   enable_scene_query_support: False
+
+  # set to True if you use camera sensors in the environment
+  enable_cameras: False
 
   default_physics_material:
     static_friction: 1.0

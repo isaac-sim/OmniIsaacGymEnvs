@@ -87,6 +87,7 @@ default_sim_params = {
     "add_distant_light": True,
     "use_flatcache": True,
     "enable_scene_query_support": False,
+    "enable_cameras": False,
     "default_physics_material": default_physics_material
 }
 

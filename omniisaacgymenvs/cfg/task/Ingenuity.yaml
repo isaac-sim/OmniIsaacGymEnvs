@@ -13,18 +13,16 @@ env:
   clipObservations: 5.0
   clipActions: 1.0
 
-  # set to True if you use camera sensors in the environment
-  enableCameraSensors: False
-
 sim:
   dt: 0.01
-  substeps: 1
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
-  gravity: [0.0, 0.0, -9.81]
+  gravity: [0.0, 0.0, -3.721]
   add_ground_plane: True
   add_distant_light: True
   use_flatcache: True
   enable_scene_query_support: False
+  # set to True if you use camera sensors in the environment
+  enable_cameras: False
 
   physx:
     num_threads: ${....num_threads}
