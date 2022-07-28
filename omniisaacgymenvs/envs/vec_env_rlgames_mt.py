@@ -40,7 +40,7 @@ import numpy as np
 class VecEnvRLGamesMT(VecEnvRLGames, VecEnvMT):
 
     def _parse_data(self, data):
-        self._obs = torch.clamp(data["obs"], -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device).clone()
+        self._obs = data["obs"].to(self._task.rl_device).clone()
         self._rew = data["rew"].to(self._task.rl_device).clone()
         self._states = torch.clamp(data["states"], -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device).clone()
         self._resets = data["reset"].to(self._task.rl_device).clone()
@@ -52,9 +52,17 @@ class VecEnvRLGamesMT(VecEnvRLGames, VecEnvMT):
 
         actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).clone()
 
+        if self._task.randomize_actions:
+            actions = self._task._sim_config.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
+
         self.send_actions(actions)
         data = self.get_data()
 
+        if self._task.randomize_observations:
+            self._obs = self._task._sim_config.apply_observations_randomization(observations=self._obs, reset_buf=self._task.reset_buf)
+        
+        self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs)
+        
         obs_dict = {}
         obs_dict["obs"] = self._obs
         obs_dict["states"] = self._states

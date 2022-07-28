@@ -40,6 +40,7 @@ import numpy as np
 import torch
 import math
 
+import omni.replicator.isaac as dr
 
 class InHandManipulationTask(RLTask):
     def __init__(
@@ -189,6 +190,8 @@ class InHandManipulationTask(RLTask):
         indices = torch.arange(self._num_envs, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
 
+        self._sim_config.set_up_domain_randomization(self)
+
     def get_object_goal_observations(self):
         self.object_pos, self.object_rot = self._objects.get_world_poses(clone=False)
         self.object_pos -= self._env_pos
@@ -247,6 +250,9 @@ class InHandManipulationTask(RLTask):
         self._hands.set_joint_position_targets(
             self.cur_targets[:, self.actuated_dof_indices], indices=None, joint_indices=self.actuated_dof_indices
         )
+
+        if self._sim_config.randomize:
+            dr.physics_view.step_randomization(env_ids)
         
     def is_done(self):
         pass

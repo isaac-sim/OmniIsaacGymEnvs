@@ -130,3 +130,72 @@ sim:
     # per-body
     density: -1
     max_depenetration_velocity: 1000.0
+
+domain_randomization:
+  randomize: False
+  randomization_params:
+    observations:
+      on_reset:
+        operation: "additive"
+        distribution: "gaussian"
+        distribution_parameters: [0, .0001]
+      on_interval:
+        frequency_interval: 1
+        operation: "additive"
+        distribution: "gaussian"
+        distribution_parameters: [0, .002]
+    actions:
+      on_reset:
+        operation: "additive"
+        distribution: "gaussian"
+        distribution_parameters: [0, 0.015]
+      on_interval:
+        frequency_interval: 1
+        operation: "additive"
+        distribution: "gaussian"
+        distribution_parameters: [0., 0.05]
+    simulation:
+      gravity:
+        on_reset:
+          operation: "additive"
+          distribution: "gaussian"
+          distribution_parameters: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.4]]
+    rigid_prim_views:
+      object_view:
+        material_properties:
+          on_reset:
+            operation: "scaling"
+            distribution: "uniform"
+            distribution_parameters: [[0.7, 1, 1], [1.3, 1, 1]]
+    articulation_views:
+      shadow_hand_view:
+        stiffness:
+          on_reset:
+            operation: "scaling"
+            distribution: "uniform"
+            distribution_parameters: [0.75, 1.5]
+        damping:
+          on_reset:
+            operation: "scaling"
+            distribution: "uniform"
+            distribution_parameters: [0.3, 3.0]
+        lower_dof_limits:
+          on_reset:
+            operation: "additive"
+            distribution: "gaussian"
+            distribution_parameters: [0.00, 0.01]
+        upper_dof_limits:
+          on_reset:
+            operation: "additive"
+            distribution: "gaussian"
+            distribution_parameters: [0.00, 0.01]
+        tendon_limit_stiffnesses:
+          on_reset:
+            operation: "direct"
+            distribution: "uniform"
+            distribution_parameters: [22.5, 45]
+        tendon_dampings:
+          on_reset:
+            operation: "direct"
+            distribution: "uniform"
+            distribution_parameters: [0.03, 0.3]

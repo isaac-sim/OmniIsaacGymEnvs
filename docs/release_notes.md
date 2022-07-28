@@ -9,6 +9,7 @@ Additions
 - Additional examples: Anymal, AnymalTerrain, BallBalance, FrankaCabinet, Ingenuity, Quadcopter
 - Update RL-Games to 1.5.2
 - Automatically disable omni.kit.window.viewport and omni.physx.flatcache extensions in headless mode
+- Add domain randomization framework using omni.replicator.isaac
 
 Fixes
 -----

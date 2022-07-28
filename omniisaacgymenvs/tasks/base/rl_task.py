@@ -61,6 +61,9 @@ class RLTask(BaseTask):
         self._device = self._cfg["sim_device"]
         print("Task Device:", self._device)
 
+        self.randomize_actions = False
+        self.randomize_observations = False
+
         self.clip_obs = self._cfg["task"]["env"].get("clipObservations", np.Inf)
         self.clip_actions = self._cfg["task"]["env"].get("clipActions", np.Inf)
         self.rl_device = self._cfg.get("rl_device", "cuda:0")
