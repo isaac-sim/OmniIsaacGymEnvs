@@ -69,7 +69,7 @@ class ShadowHandTask(InHandManipulationTask):
         self.fingertips = ["robot0:ffdistal", "robot0:mfdistal", "robot0:rfdistal", "robot0:lfdistal", "robot0:thdistal"]
         self.num_fingertips = len(self.fingertips)
 
-        self.object_scale = torch.tensor([0.8, 0.8, 0.8])
+        self.object_scale = torch.tensor([1.0, 1.0, 1.0])
 
         self._num_observations = self.num_obs_dict[self.obs_type]
         self._num_actions = 20
