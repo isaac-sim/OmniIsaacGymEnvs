@@ -32,6 +32,8 @@ from omni.isaac.gym.vec_env import VecEnvBase
 import torch
 import numpy as np
 
+from datetime import datetime
+
 
 # VecEnv Wrapper for RL training
 class VecEnvRLGames(VecEnvBase):
@@ -77,6 +79,9 @@ class VecEnvRLGames(VecEnvBase):
 
     def reset(self):
         """ Resets the task and applies default zero actions to recompute observations and states. """
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{now}] Running RL reset")
+
         self._task.reset()
         actions = torch.zeros((self.num_envs, self._task.num_actions), device=self._task.device)
         obs_dict, _, _, _ = self.step(actions)
