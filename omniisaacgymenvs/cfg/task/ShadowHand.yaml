@@ -5,7 +5,7 @@ physics_engine: ${..physics_engine}
 
 # if given, will override the device setting in gym.
 env:
-  numEnvs: ${resolve_default:2048,${...num_envs}}
+  numEnvs: ${resolve_default:8192,${...num_envs}}
   envSpacing: 0.75
   episodeLength: 600
 
@@ -164,6 +164,7 @@ domain_randomization:
       object_view:
         material_properties:
           on_reset:
+            num_buckets: 250
             operation: "scaling"
             distribution: "uniform"
             distribution_parameters: [[0.7, 1, 1], [1.3, 1, 1]]
@@ -199,3 +200,9 @@ domain_randomization:
             operation: "direct"
             distribution: "uniform"
             distribution_parameters: [0.03, 0.3]
+        material_properties:
+          on_reset:
+            num_buckets: 250
+            operation: "scaling"
+            distribution: "uniform"
+            distribution_parameters: [[0.7, 1, 1], [1.3, 1, 1]]

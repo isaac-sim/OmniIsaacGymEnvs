@@ -544,10 +544,12 @@ class SimConfig():
         return actions
     
     def _apply_uncorrelated_noise(self, buffer, randomize_ids, operation, distribution, distribution_parameters):
-        if distribution == "gaussian":
+        if distribution == "gaussian" or "normal":
             noise = torch.normal(mean=distribution_parameters[0], std=distribution_parameters[1], size=(len(randomize_ids), buffer.shape[1]), device=self._config["sim_device"])
         elif distribution == "uniform":
             noise = (distribution_parameters[1] - distribution_parameters[0]) * torch.rand((len(randomize_ids), buffer.shape[1]), device=self._config["sim_device"]) + distribution_parameters[0]
+        elif distribution == "loguniform" or "log_uniform":
+            noise = torch.exp((np.log(distribution_parameters[1]) - np.log(distribution_parameters[0])) * torch.rand((len(randomize_ids), buffer.shape[1]), device=self._config["sim_device"]) + np.log(distribution_parameters[0]))
         else:
             print(f"The specified {distribution} distribution is not supported.")
 
@@ -566,10 +568,12 @@ class SimConfig():
             correlated_noise_buffer = self._actions_correlated_noise
 
         if len(reset_ids) > 0:
-            if distribution == "gaussian":
+            if distribution == "gaussian" or "normal":
                 correlated_noise_buffer[reset_ids] = torch.normal(mean=distribution_parameters[0], std=distribution_parameters[1], size=(len(reset_ids), buffer.shape[1]), device=self._config["sim_device"])
             elif distribution == "uniform":
                 correlated_noise_buffer[reset_ids] = (distribution_parameters[1] - distribution_parameters[0]) * torch.rand((len(reset_ids), buffer.shape[1]), device=self._config["sim_device"]) + distribution_parameters[0]
+            elif distribution == "loguniform" or "log_uniform":
+                correlated_noise_buffer[reset_ids] = torch.exp((np.log(distribution_parameters[1]) - np.log(distribution_parameters[0])) * torch.rand((len(reset_ids), buffer.shape[1]), device=self._config["sim_device"]) + np.log(distribution_parameters[0]))
             else:
                 print(f"The specified {distribution} distribution is not supported.")
         
@@ -627,6 +631,9 @@ class SimConfig():
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_reset are provided: " + \
                         "operation, distribution, distribution_parameters.")
                 kwargs = {"view_name": view_name, "operation": params["on_reset"]["operation"]}
+
+                if attribute == "material_properties" and "num_buckets" in params["on_reset"].keys():
+                    kwargs["num_buckets"] = params["on_reset"]["num_buckets"]
                 
                 self.distributions["rigid_prim_views"][view_name][attribute]["on_reset"] = self._generate_distribution(
                     dimension=dr.physics_view._rigid_prim_views_initial_values[view_name][attribute].shape[1],
@@ -642,6 +649,10 @@ class SimConfig():
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_interval are provided: " + \
                         "frequency_interval, operation, distribution, distribution_parameters.")
                 kwargs = {"view_name": view_name, "operation": params["on_interval"]["operation"]}
+
+                if attribute == "material_properties" and "num_buckets" in params["on_interval"].keys():
+                    kwargs["num_buckets"] = params["on_interval"]["num_buckets"]
+
                 self.distributions["rigid_prim_views"][view_name][attribute]["on_interval"] = self._generate_distribution(
                     dimension=dr.physics_view._rigid_prim_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
@@ -664,6 +675,10 @@ class SimConfig():
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_reset are provided: " + \
                         "operation, distribution, distribution_parameters.")
                 kwargs = {"view_name": view_name, "operation": params["on_reset"]["operation"]}
+
+                if attribute == "material_properties" and "num_buckets" in params["on_reset"].keys():
+                    kwargs["num_buckets"] = params["on_reset"]["num_buckets"]
+
                 self.distributions["articulation_views"][view_name][attribute]["on_reset"] = self._generate_distribution(
                     dimension=dr.physics_view._articulation_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
@@ -678,6 +693,10 @@ class SimConfig():
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_interval are provided: " + \
                         "frequency_interval, operation, distribution, distribution_parameters.")
                 kwargs = {"view_name": view_name, "operation": params["on_interval"]["operation"]}
+
+                if attribute == "material_properties" and "num_buckets" in params["on_interval"].keys():
+                    kwargs["num_buckets"] = params["on_interval"]["num_buckets"]
+                
                 self.distributions["articulation_views"][view_name][attribute]["on_interval"]  = self._generate_distribution(
                     dimension=dr.physics_view._articulation_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
@@ -699,13 +718,19 @@ class SimConfig():
         elif distribution_parameters.shape == (2, dimension):
             # if the user provides a set of parameters for each dimension in the format [[...], [...]]
             dist_params = distribution_parameters.tolist()
+        elif attribute in ["material_properties", "body_inertias"] and distribution_parameters.shape == (2, 3):
+            # if the user only provides the parameters for one body in the articulation, assume the same parameters for all other links
+            dist_params = [[distribution_parameters[0]] * (dimension // 3), [distribution_parameters[1]] * (dimension // 3)]
         else:
             raise ValueError(f"The provided distribution_parameters for {view_name} {attribute} is invalid due to incorrect dimensions.")
 
         if params["distribution"] == "uniform":
             return rep.distribution.uniform(tuple(dist_params[0]), tuple(dist_params[1]))
-        elif params["distribution"] == "gaussian":
+        elif params["distribution"] == "gaussian" or "normal":
             return rep.distribution.normal(tuple(dist_params[0]), tuple(dist_params[1]))
+        elif params["distribution"] == "loguniform" or "log_uniform":
+            return rep.distribution.log_uniform(tuple(dist_params[0]), tuple(dist_params[1]))
         else:
-            raise ValueError(f"The provided distribution for {view_name} {attribute} is not supported. Please input either uniform or gaussian.")
-
+            raise ValueError(f"The provided distribution for {view_name} {attribute} is not supported. "
+                + "Options: uniform, gaussian/normal, loguniform/log_uniform"
+            )
