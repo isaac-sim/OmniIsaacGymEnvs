@@ -190,7 +190,7 @@ domain_randomization:
             operation: "additive"
             distribution: "gaussian"
             distribution_parameters: [0.00, 0.01]
-        tendon_limit_stiffnesses:
+        tendon_stiffnesses:
           on_reset:
             operation: "direct"
             distribution: "uniform"

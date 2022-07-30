@@ -428,7 +428,7 @@ class SimConfig():
                                 self.distributions["simulation"] = dict()
                                 dr.physics_view.register_simulation_context(task._env._world)
                                 for attribute, params in randomization_params["simulation"].items():
-                                    self._set_up_simulation_randomiztion(attribute, params)
+                                    self._set_up_simulation_randomization(attribute, params)
                         elif opt == "rigid_prim_views":
                             if randomization_params["rigid_prim_views"] is not None:
                                 self.distributions["rigid_prim_views"] = dict()
@@ -439,7 +439,7 @@ class SimConfig():
                                             rigid_prim_view=task._env._world.scene._scene_registry.rigid_prim_views[view_name],
                                         )
                                         for attribute, params in randomization_params["rigid_prim_views"][view_name].items():
-                                            self._set_up_rigid_prim_view_randomiztion(view_name, attribute, params)
+                                            self._set_up_rigid_prim_view_randomization(view_name, attribute, params)
                         elif opt == "articulation_views":
                             if randomization_params["articulation_views"] is not None:
                                 self.distributions["articulation_views"] = dict()
@@ -450,7 +450,7 @@ class SimConfig():
                                             articulation_view=task._env._world.scene._scene_registry.articulated_views[view_name],
                                         )
                                         for attribute, params in randomization_params["articulation_views"][view_name].items():
-                                            self._set_up_articulation_view_randomiztion(view_name, attribute, params)
+                                            self._set_up_articulation_view_randomization(view_name, attribute, params)
                 rep.orchestrator.run()
             else:
                 print("Domain randomization will not be applied.")
@@ -586,7 +586,7 @@ class SimConfig():
         return buffer        
 
     
-    def _set_up_simulation_randomiztion(self, attribute, params):
+    def _set_up_simulation_randomization(self, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for simulation {attribute} is not provided.")
         if attribute in dr.SIMULATION_CONTEXT_ATTRIBUTES:
@@ -621,7 +621,7 @@ class SimConfig():
                 with dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
                     dr.physics_view.randomize_simulation_context(**kwargs)
             
-    def _set_up_rigid_prim_view_randomiztion(self, view_name, attribute, params):
+    def _set_up_rigid_prim_view_randomization(self, view_name, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for rigid prim view {view_name} {attribute} is not provided.")
         if attribute in dr.RIGID_PRIM_ATTRIBUTES:
@@ -665,7 +665,7 @@ class SimConfig():
         else:
             raise ValueError(f"The attribute {attribute} for {view_name} is invalid for domain randomization.")
 
-    def _set_up_articulation_view_randomiztion(self, view_name, attribute, params):
+    def _set_up_articulation_view_randomization(self, view_name, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for articulation view {view_name} {attribute} is not provided.")
         if attribute in dr.ARTICULATION_ATTRIBUTES:
