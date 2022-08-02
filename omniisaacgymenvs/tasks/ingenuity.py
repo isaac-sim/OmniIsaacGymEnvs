@@ -85,8 +85,9 @@ class IngenuityTask(RLTask):
         self.get_target()
         RLTask.set_up_scene(self, scene)
         self._copters = IngenuityView(prim_paths_expr="/World/envs/.*/Ingenuity", name="ingenuity_view")
-        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", reset_xform_properties=False)
+        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
         scene.add(self._copters)
+        scene.add(self._balls)
         for i in range(2):
             scene.add(self._copters.physics_rotors[i])
             scene.add(self._copters.visual_rotors[i])
@@ -107,7 +108,6 @@ class IngenuityTask(RLTask):
             color=color)
         self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
         ball.set_collision_enabled(False)
-        ball._rigid_prim_view._rigid_body_apis[0].GetKinematicEnabledAttr().Set(True)
 
     def get_observations(self) -> dict:
         self.root_pos, self.root_rot = self._copters.get_world_poses(clone=False)
@@ -181,8 +181,6 @@ class IngenuityTask(RLTask):
 
         # control tensors
         self.thrusts = torch.zeros((self._num_envs, 2, 3), dtype=torch.float32, device=self._device)
-
-        self.set_targets(self.all_indices)
 
     def set_targets(self, env_ids):
         num_sets = len(env_ids)
