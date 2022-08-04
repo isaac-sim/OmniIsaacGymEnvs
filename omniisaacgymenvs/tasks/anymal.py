@@ -265,6 +265,6 @@ class AnymalTask(RLTask):
 
     def is_done(self) -> None:
         # reset agents
-        time_out = self.progress_buf > self.max_episode_length
+        time_out = self.progress_buf >= self.max_episode_length - 1
         self.reset_buf[:] = time_out | self.fallen_over
 
