@@ -3,7 +3,7 @@
 The following section presents a method that modifies existing USD assets 
 which allows Isaac Sim to load significantly more environments. This is currently
 an experimental method and has thus not been completely integrated into the 
-framework. As a result, this section is reserved for powers users who wish to 
+framework. As a result, this section is reserved for power users who wish to 
 maxmimize the performance of the Isaac Sim RL framework. 
 
 
@@ -21,6 +21,17 @@ environments. To enable this functionality, USD assets need to be modified to be
 
 
 ### Creating Instanceable Assets
+
+Assets can now be directly imported as Instanceable assets through the URDF and MJCF importers provided in Isaac Sim. By selecting this option, imported assets will be split into two separate USD files that follow the above hierarchy definition. Any mesh data will be written to an USD stage to be referenced by the main USD stage, which contains the main robot definition. 
+
+To use the Instanceable option in the importers, first check the `Create Instanceable Asset` option. Then, specify a file path to indicate the location for saving the mesh data in the `Instanceable USD Path` textbox. This will default to `./instanceable_meshes.usd`, which will generate a file `instanceable_meshes.usd` that is saved to the current directory.
+
+Once the asset is imported with these options enabled, you will see the robot definition in the stage - we will refer to this stage as the master stage. If we expand the robot hierarchy in the Stage, we will notice that the parent prims that have mesh decendants have been marked as Instanceable and they reference a prim in our `Instanceable USD Path` USD file. We are also no longer able to modify attributes of descendant meshes.
+
+To add the instanced asset into a new stage, we will simply need to add the master USD file.
+
+
+### Converting Existing Assets
 
 We provide the utility function `convert_asset_instanceable`, which creates an instanceable 
 version of a given USD asset in `/omniisaacgymenvs/utils/usd_utils/create_instanceable_assets.py`. 

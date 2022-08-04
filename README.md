@@ -66,8 +66,8 @@ PYTHON_PATH scripts/rlgames_train.py task=Ant headless=True
 
 #### A Note on the Startup Time of the Simulation
 
-Some of the examples could take a few minutes to load because the startup time linearly scales based on the number of environments. The startup time will
-be optimized in the next release.
+Some of the examples could take a few minutes to load because the startup time scales based on the number of environments. The startup time will continually
+be optimized in future releases.
 
 
 ### Loading trained models // Checkpoints
