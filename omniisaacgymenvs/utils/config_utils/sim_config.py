@@ -45,7 +45,10 @@ class SimConfig():
         self._config = config
         self._cfg = config.get("task", dict())
         self._parse_config()
+
         self.randomize = False
+        self._observations_dr_params = None
+        self._actions_dr_params = None
         
         if self._config["test"] == True:
             self._sim_params["enable_scene_query_support"] = True
@@ -410,6 +413,7 @@ class SimConfig():
     def set_up_domain_randomization(self, task):
         dr_config = self._cfg.get("domain_randomization", None)
         self.distributions = dict()
+        self.active_domain_randomizations = dict()
 
         if dr_config is not None:
             randomize = dr_config.get("randomize", False)
@@ -466,11 +470,12 @@ class SimConfig():
             if not set(('operation','distribution', 'distribution_parameters')).issubset(self._observations_dr_params["on_reset"].keys()):
                 raise ValueError(f"Please ensure the following observations on_reset randomization parameters are provided: " + \
                     "operation, distribution, distribution_parameters.")
+            self.active_domain_randomizations[("observations", "on_reset")] = np.array(self._observations_dr_params["on_reset"]["distribution_parameters"])
         if "on_interval" in self._observations_dr_params.keys():
             if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(self._observations_dr_params["on_interval"].keys()):
                 raise ValueError(f"Please ensure the following observations on_interval randomization parameters are provided: " + \
                     "frequency_interval, operation, distribution, distribution_parameters.")
-
+            self.active_domain_randomizations[("observations", "on_interval")] = np.array(self._observations_dr_params["on_interval"]["distribution_parameters"])
         self._observations_counter_buffer = torch.zeros((self._cfg["env"]["numEnvs"]), dtype=torch.int, device=self._config["sim_device"])
         self._observations_correlated_noise = torch.zeros((self._cfg["env"]["numEnvs"], task.num_observations), device=self._config["sim_device"])
         
@@ -483,10 +488,12 @@ class SimConfig():
             if not set(('operation','distribution', 'distribution_parameters')).issubset(self._actions_dr_params["on_reset"].keys()):
                 raise ValueError(f"Please ensure the following actions on_reset randomization parameters are provided: " + \
                     "operation, distribution, distribution_parameters.")
+            self.active_domain_randomizations[("actions", "on_reset")] = np.array(self._actions_dr_params["on_reset"]["distribution_parameters"])
         if "on_interval" in self._actions_dr_params.keys():
             if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(self._actions_dr_params["on_interval"].keys()):
                 raise ValueError(f"Please ensure the following actions on_interval randomization parameters are provided: " + \
                     "frequency_interval, operation, distribution, distribution_parameters.")
+            self.active_domain_randomizations[("actions", "on_interval")] = np.array(self._actions_dr_params["on_interval"]["distribution_parameters"])
         self._actions_counter_buffer = torch.zeros((self._cfg["env"]["numEnvs"]), dtype=torch.int, device=self._config["sim_device"])
         self._actions_correlated_noise = torch.zeros((self._cfg["env"]["numEnvs"], task.num_actions), device=self._config["sim_device"])
 
@@ -585,7 +592,7 @@ class SimConfig():
             print(f"The specified {operation} operation type is not supported.")
         return buffer        
 
-    
+
     def _set_up_simulation_randomization(self, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for simulation {attribute} is not provided.")
@@ -595,8 +602,8 @@ class SimConfig():
                 if not set(('operation','distribution', 'distribution_parameters')).issubset(params["on_reset"]):
                     raise ValueError(f"Please ensure the following randomization parameters for simulation {attribute} on_reset are provided: " + \
                         "operation, distribution, distribution_parameters.")
+                self.active_domain_randomizations[("simulation", attribute, "on_reset")] = np.array(params["on_reset"]["distribution_parameters"])
                 kwargs = {"operation": params["on_reset"]["operation"]}
-                
                 self.distributions["simulation"][attribute]["on_reset"] = self._generate_distribution(
                     dimension=dr.physics_view._simulation_context_initial_values[attribute].shape[0],
                     view_name="simulation", 
@@ -610,6 +617,7 @@ class SimConfig():
                 if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(params["on_interval"]):
                     raise ValueError(f"Please ensure the following randomization parameters for simulation {attribute} on_interval are provided: " + \
                         "frequency_interval, operation, distribution, distribution_parameters.")
+                self.active_domain_randomizations[("simulation", attribute, "on_interval")] = np.array(params["on_interval"]["distribution_parameters"])
                 kwargs = {"operation": params["on_interval"]["operation"]}
                 self.distributions["simulation"][attribute]["on_interval"] = self._generate_distribution(
                     dimension=dr.physics_view._simulation_context_initial_values[attribute].shape[0],
@@ -630,8 +638,8 @@ class SimConfig():
                 if not set(('operation','distribution', 'distribution_parameters')).issubset(params["on_reset"]):
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_reset are provided: " + \
                         "operation, distribution, distribution_parameters.")
+                self.active_domain_randomizations[("rigid_prim_views", view_name, attribute, "on_reset")] = np.array(params["on_reset"]["distribution_parameters"])
                 kwargs = {"view_name": view_name, "operation": params["on_reset"]["operation"]}
-
                 if attribute == "material_properties" and "num_buckets" in params["on_reset"].keys():
                     kwargs["num_buckets"] = params["on_reset"]["num_buckets"]
                 
@@ -648,8 +656,8 @@ class SimConfig():
                 if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(params["on_interval"]):
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_interval are provided: " + \
                         "frequency_interval, operation, distribution, distribution_parameters.")
+                self.active_domain_randomizations[("rigid_prim_views", view_name, attribute, "on_interval")] = np.array(params["on_interval"]["distribution_parameters"])
                 kwargs = {"view_name": view_name, "operation": params["on_interval"]["operation"]}
-
                 if attribute == "material_properties" and "num_buckets" in params["on_interval"].keys():
                     kwargs["num_buckets"] = params["on_interval"]["num_buckets"]
 
@@ -674,8 +682,8 @@ class SimConfig():
                 if not set(('operation','distribution', 'distribution_parameters')).issubset(params["on_reset"]):
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_reset are provided: " + \
                         "operation, distribution, distribution_parameters.")
+                self.active_domain_randomizations[("articulation_views", view_name, attribute, "on_reset")] = np.array(params["on_reset"]["distribution_parameters"])
                 kwargs = {"view_name": view_name, "operation": params["on_reset"]["operation"]}
-
                 if attribute == "material_properties" and "num_buckets" in params["on_reset"].keys():
                     kwargs["num_buckets"] = params["on_reset"]["num_buckets"]
 
@@ -692,8 +700,8 @@ class SimConfig():
                 if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(params["on_interval"]):
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_interval are provided: " + \
                         "frequency_interval, operation, distribution, distribution_parameters.")
+                self.active_domain_randomizations[("articulation_views", view_name, attribute, "on_interval")] = np.array(params["on_interval"]["distribution_parameters"])
                 kwargs = {"view_name": view_name, "operation": params["on_interval"]["operation"]}
-
                 if attribute == "material_properties" and "num_buckets" in params["on_interval"].keys():
                     kwargs["num_buckets"] = params["on_interval"]["num_buckets"]
                 
@@ -709,9 +717,21 @@ class SimConfig():
         else:
             raise ValueError(f"The attribute {attribute} for {view_name} is invalid for domain randomization.")
     
-    def _generate_distribution(self, view_name, attribute, dimension, params):
-        distribution_parameters = np.array(params["distribution_parameters"])
-        
+    def _generate_distribution(self, view_name, attribute, dimension, params):        
+        dist_params = self._sanitize_distribution_parameters(attribute, dimension, params["distribution_parameters"])
+        if params["distribution"] == "uniform":
+            return rep.distribution.uniform(tuple(dist_params[0]), tuple(dist_params[1]))
+        elif params["distribution"] == "gaussian" or "normal":
+            return rep.distribution.normal(tuple(dist_params[0]), tuple(dist_params[1]))
+        elif params["distribution"] == "loguniform" or "log_uniform":
+            return rep.distribution.log_uniform(tuple(dist_params[0]), tuple(dist_params[1]))
+        else:
+            raise ValueError(f"The provided distribution for {view_name} {attribute} is not supported. "
+                + "Options: uniform, gaussian/normal, loguniform/log_uniform"
+            )
+    
+    def _sanitize_distribution_parameters(self, attribute, dimension, params):
+        distribution_parameters = np.array(params)
         if distribution_parameters.shape == (2,):
             # if the user does not provide a set of parameters for each dimension
             dist_params = [[distribution_parameters[0]]*dimension, [distribution_parameters[1]]*dimension]
@@ -723,14 +743,57 @@ class SimConfig():
             dist_params = [[distribution_parameters[0]] * (dimension // 3), [distribution_parameters[1]] * (dimension // 3)]
         else:
             raise ValueError(f"The provided distribution_parameters for {view_name} {attribute} is invalid due to incorrect dimensions.")
+        return dist_params
+    
 
-        if params["distribution"] == "uniform":
-            return rep.distribution.uniform(tuple(dist_params[0]), tuple(dist_params[1]))
-        elif params["distribution"] == "gaussian" or "normal":
-            return rep.distribution.normal(tuple(dist_params[0]), tuple(dist_params[1]))
-        elif params["distribution"] == "loguniform" or "log_uniform":
-            return rep.distribution.log_uniform(tuple(dist_params[0]), tuple(dist_params[1]))
+    def set_dr_distribution_parameters(self, distribution_parameters, *distribution_path):
+        if distribution_path not in self.active_domain_randomizations.keys():
+            raise ValueError(f"Cannot find a valid domain randomization distribution using the path {distribution_path}.")
+        if distribution_path[0] == "observations":
+            if len(distribution_parameters) == 2:
+                self._observations_dr_params[distribution_path[1]]["distribution_parameters"] = distribution_parameters
+            else:
+                raise ValueError(f"Please provide distribution_parameters for observations {distribution_path[1]} " +
+                    "in the form of [dist_param_1, dist_param_2]")
+        elif distribution_path[0] == "actions":
+            if len(distribution_parameters) == 2:
+                self._actions_dr_params[distribution_path[1]]["distribution_parameters"] = distribution_parameters
+            else:
+                raise ValueError(f"Please provide distribution_parameters for actions {distribution_path[1]} " +
+                    "in the form of [dist_param_1, dist_param_2]")
         else:
-            raise ValueError(f"The provided distribution for {view_name} {attribute} is not supported. "
-                + "Options: uniform, gaussian/normal, loguniform/log_uniform"
-            )
+            replicator_distribution = self.distributions[distribution_path[0]][distribution_path[1]][distribution_path[2]]                
+            if distribution_path[0] == "rigid_prim_views" or distribution_path[0] == "articulation_views":
+                replicator_distribution = replicator_distribution[distribution_path[3]]
+            if replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleUniform" \
+                or replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleLogUniform":
+                dimension = len(dr.utils.get_distribution_params(replicator_distribution, ["lower"])[0])
+                dist_params = self._sanitize_distribution_parameters(distribution_path[-2], dimension, distribution_parameters)
+                dr.utils.set_distribution_params(replicator_distribution, {"lower": dist_params[0], "upper": dist_params[1]})
+            elif replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleNormal":
+                dimension = len(dr.utils.get_distribution_params(replicator_distribution, ["mean"])[0])
+                dist_params = self._sanitize_distribution_parameters(distribution_path[-2], dimension, distribution_parameters)
+                dr.utils.set_distribution_params(replicator_distribution, {"mean": dist_params[0], "std": dist_params[1]})
+    
+    def get_dr_distribution_parameters(self, *distribution_path):
+        if distribution_path not in self.active_domain_randomizations.keys():
+            raise ValueError(f"Cannot find a valid domain randomization distribution using the path {distribution_path}.")
+        if distribution_path[0] == "observations":
+            return self._observations_dr_params[distribution_path[1]]["distribution_parameters"]
+        elif distribution_path[0] == "actions":
+            return self._actions_dr_params[distribution_path[1]]["distribution_parameters"]
+        else:
+            replicator_distribution = self.distributions[distribution_path[0]][distribution_path[1]][distribution_path[2]]                
+            if distribution_path[0] == "rigid_prim_views" or distribution_path[0] == "articulation_views":
+                replicator_distribution = replicator_distribution[distribution_path[3]]
+            if replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleUniform" \
+                or replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleLogUniform":
+                return dr.utils.get_distribution_params(replicator_distribution, ["lower", "upper"])
+            elif replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleNormal":
+                return dr.utils.get_distribution_params(replicator_distribution, ["mean", "std"])
+    
+    def get_initial_dr_distribution_parameters(self, *distribution_path):
+        if distribution_path not in self.active_domain_randomizations.keys():
+            raise ValueError(f"Cannot find a valid domain randomization distribution using the path {distribution_path}.")
+        return self.active_domain_randomizations[distribution_path].copy()
+    
