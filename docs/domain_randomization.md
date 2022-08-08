@@ -57,8 +57,11 @@ determine when the randomization is applied:
 -   `on_interval`: Adds uncorrelated noise to a parameter at a frequency specified
                    by `frequency_interval`. If a parameter also has `on_reset` randomization,
                    the `on_interval` noise is combined with the noise applied at `on_reset`.
+
+-   `on_startup`: Applies randomization once prior to the start of the simulation. Only available
+                  to rigid prim scale, mass, density and articulation scale parameters.
             
-For `on_reset` and `on_interval`, you can specify the following settings:
+For `on_reset`, `on_interval`, and `on_startup`, you can specify the following settings:
 
 -   `distribution`: The distribution to generate a sample `x` from. The available distributions 
                     are listed below. Note that parameters `a` and `b` are defined by the 
@@ -181,13 +184,15 @@ The exact parameters that can be randomized are listed below:
 - angular_velocity (dim=3): The angular velocity of the rigid prim. In rad/s. **CPU pipeline only**
 - velocity (dim=6): The linear + angular velocity of the rigid prim.
 - force (dim=3): Apply a force to the rigid prim. In N.
-- mass (dim=1): Mass of the rigid prim. In kg. **CPU pipeline only**
+- mass (dim=1): Mass of the rigid prim. In kg. **CPU pipeline only during runtime**. 
 - inertia (dim=3): The diagonal values of the inertia matrix. **CPU pipeline only**
 - material_properties (dim=3): Static friction, Dynamic friction, and Restitution.
 - contact_offset (dim=1): A small distance from the surface of the collision geometry at 
                           which contacts start being generated.
 - rest_offset (dim=1): A small distance from the surface of the collision geometry at 
                        which the effective contact with the shape takes place.
+- scale (dim=1): The scale of the rigid prim. `on_startup` only. 
+- density (dim=1): Density of the rigid prim. `on_startup` only. 
 
 **articulation\_views**:
 - position (dim=3): The position of the articulation root. In meters.
@@ -221,16 +226,27 @@ The exact parameters that can be randomized are listed below:
 - tendon_upper_limits (dim=num_tendons): The upper limits of the fixed tendons in the articulation.
 - tendon_rest_lengths (dim=num_tendons): The rest lengths of the fixed tendons in the articulation.
 - tendon_offsets (dim=num_tendons): The offsets of the fixed tendons in the articulation.
-
+- scale (dim=1): The scale of the articulation. `on_startup` only. 
 
 Applying Domain Randomization
 ------------------------------
 
-To parse the domain randomization configurations in the `yaml` file and set up the DR pipeline, 
-it is necessary to call `self._sim_config.set_up_domain_randomization(self)`, `where self._sim_config`
+To parse the domain randomization configurations in the task `yaml` file and set up the DR pipeline, 
+it is necessary to call `self._sim_config.set_up_domain_randomization(self)`, where `self._sim_config`
 is the `SimConfig` object passed in the Task's `__init__`. 
 
-To trigger the `on_reset` and `on_interval` randomizations, it is required to step the interal
+It is worth noting that the names of the views provided under `rigid_prim_views` or `articulation_views` 
+in the task `yaml` file must match the names passed into `RigidPrimView` or `ArticulationView` objects
+in the python task file. In addition, all `RigidPrimView` and `ArticulationView` that would have domain
+randomizaiton applied must be added to the scene in the task's `set_up_scene()` via `scene.add()`.
+
+To trigger `on_startup` randomizations, call `self._sim_config.apply_on_startup_domain_randomization(self)`
+in `set_up_scene()` after all views are added to the scene. Note that `on_startup` randomizations
+are only availble to rigid prim scale, mass, density and articulation scale parameters since these parameters
+cannot be randomized after the simulation begins on GPU pipeline. Therefore, randomizations must be applied
+to these parameters in `set_up_scene()` prior to the start of the simulation.  
+
+To trigger `on_reset` and `on_interval` randomizations, it is required to step the interal
 counter of the DR pipeline in `pre_physics_step()`:
 
 ```python

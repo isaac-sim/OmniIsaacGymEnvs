@@ -112,10 +112,21 @@ class InHandManipulationTask(RLTask):
    
         self._hands = self.get_hand_view(scene)
         scene.add(self._hands)
-        self._objects = RigidPrimView(prim_paths_expr="/World/envs/env_.*/object/object", name="object_view", reset_xform_properties=False)
+        self._objects = RigidPrimView(
+            prim_paths_expr="/World/envs/env_.*/object/object",
+            name="object_view", 
+            reset_xform_properties=False,
+            masses=torch.tensor([0.07087]*self._num_envs, device=self.device),
+        )
         scene.add(self._objects)
-        self._goals = RigidPrimView(prim_paths_expr="/World/envs/env_.*/goal/object", name="goal_view", reset_xform_properties=False)
+        self._goals = RigidPrimView(
+            prim_paths_expr="/World/envs/env_.*/goal/object", 
+            name="goal_view", 
+            reset_xform_properties=False
+        )
         scene.add(self._goals)
+   
+        self._sim_config.apply_on_startup_domain_randomization(self)
     
     @abstractmethod
     def get_hand(self):
@@ -137,7 +148,7 @@ class InHandManipulationTask(RLTask):
         self.object_usd_path = f"{self._assets_root_path}/Isaac/Props/Blocks/block_instanceable.usd"
         add_reference_to_stage(self.object_usd_path, self.default_zero_env_path + "/object")
         obj = XFormPrim(
-            prim_path=self.default_zero_env_path + "/object",
+            prim_path=self.default_zero_env_path + "/object/object",
             name="object",
             translation=self.object_start_translation,
             orientation=self.object_start_orientation,

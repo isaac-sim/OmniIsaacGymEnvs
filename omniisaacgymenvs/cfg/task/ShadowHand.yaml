@@ -168,6 +168,16 @@ domain_randomization:
             operation: "scaling"
             distribution: "uniform"
             distribution_parameters: [[0.7, 1, 1], [1.3, 1, 1]]
+        scale:
+          on_startup:
+            operation: "scaling"
+            distribution: "uniform"
+            distribution_parameters: [0.95, 1.05]
+        mass:
+          on_startup:
+            operation: "scaling"
+            distribution: "uniform"
+            distribution_parameters: [0.5, 1.5]
     articulation_views:
       shadow_hand_view:
         stiffness:

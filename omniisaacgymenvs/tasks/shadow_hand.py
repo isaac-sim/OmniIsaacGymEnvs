@@ -82,12 +82,17 @@ class ShadowHandTask(InHandManipulationTask):
         hand_start_translation = torch.tensor([0.0, 0.0, 0.5], device=self.device)
         hand_start_orientation = torch.tensor([0.0, 0.0, -0.70711, 0.70711], device=self.device)
 
-        shadow_hand = ShadowHand(prim_path=self.default_zero_env_path + "/shadow_hand", 
-                                 name="shadow_hand",
-                                 translation=hand_start_translation, 
-                                 orientation=hand_start_orientation,
-                                )
-        self._sim_config.apply_articulation_settings("shadow_hand", get_prim_at_path(shadow_hand.prim_path), self._sim_config.parse_actor_config("shadow_hand"))
+        shadow_hand = ShadowHand(
+            prim_path=self.default_zero_env_path + "/shadow_hand", 
+            name="shadow_hand",
+            translation=hand_start_translation, 
+            orientation=hand_start_orientation,
+        )
+        self._sim_config.apply_articulation_settings(
+            "shadow_hand", 
+            get_prim_at_path(shadow_hand.prim_path), 
+            self._sim_config.parse_actor_config("shadow_hand"),
+        )
         shadow_hand.set_shadow_hand_properties(stage=self._stage, shadow_hand_prim=shadow_hand.prim)
         shadow_hand.set_motor_control_mode(stage=self._stage, shadow_hand_path=shadow_hand.prim_path)
         pose_dy, pose_dz = -0.39, 0.10

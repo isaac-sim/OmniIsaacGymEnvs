@@ -79,12 +79,17 @@ class AllegroHandTask(InHandManipulationTask):
         hand_start_translation = torch.tensor([0.0, 0.0, 0.5], device=self.device)
         hand_start_orientation = torch.tensor([0.257551, 0.283045, 0.683330, -0.621782], device=self.device)
 
-        allegro_hand = AllegroHand(prim_path=self.default_zero_env_path + "/allegro_hand", 
-                                 name="allegro_hand",
-                                 translation=hand_start_translation, 
-                                 orientation=hand_start_orientation,
-                                )
-        self._sim_config.apply_articulation_settings("allegro_hand", get_prim_at_path(allegro_hand.prim_path), self._sim_config.parse_actor_config("allegro_hand"))
+        allegro_hand = AllegroHand(
+            prim_path=self.default_zero_env_path + "/allegro_hand", 
+            name="allegro_hand",
+            translation=hand_start_translation, 
+            orientation=hand_start_orientation,
+        )
+        self._sim_config.apply_articulation_settings(
+            "allegro_hand", 
+            get_prim_at_path(allegro_hand.prim_path), 
+            self._sim_config.parse_actor_config("allegro_hand")
+        )
         allegro_hand_prim = self._stage.GetPrimAtPath(allegro_hand.prim_path)
         allegro_hand.set_allegro_hand_properties(stage=self._stage, allegro_hand_prim=allegro_hand_prim)
         allegro_hand.set_motor_control_mode(stage=self._stage, allegro_hand_path=self.default_zero_env_path + "/allegro_hand")
