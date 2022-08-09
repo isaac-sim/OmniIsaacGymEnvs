@@ -40,6 +40,7 @@ from omegaconf import DictConfig
 from rl_games.common import env_configurations, vecenv
 from rl_games.torch_runner import Runner
 
+import datetime
 import os
 import threading
 import queue
@@ -79,12 +80,34 @@ class RLGTrainer():
         with open(os.path.join(experiment_dir, 'config.yaml'), 'w') as f:
             f.write(OmegaConf.to_yaml(self.cfg))
 
+        time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        if self.cfg.wandb_activate:
+            # Make sure to install WandB if you actually use this.
+            import wandb
+
+            run_name = f"{self.cfg.wandb_name}_{time_str}"
+
+            wandb.init(
+                project=self.cfg.wandb_project,
+                group=self.cfg.wandb_group,
+                entity=self.cfg.wandb_entity,
+                config=self.cfg_dict,
+                sync_tensorboard=True,
+                id=run_name,
+                resume="allow",
+                monitor_gym=True,
+            )
+
         runner.run({
             'train': not self.cfg.test,
             'play': self.cfg.test,
             'checkpoint': self.cfg.checkpoint,
             'sigma': None
         })
+
+        if self.cfg.wandb_activate:
+            wandb.finish()
 
 
 class Trainer(TrainerMT):
