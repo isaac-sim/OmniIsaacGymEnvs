@@ -67,3 +67,7 @@ class ShadowHandView(ArticulationView):
         for joint_name in self.actuated_joint_names:
             self._actuated_dof_indices.append(self.get_dof_index(joint_name))
         self._actuated_dof_indices.sort()
+
+        limit_stiffness = torch.tensor([30.0] * self.num_fixed_tendons, device=self._device)
+        damping = torch.tensor([0.1] * self.num_fixed_tendons, device=self._device)
+        self.set_fixed_tendon_properties(dampings=damping, limit_stiffnesses=limit_stiffness)
