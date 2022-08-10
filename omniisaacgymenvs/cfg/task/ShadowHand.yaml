@@ -202,14 +202,14 @@ domain_randomization:
             distribution_parameters: [0.00, 0.01]
         tendon_stiffnesses:
           on_reset:
-            operation: "direct"
+            operation: "scaling"
             distribution: "uniform"
-            distribution_parameters: [22.5, 45]
+            distribution_parameters: [0.75, 1.5]
         tendon_dampings:
           on_reset:
-            operation: "direct"
+            operation: "scaling"
             distribution: "uniform"
-            distribution_parameters: [0.03, 0.3]
+            distribution_parameters: [0.3, 3.0]
         material_properties:
           on_reset:
             num_buckets: 250

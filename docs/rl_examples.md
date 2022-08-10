@@ -7,6 +7,19 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
 
 *Note: All commands should be executed from `omniisaacgymenvs/omniisaacgymenvs`.*
 
+* [Cartpole](#cartpole-cartpolepy)
+* [Ant](#ant-antpy)
+* [Humanoid](#humanoid-humanoidpy)
+* [Shadow Hand](#shadow-hand-object-manipulation-shadow_handpy)
+* [Allegro Hand](#allegro-hand-object-manipulation-allegro_handpy)
+* [ANYmal](#anymal-anymalpy)
+* [ANYmal Rough Terrain](#anymal-rough-terrain-anymal_terrainpy)
+* [NASA Ingenuity Helicopter](#nasa-ingenuity-helicopter-ingenuitypy)
+* [Quadcopter](#quadcopter-quadcopterpy)
+* [Ball Balance](#ball-balance-ball_balancepy)
+* [Franka Cabinet](#franka-cabinet-franka_cabinetpy)
+
+
 ### Cartpole [cartpole.py](../omniisaacgymenvs/tasks/cartpole.py)
 
 Cartpole is a simple example that demonstrates getting and setting usage of DOF states using 
@@ -127,3 +140,115 @@ Config files used for this task are:
 -   **rl_games training config**: [AllegroHandPPO.yaml](../omniisaacgymenvs/cfg/train/AllegroHandPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/171454176-ce08f6d0-3087-4ecc-9273-7d30d8f73f6d.gif" width="300" height="150"/>
+
+
+### ANYmal [anymal.py](../omniisaacgymenvs/tasks/anymal.py)
+
+This example trains a model of the ANYmal quadruped robot from ANYbotics
+to follow randomly chosen x, y, and yaw target velocities.
+
+Training can be launched with command line argument `task=Anymal`.
+
+Running inference with pre-trained model can be launched with command line argument `task=Anymal test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [Anymal.yaml](../omniisaacgymenvs/cfg/task/Anymal.yaml)
+-   **rl_games training config**: [AnymalPPO.yaml](../omniisaacgymenvs/cfg/train/AnymalPPO.yaml)
+
+
+### Anymal Rough Terrain [anymal_terrain.py](../omniisaacgymenvs/tasks/anymal_terrain.py)
+
+A more complex version of the above Anymal environment that supports
+traversing various forms of rough terrain.
+
+Training can be launched with command line argument `task=AnymalTerrain`.
+
+Running inference with pre-trained model can be launched with command line argument `task=AnymalTerrain test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth`
+
+-   **Task config**: [AnymalTerrain.yaml](../omniisaacgymenvs/cfg/task/AnymalTerrain.yaml)
+-   **rl_games training config**: [AnymalTerrainPPO.yaml](../omniisaacgymenvs/cfg/train/AnymalTerrainPPO.yaml)
+
+**Note** during test time use the last weights generated, rather than the usual best weights. 
+Due to curriculum training, the reward goes down as the task gets more challenging, so the best weights
+do not typically correspond to the best outcome.
+
+**Note** if you use the ANYmal rough terrain environment in your work, please ensure you cite the following work:
+```
+@misc{rudin2021learning,
+      title={Learning to Walk in Minutes Using Massively Parallel Deep Reinforcement Learning}, 
+      author={Nikita Rudin and David Hoeller and Philipp Reist and Marco Hutter},
+      year={2021},
+      journal = {arXiv preprint arXiv:2109.11978}
+```
+**Note** The OmniIsaacGymEnvs implementation slightly differs from the implementation used in the paper above, which also
+uses a different RL library and PPO implementation. The original implementation is made available [here](https://github.com/leggedrobotics/legged_gym). Results reported in the Isaac Gym technical paper are based on that repository, not this one.
+
+
+### NASA Ingenuity Helicopter [ingenuity.py](../omniisaacgymenvs/tasks/ingenuity.py)
+
+This example trains a simplified model of NASA's Ingenuity helicopter to navigate to a moving target.
+It showcases the use of velocity tensors and applying force vectors to rigid bodies.
+Note that we are applying force directly to the chassis, rather than simulating aerodynamics.
+This example also demonstrates using different values for gravitational forces.
+Ingenuity Helicopter visual 3D Model courtesy of NASA: https://mars.nasa.gov/resources/25043/mars-ingenuity-helicopter-3d-model/.
+
+Training can be launched with command line argument `task=Ingenuity`.
+
+Running inference with pre-trained model can be launched with command line argument `task=Ingenuity test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ingenuity.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [Ingenuity.yaml](../omniisaacgymenvs/cfg/task/Ingenuity.yaml)
+-   **rl_games training config**: [IngenuityPPO.yaml](../omniisaacgymenvs/cfg/train/IngenuityPPO.yaml)
+
+
+### Quadcopter [quadcopter.py](../omniisaacgymenvs/tasks/quadcopter.py)
+
+This example trains a very simple quadcopter model to reach and hover near a fixed position.  
+Lift is achieved by applying thrust forces to the "rotor" bodies, which are modeled as flat cylinders.  
+In addition to thrust, the pitch and roll of each rotor is controlled using DOF position targets.
+
+Training can be launched with command line argument `task=Quadcopter`.
+
+Running inference with pre-trained model can be launched with command line argument `task=Quadcopter test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/quadcopter.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [Quadcopter.yaml](../omniisaacgymenvs/cfg/task/Quadcopter.yaml)
+-   **rl_games training config**: [QuadcopterPPO.yaml](../omniisaacgymenvs/cfg/train/QuadcopterPPO.yaml)
+
+
+### Ball Balance [ball_balance.py](../omniisaacgymenvs/tasks/ball_balance.py)
+
+This example trains balancing tables to balance a ball on the table top.
+This is a great example to showcase the use of force and torque sensors, as well as DOF states for the table and root states for the ball. 
+In this example, the three-legged table has a force sensor attached to each leg. 
+We use the force sensor APIs to collect force and torque data on the legs, which guide position target outputs produced by the policy.
+
+Training can be launched with command line argument `task=BallBalance`.
+
+Running inference with pre-trained model can be launched with command line argument `task=BallBalance test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ball_balance.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [BallBalance.yaml](../omniisaacgymenvs/cfg/task/BallBalance.yaml)
+-   **rl_games training config**: [BallBalancePPO.yaml](../omniisaacgymenvs/cfg/train/BallBalancePPO.yaml)
+
+
+### Franka Cabinet [franka_cabinet.py](../omniisaacgymenvs/tasks/franka_cabinet.py)
+
+This Franka example demonstrates interaction between Franka arm and cabinet, as well as setting states of objects inside the drawer.
+It also showcases control of the Franka arm using position targets.
+In this example, we use DOF state tensors to retrieve the state of the Franka arm, as well as the state of the drawer on the cabinet.
+Actions are applied as position targets to the Franka arm DOFs.
+
+Training can be launched with command line argument `task=FrankaCabinet`.
+
+Running inference with pre-trained model can be launched with command line argument `task=FrankaCabinet test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/franka_cabinet.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [FrankaCabinet.yaml](../omniisaacgymenvs/cfg/task/FrankaCabinet.yaml)
+-   **rl_games training config**: [FrankaCabinetPPO.yaml](../omniisaacgymenvs/cfg/train/FrankaCabinetPPO.yaml)
+

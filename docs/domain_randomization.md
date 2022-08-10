@@ -115,6 +115,8 @@ yaml file, you can specify your domain randomization parameters under the
             ...
 ```
 
+This can also be set as a command line argument at launch time with `task.domain_randomization.randomize=True`. 
+
 Next, we will define our parameters under the `randomization_params`
 keys. Here you can see how we used the previous settings to define some
 randomization parameters for a ShadowHand cube manipulation task:
