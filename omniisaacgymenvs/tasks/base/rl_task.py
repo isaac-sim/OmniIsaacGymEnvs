@@ -36,6 +36,7 @@ from omni.isaac.core.utils.types import ArticulationAction
 from omni.isaac.core.utils.prims import define_prim
 from omni.isaac.cloner import GridCloner
 from omniisaacgymenvs.tasks.utils.usd_utils import create_distant_light
+from omniisaacgymenvs.utils.domain_randomization.randomize import Randomizer
 import omni.kit
 
 class RLTask(BaseTask):
@@ -59,6 +60,7 @@ class RLTask(BaseTask):
 
         self.test = self._cfg["test"]
         self._device = self._cfg["sim_device"]
+        self._dr_randomizer = Randomizer(self._sim_config)
         print("Task Device:", self._device)
 
         self.randomize_actions = False

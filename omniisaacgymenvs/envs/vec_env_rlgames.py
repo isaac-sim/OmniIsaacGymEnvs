@@ -57,7 +57,7 @@ class VecEnvRLGames(VecEnvBase):
         actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device).clone()
 
         if self._task.randomize_actions:
-            actions = self._task._sim_config.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
+            actions = self._task._dr_randomizer.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
 
         self._task.pre_physics_step(actions)
         
@@ -68,7 +68,7 @@ class VecEnvRLGames(VecEnvBase):
         self._obs, self._rew, self._resets, self._extras = self._task.post_physics_step()
 
         if self._task.randomize_observations:
-            self._obs = self._task._sim_config.apply_observations_randomization(observations=self._obs, reset_buf=self._task.reset_buf)
+            self._obs = self._task._dr_randomizer.apply_observations_randomization(observations=self._obs, reset_buf=self._task.reset_buf)
 
         self._states = self._task.get_states()
         self._process_data()

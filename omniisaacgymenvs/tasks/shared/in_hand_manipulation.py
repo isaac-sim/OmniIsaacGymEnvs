@@ -126,7 +126,7 @@ class InHandManipulationTask(RLTask):
         )
         scene.add(self._goals)
    
-        self._sim_config.apply_on_startup_domain_randomization(self)
+        self._dr_randomizer.apply_on_startup_domain_randomization(self)
     
     @abstractmethod
     def get_hand(self):
@@ -201,7 +201,7 @@ class InHandManipulationTask(RLTask):
         indices = torch.arange(self._num_envs, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
 
-        self._sim_config.set_up_domain_randomization(self)
+        self._dr_randomizer.set_up_domain_randomization(self)
 
     def get_object_goal_observations(self):
         self.object_pos, self.object_rot = self._objects.get_world_poses(clone=False)
@@ -262,7 +262,7 @@ class InHandManipulationTask(RLTask):
             self.cur_targets[:, self.actuated_dof_indices], indices=None, joint_indices=self.actuated_dof_indices
         )
 
-        if self._sim_config.randomize:
+        if self._dr_randomizer.randomize:
             dr.physics_view.step_randomization(env_ids)
         
     def is_done(self):

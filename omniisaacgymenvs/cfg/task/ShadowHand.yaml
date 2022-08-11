@@ -156,7 +156,8 @@ domain_randomization:
         distribution_parameters: [0., 0.05]
     simulation:
       gravity:
-        on_reset:
+        on_interval:
+          frequency_interval: 720
           operation: "additive"
           distribution: "gaussian"
           distribution_parameters: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.4]]

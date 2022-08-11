@@ -234,15 +234,15 @@ Applying Domain Randomization
 ------------------------------
 
 To parse the domain randomization configurations in the task `yaml` file and set up the DR pipeline, 
-it is necessary to call `self._sim_config.set_up_domain_randomization(self)`, where `self._sim_config`
-is the `SimConfig` object passed in the Task's `__init__`. 
+it is necessary to call `self._randomizer.set_up_domain_randomization(self)`, where `self._randomizer`
+is the `Randomizer` object created in RLTask's `__init__`.
 
 It is worth noting that the names of the views provided under `rigid_prim_views` or `articulation_views` 
 in the task `yaml` file must match the names passed into `RigidPrimView` or `ArticulationView` objects
 in the python task file. In addition, all `RigidPrimView` and `ArticulationView` that would have domain
 randomizaiton applied must be added to the scene in the task's `set_up_scene()` via `scene.add()`.
 
-To trigger `on_startup` randomizations, call `self._sim_config.apply_on_startup_domain_randomization(self)`
+To trigger `on_startup` randomizations, call `self._randomizer.apply_on_startup_domain_randomization(self)`
 in `set_up_scene()` after all views are added to the scene. Note that `on_startup` randomizations
 are only availble to rigid prim scale, mass, density and articulation scale parameters since these parameters
 cannot be randomized after the simulation begins on GPU pipeline. Therefore, randomizations must be applied
@@ -252,7 +252,7 @@ To trigger `on_reset` and `on_interval` randomizations, it is required to step t
 counter of the DR pipeline in `pre_physics_step()`:
 
 ```python
-if self._sim_config.randomize:
+if self._randomizer.randomize:
     omni.replicator.isaac.physics_view.step_randomization(reset_inds)
 ```
 `reset_inds` is a list of indices of the environments that need to be reset. For those environments, it will
@@ -264,7 +264,7 @@ Randomization Scheduling
 ----------------------------
 
 We provide methods to modify distribution parameters defined in the `yaml` file during training, which
-allows custom DR scheduling. There are three methods from from the `SimConfig` class
+allows custom DR scheduling. There are three methods from the `Randomizer` class
 that are relevant to DR scheduling:
 
 - `get_initial_dr_distribution_parameters`: returns a numpy array of the initial parameters (as defined in 
@@ -276,26 +276,26 @@ Using the DR configuration example defined above, we can get the current paramet
 to gravity randomization and shadow hand joint stiffness randomization as follows:
 
 ```python
-current_gravity_dr_params = self._sim_config.get_dr_distribution_parameters(
+current_gravity_dr_params = self._randomizer.get_dr_distribution_parameters(
     "simulation", 
     "gravity", 
     "on_reset",
 )
-self._sim_config.set_dr_distribution_parameters(
+self._randomizer.set_dr_distribution_parameters(
     [[0.0, 0.0, 0.0], [0.0, 0.0, 0.5]], 
     "simulation", 
     "gravity", 
     "on_reset",
 )
 
-current_joint_stiffness_dr_params = self._sim_config.get_dr_distribution_parameters(
+current_joint_stiffness_dr_params = self._randomizer.get_dr_distribution_parameters(
     "articulation_views", 
     "shadow_hand_view", 
     "stiffness", 
     "on_reset",
 )
 
-self._sim_config.set_dr_distribution_parameters(
+self._randomizer.set_dr_distribution_parameters(
     [0.7, 1.55],
     "articulation_views", 
     "shadow_hand_view", 
@@ -315,7 +315,7 @@ def apply_observations_actions_noise_linear_scheduling(self, schedule_epoch=100)
     if current_epoch <= schedule_epoch:
         if (self._env.sim_frame_count // self._cfg["task"]["env"]["controlFrequencyInv"]) % self._cfg["train"]["params"]["config"]["horizon_length"] == 0:
             for distribution_path in [("observations", "on_reset"), ("observations", "on_interval"), ("actions", "on_reset"), ("actions", "on_interval")]:
-                scheduled_params = self._sim_config.get_initial_dr_distribution_parameters(*distribution_path)
+                scheduled_params = self._randomizer.get_initial_dr_distribution_parameters(*distribution_path)
                 scheduled_params[1] = (1/schedule_epoch) * current_epoch * scheduled_params[1]
-                self._sim_config.set_dr_distribution_parameters(scheduled_params, *distribution_path)
+                self._randomizer.set_dr_distribution_parameters(scheduled_params, *distribution_path)
 ```
