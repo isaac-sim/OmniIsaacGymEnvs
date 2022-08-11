@@ -76,7 +76,7 @@ params:
     seq_len: 4 # only for rnn
     bounds_loss_coef: 0.
 
-    max_epochs: ${resolve_default:1500,${....max_iterations}}
+    max_epochs: ${resolve_default:2000,${....max_iterations}}
     save_best_after: 50
     score_to_win: 20000
     save_frequency: 50

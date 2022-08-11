@@ -105,7 +105,8 @@ class IngenuityTask(RLTask):
             translation=self._ball_position, 
             name="target_0",
             radius=radius,
-            color=color)
+            color=color,
+        )
         self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
         ball.set_collision_enabled(False)
 
@@ -226,18 +227,19 @@ class IngenuityTask(RLTask):
 
         # distance to target
         target_dist = torch.sqrt(torch.square(self.target_positions - root_positions).sum(-1))
-        pos_reward = 1.0 / (1.0 + target_dist * target_dist)
+        pos_reward = 1.0 / (1.0 + 2.5 * target_dist * target_dist)
         self.target_dist = target_dist
         self.root_positions = root_positions
 
         # uprightness
         ups = quat_axis(root_quats, 2)
+        
         tiltage = torch.abs(1 - ups[..., 2])
-        up_reward = 1.0 / (1.0 + tiltage * tiltage)
-
+        up_reward = 1.0 / (1.0 + 30 * tiltage * tiltage)
+  
         # spinning
         spinnage = torch.abs(root_angvels[..., 2])
-        spinnage_reward = 1.0 / (1.0 + spinnage * spinnage)
+        spinnage_reward = 1.0 / (1.0 + 10 * spinnage * spinnage)
 
         # combined reward
         # uprightness and spinning only matter when close to the target

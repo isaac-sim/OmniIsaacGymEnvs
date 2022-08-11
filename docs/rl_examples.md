@@ -7,17 +7,18 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
 
 *Note: All commands should be executed from `omniisaacgymenvs/omniisaacgymenvs`.*
 
-* [Cartpole](#cartpole-cartpolepy)
-* [Ant](#ant-antpy)
-* [Humanoid](#humanoid-humanoidpy)
-* [Shadow Hand](#shadow-hand-object-manipulation-shadow_handpy)
-* [Allegro Hand](#allegro-hand-object-manipulation-allegro_handpy)
-* [ANYmal](#anymal-anymalpy)
-* [ANYmal Rough Terrain](#anymal-rough-terrain-anymal_terrainpy)
-* [NASA Ingenuity Helicopter](#nasa-ingenuity-helicopter-ingenuitypy)
-* [Quadcopter](#quadcopter-quadcopterpy)
-* [Ball Balance](#ball-balance-ball_balancepy)
-* [Franka Cabinet](#franka-cabinet-franka_cabinetpy)
+- [Reinforcement Learning Examples](#reinforcement-learning-examples)
+  - [Cartpole cartpole.py](#cartpole-cartpolepy)
+  - [Ant ant.py](#ant-antpy)
+  - [Humanoid humanoid.py](#humanoid-humanoidpy)
+  - [Shadow Hand Object Manipulation shadow_hand.py](#shadow-hand-object-manipulation-shadow_handpy)
+  - [Allegro Hand Object Manipulation allegro_hand.py](#allegro-hand-object-manipulation-allegro_handpy)
+  - [ANYmal anymal.py](#anymal-anymalpy)
+  - [Anymal Rough Terrain anymal_terrain.py](#anymal-rough-terrain-anymal_terrainpy)
+  - [NASA Ingenuity Helicopter ingenuity.py](#nasa-ingenuity-helicopter-ingenuitypy)
+  - [Quadcopter quadcopter.py](#quadcopter-quadcopterpy)
+  - [Ball Balance ball_balance.py](#ball-balance-ball_balancepy)
+  - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
 
 
 ### Cartpole [cartpole.py](../omniisaacgymenvs/tasks/cartpole.py)
@@ -156,6 +157,8 @@ Config files used for this task are:
 -   **Task config**: [Anymal.yaml](../omniisaacgymenvs/cfg/task/Anymal.yaml)
 -   **rl_games training config**: [AnymalPPO.yaml](../omniisaacgymenvs/cfg/train/AnymalPPO.yaml)
 
+<img src="https://user-images.githubusercontent.com/34286328/184168200-152567a8-3354-4947-9ae0-9443a56fee4c.gif" width="300" height="150"/>
+
 
 ### Anymal Rough Terrain [anymal_terrain.py](../omniisaacgymenvs/tasks/anymal_terrain.py)
 
@@ -184,6 +187,8 @@ do not typically correspond to the best outcome.
 **Note** The OmniIsaacGymEnvs implementation slightly differs from the implementation used in the paper above, which also
 uses a different RL library and PPO implementation. The original implementation is made available [here](https://github.com/leggedrobotics/legged_gym). Results reported in the Isaac Gym technical paper are based on that repository, not this one.
 
+<img src="https://user-images.githubusercontent.com/34286328/184170040-3f76f761-e748-452e-b8c8-3cc1c7c8cb98.gif" width="300" height="150"/>
+
 
 ### NASA Ingenuity Helicopter [ingenuity.py](../omniisaacgymenvs/tasks/ingenuity.py)
 
@@ -202,6 +207,7 @@ Config files used for this task are:
 -   **Task config**: [Ingenuity.yaml](../omniisaacgymenvs/cfg/task/Ingenuity.yaml)
 -   **rl_games training config**: [IngenuityPPO.yaml](../omniisaacgymenvs/cfg/train/IngenuityPPO.yaml)
 
+<img src="https://user-images.githubusercontent.com/34286328/184176312-df7d2727-f043-46e3-b537-48a583d321b9.gif" width="300" height="150"/>
 
 ### Quadcopter [quadcopter.py](../omniisaacgymenvs/tasks/quadcopter.py)
 
@@ -218,6 +224,7 @@ Config files used for this task are:
 -   **Task config**: [Quadcopter.yaml](../omniisaacgymenvs/cfg/task/Quadcopter.yaml)
 -   **rl_games training config**: [QuadcopterPPO.yaml](../omniisaacgymenvs/cfg/train/QuadcopterPPO.yaml)
 
+<img src="https://user-images.githubusercontent.com/34286328/184178817-9c4b6b3c-c8a2-41fb-94be-cfc8ece51d5d.gif" width="300" height="150"/>
 
 ### Ball Balance [ball_balance.py](../omniisaacgymenvs/tasks/ball_balance.py)
 
@@ -235,6 +242,7 @@ Config files used for this task are:
 -   **Task config**: [BallBalance.yaml](../omniisaacgymenvs/cfg/task/BallBalance.yaml)
 -   **rl_games training config**: [BallBalancePPO.yaml](../omniisaacgymenvs/cfg/train/BallBalancePPO.yaml)
 
+<img src="https://user-images.githubusercontent.com/34286328/184172037-cdad9ee8-f705-466f-bbde-3caa6c7dea37.gif" width="300" height="150"/>
 
 ### Franka Cabinet [franka_cabinet.py](../omniisaacgymenvs/tasks/franka_cabinet.py)
 
@@ -251,4 +259,6 @@ Config files used for this task are:
 
 -   **Task config**: [FrankaCabinet.yaml](../omniisaacgymenvs/cfg/task/FrankaCabinet.yaml)
 -   **rl_games training config**: [FrankaCabinetPPO.yaml](../omniisaacgymenvs/cfg/train/FrankaCabinetPPO.yaml)
+
+<img src="https://user-images.githubusercontent.com/34286328/184174894-03767aa0-936c-4bfe-bbe9-a6865f539bb4.gif" width="300" height="150"/>
 

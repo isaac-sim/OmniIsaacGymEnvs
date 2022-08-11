@@ -86,6 +86,6 @@ sim:
     sleep_threshold: 0.005
     stabilization_threshold: 0.001
     # per-body
-    density: -1
+    density: 200
     max_depenetration_velocity: 1000.0
 

@@ -95,7 +95,8 @@ class BallBalanceTask(RLTask):
             translation=self._ball_position, 
             name="ball_0",
             radius=self._ball_radius,
-            color=torch.tensor([0.9, 0.6, 0.2]))
+            color=torch.tensor([0.9, 0.6, 0.2]),
+        )
         self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
 
     def set_up_table_anchors(self):
@@ -184,7 +185,7 @@ class BallBalanceTask(RLTask):
         # reset position targets for reset envs
         self.dof_position_targets[reset_env_ids] = 0
 
-        self._balance_bots.set_joint_position_targets(self.dof_position_targets.clone())
+        self._balance_bots.set_joint_position_targets(self.dof_position_targets) #.clone())
 
     def reset_idx(self, env_ids):
         num_resets = len(env_ids)
@@ -197,7 +198,7 @@ class BallBalanceTask(RLTask):
         min_height = 1.0
         max_height = 2.0
         min_horizontal_speed = 0
-        max_horizontal_speed = 5
+        max_horizontal_speed = 2
 
         dists = torch_rand_float(min_d, max_d, (num_resets, 1), self._device)
         dirs = torch_random_dir_2((num_resets, 1), self._device)
@@ -211,19 +212,15 @@ class BallBalanceTask(RLTask):
         ball_pos = self.initial_ball_pos.clone()
         ball_rot = self.initial_ball_rot.clone()
         # position
-        ball_pos[env_ids_64, 0] += hpos[..., 0]
-        ball_pos[env_ids_64, 2] += torch_rand_float(
-            min_height, max_height, (num_resets, 1), self._device
-        ).squeeze()
-        ball_pos[env_ids_64, 1] += hpos[..., 1]
+        ball_pos[env_ids_64, 0:2] += hpos[..., 0:2]
+        ball_pos[env_ids_64, 2] += torch_rand_float(min_height, max_height, (num_resets, 1), self._device).squeeze()
         # rotation
         ball_rot[env_ids_64, 0] = 1
         ball_rot[env_ids_64, 1:] = 0
         ball_velocities = self.initial_ball_velocities.clone()
         # linear
-        ball_velocities[env_ids_64, 0] = hvels[..., 0]
+        ball_velocities[env_ids_64, 0:2] = hvels[..., 0:2]
         ball_velocities[env_ids_64, 2] = vspeeds
-        ball_velocities[env_ids_64, 1] = hvels[..., 1]
         # angular
         ball_velocities[env_ids_64, 3:6] = 0
 
