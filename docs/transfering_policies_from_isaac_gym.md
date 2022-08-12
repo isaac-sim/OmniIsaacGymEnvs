@@ -90,6 +90,33 @@ of `1/deg` in the Isaac Sim UI but `1/rad` in Isaac Gym Preview Releases.
 <img src="./media/JointAPI.png" width="500"/>
 
 
+### Differences in APIs
+
+APIs for accessing physics states in Isaac Sim require the creation of an ArticulationView or RigidPrimView
+object. Multiple view objects can be initialized for different articulations or bodies in the scene by defining
+a regex expression that matches the paths of the desired objects. This approach eliminates the need of retrieving
+body handles to slice states for specific bodies in the scene. 
+
+We have also removed `acquire` and `refresh` APIs in Isaac Sim. Physics states can be directly applied or retrieved
+by using `set`/`get` APIs defined for the views.
+New APIs provided in Isaac Sim no longer require explicit wrapping and un-wrapping of underlying buffers. 
+APIs can now work with tensors directly for reading and writing data. Most APIs in Isaac Sim also provide
+the option to specify an `indices` parameter, which can be used when reading or writing data for a subset
+of environments. Note that when setting states with the `indices` parameter, the shape of the states buffer
+should match with the dimension of the `indices` list.
+
+Note some naming differences between APIs in Isaac Gym Preview Release and Isaac Sim. Most `dof` related APIs have been
+named to `joint` in Isaac Sim. `root_states` is now separated into different APIs for `world_poses` and `velocities`. 
+Similary, `dof_states` are retrieved individually in Isaac Sim as `joint_positions` and `joint_velocities`. 
+APIs in Isaac Sim also no longer follow the explicit `_tensors` or `_tensor_indexed` suffixes in naming.
+Indexed versions of APIs now happen implicitly through the optional `indices` parameter.
+
+As part of our API improvements, we are defining a new set of contact APIs that aim to provide more useful details
+on contacts and collisions. This will be a replacement of `net_contact_force` in the Isaac Gym Preview Release and 
+will be available in the next release of Isaac Sim. For now, Isaac Sim does not provide a tensorized API for 
+collecting contacts.
+
+
 ### Task Configuration Files
 
 There are a few modifications that need to be made to an existing Isaac Gym Preview Release 
@@ -136,9 +163,9 @@ GPU buffer sizes are specified as follows:
 ```yaml
     gpu_max_rigid_contact_count: 524288
     gpu_max_rigid_patch_count: 81920
-    gpu_found_lost_pairs_capacity: 4096
+    gpu_found_lost_pairs_capacity: 8192
     gpu_found_lost_aggregate_pairs_capacity: 262144
-    gpu_total_aggregate_pairs_capacity: 4096
+    gpu_total_aggregate_pairs_capacity: 8192
     gpu_max_soft_body_contacts: 1048576
     gpu_max_particle_contacts: 1048576
     gpu_heap_capacity: 67108864
@@ -152,7 +179,7 @@ you encounter errors related to GPU buffer sizes.
 #### Articulation Parameters
 
 The articulation parameters of each actor can now be individually specified tn the Isaac Sim 
-task configuration `yaml` file. The following is a example template for setting these parameters:
+task configuration `yaml` file. The following is an example template for setting these parameters:
 
 ```yaml
   ARTICULATION_NAME:

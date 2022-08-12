@@ -90,7 +90,7 @@ sim:
     override_usd_defaults: False
     fixed_base: False
     enable_self_collisions: True
-    enable_gyroscopic_forces: False
+    enable_gyroscopic_forces: True
     # also in stage params
     # per-actor
     solver_position_iteration_count: 8
