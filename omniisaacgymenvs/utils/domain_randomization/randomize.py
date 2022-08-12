@@ -432,9 +432,9 @@ class Randomizer():
         dist_params = self._sanitize_distribution_parameters(attribute, dimension, params["distribution_parameters"])
         if params["distribution"] == "uniform":
             return rep.distribution.uniform(tuple(dist_params[0]), tuple(dist_params[1]))
-        elif params["distribution"] == "gaussian" or "normal":
+        elif params["distribution"] == "gaussian" or params["distribution"] == "normal":
             return rep.distribution.normal(tuple(dist_params[0]), tuple(dist_params[1]))
-        elif params["distribution"] == "loguniform" or "log_uniform":
+        elif params["distribution"] == "loguniform" or params["distribution"] == "log_uniform":
             return rep.distribution.log_uniform(tuple(dist_params[0]), tuple(dist_params[1]))
         else:
             raise ValueError(f"The provided distribution for {view_name} {attribute} is not supported. "

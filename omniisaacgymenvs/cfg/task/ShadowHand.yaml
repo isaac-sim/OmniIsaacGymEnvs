@@ -184,12 +184,12 @@ domain_randomization:
         stiffness:
           on_reset:
             operation: "scaling"
-            distribution: "uniform"
+            distribution: "loguniform"
             distribution_parameters: [0.75, 1.5]
         damping:
           on_reset:
             operation: "scaling"
-            distribution: "uniform"
+            distribution: "loguniform"
             distribution_parameters: [0.3, 3.0]
         lower_dof_limits:
           on_reset:
@@ -204,12 +204,12 @@ domain_randomization:
         tendon_stiffnesses:
           on_reset:
             operation: "scaling"
-            distribution: "uniform"
+            distribution: "loguniform"
             distribution_parameters: [0.75, 1.5]
         tendon_dampings:
           on_reset:
             operation: "scaling"
-            distribution: "uniform"
+            distribution: "loguniform"
             distribution_parameters: [0.3, 3.0]
         material_properties:
           on_reset:
