@@ -8,6 +8,7 @@ Additions
 ---------
 - Additional examples: Anymal, AnymalTerrain, BallBalance, FrankaCabinet, Ingenuity, Quadcopter
 - Add domain randomization framework `using omni.replicator.isaac`
+- Add AnymalTerrain interactable demo
 - Automatically disable `omni.kit.window.viewport` and `omni.physx.flatcache` extensions in headless mode to improve start-up load time
 - Introduce `reset_xform_properties` flag for initializing Views of cloned environments to reduce load time
 - Add WandB support

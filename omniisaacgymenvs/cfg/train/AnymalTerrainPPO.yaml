@@ -77,7 +77,7 @@ params:
     bounds_loss_coef: 0.
 
     max_epochs: ${resolve_default:2000,${....max_iterations}}
-    save_best_after: 50
+    save_best_after: 100
     score_to_win: 20000
     save_frequency: 50
     print_stats: True

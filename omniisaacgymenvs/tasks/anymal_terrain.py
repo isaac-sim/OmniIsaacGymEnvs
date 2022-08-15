@@ -107,6 +107,8 @@ class AnymalTerrainTask(RLTask):
         self.Kp = self._task_cfg["env"]["control"]["stiffness"]
         self.Kd = self._task_cfg["env"]["control"]["damping"]
         self.curriculum = self._task_cfg["env"]["terrain"]["curriculum"]
+        self.base_threshold = 0.2
+        self.knee_threshold = 0.1
 
         for key in self.rew_scales.keys():
             self.rew_scales[key] *= self.dt
@@ -355,11 +357,10 @@ class AnymalTerrainTask(RLTask):
     def check_termination(self):
         self.timeout_buf = torch.where(self.progress_buf >= self.max_episode_length - 1, torch.ones_like(self.timeout_buf), torch.zeros_like(self.timeout_buf))
         ground_heights_below_base = self.get_ground_heights_below_base().squeeze()
-        self.has_base_fallen = self._anymals.is_base_below_threshold(threshold=0.2, ground_heights=ground_heights_below_base)
+        self.has_base_fallen = self._anymals.is_base_below_threshold(threshold=self.base_threshold, ground_heights=ground_heights_below_base)
         ground_heights_below_knees = self.get_ground_heights_below_knees()
-        self.has_knees_fallen = self._anymals.is_knee_below_threshold(threshold=0.1, ground_heights=ground_heights_below_knees)
+        self.has_knees_fallen = self._anymals.is_knee_below_threshold(threshold=self.knee_threshold, ground_heights=ground_heights_below_knees)
         self.has_fallen = self.has_base_fallen | self.has_knees_fallen
-
         self.reset_buf = self.has_fallen.clone()
         self.reset_buf = torch.where(self.timeout_buf.bool(), torch.ones_like(self.reset_buf), self.reset_buf)
 
