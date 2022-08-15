@@ -53,6 +53,7 @@ class Randomizer():
             randomization_params = dr_config.get("randomization_params", None)
             if randomize and randomization_params is not None:
                 self.randomize = True
+                self.min_frequency = dr_config.get("min_frequency", 1)
 
     def apply_on_startup_domain_randomization(self, task):
         if self.randomize:

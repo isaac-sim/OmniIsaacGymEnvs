@@ -95,6 +95,7 @@ class InHandManipulationTask(RLTask):
         self.reset_goal_buf = self.reset_buf.clone()
         self.successes = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
         self.consecutive_successes = torch.zeros(1, dtype=torch.float, device=self.device)
+        self.randomization_buf = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
 
         self.av_factor = torch.tensor(self.av_factor, dtype=torch.float, device=self.device)
         self.total_successes = 0
@@ -222,6 +223,7 @@ class InHandManipulationTask(RLTask):
         )
 
         self.extras['consecutive_successes'] = self.consecutive_successes.mean()
+        self.randomization_buf += 1
 
         if self.print_success_stat:
             self.total_resets = self.total_resets + self.reset_buf.sum()
@@ -235,6 +237,8 @@ class InHandManipulationTask(RLTask):
     def pre_physics_step(self, actions):
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         goal_env_ids = self.reset_goal_buf.nonzero(as_tuple=False).squeeze(-1)
+
+        reset_buf = self.reset_buf.clone()
 
         # if only goals need reset, then call set API
         if len(goal_env_ids) > 0 and len(env_ids) == 0:
@@ -265,8 +269,11 @@ class InHandManipulationTask(RLTask):
         )
 
         if self._dr_randomizer.randomize:
-            dr.physics_view.step_randomization(env_ids)
-        
+            rand_envs = torch.where(self.randomization_buf >= self._dr_randomizer.min_frequency, torch.ones_like(self.randomization_buf), torch.zeros_like(self.randomization_buf))
+            rand_env_ids = torch.nonzero(torch.logical_and(rand_envs, reset_buf))
+            dr.physics_view.step_randomization(rand_env_ids)
+            self.randomization_buf[rand_env_ids] = 0
+
     def is_done(self):
         pass
 

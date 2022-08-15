@@ -133,6 +133,7 @@ sim:
 
 domain_randomization:
   randomize: False
+  min_frequency: 720
   randomization_params:
     observations:
       on_reset:
