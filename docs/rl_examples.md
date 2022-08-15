@@ -116,6 +116,9 @@ this example also demonstrates the use of tendons, which are imported using the 
 
 Training can be launched with command line argument `task=ShadowHand`.
 
+Training with Domain Randomization can be launched with command line argument `task.domain_randomization.randomize=True`.
+For best training results with DR, use `num_envs=16384`.
+
 Running inference with pre-trained model can be launched with command line argument `task=ShadowHand test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand.pth`
 
 Config files used for this task are:
