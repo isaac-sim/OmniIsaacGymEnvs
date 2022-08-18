@@ -228,4 +228,6 @@ PYTHON_PATH scripts/rlgames_play.py task=AnymalTerrain num_envs=64 checkpoint=om
 <img src="https://user-images.githubusercontent.com/34286328/184688654-6e7899b2-5847-4184-8944-2a96b129b1ff.gif" width="600" height="300"/>
 
 
+## A note about Force Sensors
 
+Force sensors are supported in Isaac Sim and OIGE via the `ArticulationView` class. Sensor readings can be retrieved using `get_force_sensor_forces()` API, as shown in the Ant/Humanoid Locomotion task, as well as in the Ball Balance task. Please note that there is currently a known bug regarding force sensors in Omniverse Physics. Transforms of force sensors (i.e. their local poses) are set in the actor space of the Articulation instead of the body space, which is the expected behaviour. We will be fixing this in the coming release.
