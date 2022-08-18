@@ -40,6 +40,7 @@ from omegaconf import DictConfig
 from rl_games.common import env_configurations, vecenv
 from rl_games.torch_runner import Runner
 
+import copy
 import datetime
 import os
 import threading
@@ -71,7 +72,7 @@ class RLGTrainer():
     def run(self):
         # create runner and set the settings
         runner = Runner(RLGPUAlgoObserver())
-        runner.load(self.rlg_config_dict)
+        runner.load(copy.deepcopy(self.rlg_config_dict))
         runner.reset()
 
         # dump config dict
