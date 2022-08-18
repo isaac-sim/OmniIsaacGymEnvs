@@ -318,35 +318,37 @@ class AnymalTerrainTask(RLTask):
     def post_physics_step(self):
         self.progress_buf[:] += 1
 
-        self.refresh_dof_state_tensors()
-        self.refresh_body_state_tensors()
+        if self._env._world.is_playing():
 
-        self.common_step_counter += 1
-        if self.common_step_counter % self.push_interval == 0:
-            self.push_robots()
-        
-        # prepare quantities
-        self.base_lin_vel = quat_rotate_inverse(self.base_quat, self.base_velocities[:, 0:3])
-        self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.base_velocities[:, 3:6])
-        self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
-        forward = quat_apply(self.base_quat, self.forward_vec)
-        heading = torch.atan2(forward[:, 1], forward[:, 0])
-        self.commands[:, 2] = torch.clip(0.5*wrap_to_pi(self.commands[:, 3] - heading), -1., 1.)
+            self.refresh_dof_state_tensors()
+            self.refresh_body_state_tensors()
 
-        self.check_termination()
-        self.get_states()
-        self.calculate_metrics()
+            self.common_step_counter += 1
+            if self.common_step_counter % self.push_interval == 0:
+                self.push_robots()
 
-        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
-        if len(env_ids) > 0:
-            self.reset_idx(env_ids)
+            # prepare quantities
+            self.base_lin_vel = quat_rotate_inverse(self.base_quat, self.base_velocities[:, 0:3])
+            self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.base_velocities[:, 3:6])
+            self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+            forward = quat_apply(self.base_quat, self.forward_vec)
+            heading = torch.atan2(forward[:, 1], forward[:, 0])
+            self.commands[:, 2] = torch.clip(0.5*wrap_to_pi(self.commands[:, 3] - heading), -1., 1.)
 
-        self.get_observations()
-        if self.add_noise:
-            self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec
+            self.check_termination()
+            self.get_states()
+            self.calculate_metrics()
 
-        self.last_actions[:] = self.actions[:]
-        self.last_dof_vel[:] = self.dof_vel[:]
+            env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+            if len(env_ids) > 0:
+                self.reset_idx(env_ids)
+
+            self.get_observations()
+            if self.add_noise:
+                self.obs_buf += (2 * torch.rand_like(self.obs_buf) - 1) * self.noise_scale_vec
+
+            self.last_actions[:] = self.actions[:]
+            self.last_dof_vel[:] = self.dof_vel[:]
 
         return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
 
