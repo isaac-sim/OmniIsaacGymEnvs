@@ -86,12 +86,6 @@ class Anymal(Robot):
     def dof_names(self):
         return self._dof_names
 
-    def initialize(self):
-        self._knees = RigidPrimView(prim_paths_expr="/World/envs/*/anymal/*_SHANK", name="knees_view")
-
-    def get_knee_transforms(self):
-        return self._knees.get_world_poses()
-
     def set_anymal_properties(self, stage, prim):
         for link_prim in prim.GetChildren():
             if link_prim.HasAPI(PhysxSchema.PhysxRigidBodyAPI): 
