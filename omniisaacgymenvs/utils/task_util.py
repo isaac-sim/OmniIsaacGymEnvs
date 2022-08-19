@@ -39,6 +39,7 @@ def initialize_task(config, env, init_sim=True):
     from omniisaacgymenvs.tasks.ingenuity import IngenuityTask
     from omniisaacgymenvs.tasks.quadcopter import QuadcopterTask
     from omniisaacgymenvs.tasks.shadow_hand import ShadowHandTask
+    from omniisaacgymenvs.tasks.crazyflie import CrazyflieTask
     
     # Mappings from strings to environments
     task_map = {
@@ -52,6 +53,7 @@ def initialize_task(config, env, init_sim=True):
         "Humanoid": HumanoidLocomotionTask,
         "Ingenuity": IngenuityTask,
         "Quadcopter": QuadcopterTask,
+        "Crazyflie": CrazyflieTask,
         "ShadowHand": ShadowHandTask,
         "ShadowHandOpenAI_FF": ShadowHandTask,
         "ShadowHandOpenAI_LSTM": ShadowHandTask,
