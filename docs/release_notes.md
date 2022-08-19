@@ -1,12 +1,13 @@
 Release Notes
 =============
 
-1.1.0 - August 19, 2022
+1.1.0 - August 22, 2022
 -----------------------
 
 Additions
 ---------
-- Additional examples: Anymal, AnymalTerrain, BallBalance, FrankaCabinet, Ingenuity, Quadcopter
+- Additional examples: Anymal, AnymalTerrain, BallBalance, Crazyflie, FrankaCabinet, Ingenuity, Quadcopter
+- Add OpenAI variantions for Feed-Forward and LSTM networks for ShadowHand
 - Add domain randomization framework `using omni.replicator.isaac`
 - Add AnymalTerrain interactable demo
 - Automatically disable `omni.kit.window.viewport` and `omni.physx.flatcache` extensions in headless mode to improve start-up load time

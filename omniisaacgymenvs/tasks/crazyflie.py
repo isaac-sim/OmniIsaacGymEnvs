@@ -145,7 +145,6 @@ class CrazyflieTask(RLTask):
         self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path),
                                                      self._sim_config.parse_actor_config("ball"))
         ball.set_collision_enabled(False)
-        # ball._rigid_prim_view._rigid_body_apis[0].GetKinematicEnabledAttr().Set(True)
 
     def get_observations(self) -> dict:
         self.root_pos, self.root_rot = self._copters.get_world_poses(clone=False)

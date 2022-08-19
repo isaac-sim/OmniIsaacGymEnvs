@@ -19,6 +19,7 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Anymal Rough Terrain anymal_terrain.py](#anymal-rough-terrain-anymal_terrainpy)
   - [NASA Ingenuity Helicopter ingenuity.py](#nasa-ingenuity-helicopter-ingenuitypy)
   - [Quadcopter quadcopter.py](#quadcopter-quadcopterpy)
+  - [Crazyflie crazyflie.py](#crazyflie-crazyfliepy)
   - [Ball Balance ball_balance.py](#ball-balance-ball_balancepy)
   - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
 
@@ -252,6 +253,19 @@ Config files used for this task are:
 -   **rl_games training config**: [QuadcopterPPO.yaml](../omniisaacgymenvs/cfg/train/QuadcopterPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184178817-9c4b6b3c-c8a2-41fb-94be-cfc8ece51d5d.gif" width="300" height="150"/>
+
+### Crazyflie [crazyflie.py](../omniisaacgymenvs/tasks/crazyflie.py)
+
+This example trains the Crazyflie drone model to hover near a fixed position. It is achieved by applying thrust forces to the four rotors.
+
+Training can be launched with command line argument `task=Crazyflie`.
+
+Config files used for this task are:
+
+-   **Task config**: [Crazyflie.yaml](../omniisaacgymenvs/cfg/task/Crazyflie.yaml)
+-   **rl_games training config**: [CrazyfliePPO.yaml](../omniisaacgymenvs/cfg/train/CrazyfliePPO.yaml)
+
+<img src="https://user-images.githubusercontent.com/6352136/185715165-b430a0c7-948b-4dce-b3bb-7832be714c37.gif" width="300" height="150"/>
 
 ### Ball Balance [ball_balance.py](../omniisaacgymenvs/tasks/ball_balance.py)
 
