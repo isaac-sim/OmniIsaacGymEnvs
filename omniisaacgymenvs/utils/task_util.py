@@ -52,7 +52,9 @@ def initialize_task(config, env, init_sim=True):
         "Humanoid": HumanoidLocomotionTask,
         "Ingenuity": IngenuityTask,
         "Quadcopter": QuadcopterTask,
-        "ShadowHand": ShadowHandTask,   
+        "ShadowHand": ShadowHandTask,
+        "ShadowHandOpenAI_FF": ShadowHandTask,
+        "ShadowHandOpenAI_LSTM": ShadowHandTask,
     }
 
     from .config_utils.sim_config import SimConfig

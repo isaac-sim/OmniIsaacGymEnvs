@@ -12,6 +12,8 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Ant ant.py](#ant-antpy)
   - [Humanoid humanoid.py](#humanoid-humanoidpy)
   - [Shadow Hand Object Manipulation shadow_hand.py](#shadow-hand-object-manipulation-shadow_handpy)
+    - [OpenAI Variant](#openai-variant)
+    - [LSTM Training Variant](#lstm-training-variant)
   - [Allegro Hand Object Manipulation allegro_hand.py](#allegro-hand-object-manipulation-allegro_handpy)
   - [ANYmal anymal.py](#anymal-anymalpy)
   - [Anymal Rough Terrain anymal_terrain.py](#anymal-rough-terrain-anymal_terrainpy)
@@ -125,6 +127,28 @@ Config files used for this task are:
 
 -   **Task config**: [ShadowHand.yaml](../omniisaacgymenvs/cfg/task/ShadowHand.yaml)
 -   **rl_games training config**: [ShadowHandPPO.yaml](../omniisaacgymenvs/cfg/train/ShadowHandPPO.yaml)
+  
+#### OpenAI Variant
+
+In addition to the basic version of this task, there is an additional variant matching OpenAI's 
+[Learning Dexterity](https://openai.com/blog/learning-dexterity/) project. This variant uses the **openai** 
+observations in the policy network, but asymmetric observations of the **full_state** in the value network.
+This can be launched with command line argument `task=ShadowHandOpenAI_FF`.
+
+Config files used for this are:
+
+-   **Task config**: [ShadowHandOpenAI_FF.yaml](../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_FF.yaml)
+-   **rl_games training config**: [ShadowHandOpenAI_FFPPO.yaml](../omniisaacgymenvs/cfg/train/ShadowHandOpenAI_FFPPO.yaml).
+
+#### LSTM Training Variant
+This variant uses LSTM policy and value networks instead of feed forward networks, and also asymmetric
+LSTM critic designed for the OpenAI variant of the task. This can be launched with command line argument 
+`task=ShadowHandOpenAI_LSTM`.
+
+Config files used for this are:
+
+-   **Task config**: [ShadowHandOpenAI_LSTM.yaml](../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_LSTM.yaml)
+-   **rl_games training config**: [ShadowHandOpenAI_LSTMPPO.yaml](../omniisaacgymenvs/cfg/train/ShadowHandOpenAI_LSTMPPO.yaml).
 
 <img src="https://user-images.githubusercontent.com/34286328/171454160-8cb6739d-162a-4c84-922d-cda04382633f.gif" width="300" height="150"/>
 

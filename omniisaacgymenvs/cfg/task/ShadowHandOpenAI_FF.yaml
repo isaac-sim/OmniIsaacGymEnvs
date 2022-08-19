@@ -7,15 +7,16 @@ physics_engine: ${..physics_engine}
 env:
   numEnvs: ${resolve_default:8192,${...num_envs}}
   envSpacing: 0.75
-  episodeLength: 600
+  episodeLength: 160 # Not used, but would be 8 sec if resetTime is not set
+  resetTime: 8 # Max time till reset, in seconds, if a goal wasn't achieved. Will overwrite the episodeLength if is > 0.
 
   clipObservations: 5.0
   clipActions: 1.0
 
   useRelativeControl: False
   dofSpeedScale: 20.0
-  actionsMovingAverage: 1.0
-  controlFrequencyInv: 2 # 60 Hz
+  actionsMovingAverage: 0.3
+  controlFrequencyInv: 6 # 20 Hz
 
   startPositionNoise: 0.01
   startRotationNoise: 0.0
@@ -26,7 +27,7 @@ env:
   resetDofVelRandomInterval: 0.0
 
  # Random forces applied to the object
-  forceScale: 0.0
+  forceScale: 1.0
   forceProbRange: [0.001, 0.1]
   forceDecay: 0.99
   forceDecayInterval: 0.08
@@ -38,15 +39,17 @@ env:
   actionPenaltyScale: -0.0002
   reachGoalBonus: 250
   fallDistance: 0.24
-  fallPenalty: 0.0
+  fallPenalty: -50.0
   velObsScale: 0.2
  
   objectType: "block"
-  observationType: "full" # can be "full_no_vel", "full", "openai", "full_state"
-  asymmetric_observations: False
-  successTolerance: 0.1
+  observationType: "openai" # can be "full_no_vel", "full", "openai", "full_state"
+  asymmetric_observations: True
+  successTolerance: 0.4
   printNumSuccesses: False
-  maxConsecutiveSuccesses: 0
+  maxConsecutiveSuccesses: 50
+  averFactor: 0.1 # running mean factor for consecutive successes calculation
+
 
 sim:
   dt: 0.0083 # 1/120 s
@@ -133,7 +136,7 @@ sim:
     max_depenetration_velocity: 1000.0
 
 domain_randomization:
-  randomize: False
+  randomize: True
   min_frequency: 720
   randomization_params:
     observations:
