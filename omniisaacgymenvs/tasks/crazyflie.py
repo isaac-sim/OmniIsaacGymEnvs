@@ -348,7 +348,7 @@ class CrazyflieTask(RLTask):
         spin_reward = 0.01 * torch.exp(-1.0 * spin)
 
         # combined reward
-        self.rew_buf[:] = pos_reward + up_reward + effort_reward + spin_reward
+        self.rew_buf[:] = pos_reward + pos_reward * (up_reward + spin_reward) - effort_reward
 
 
         # log episode reward sums

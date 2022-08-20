@@ -260,6 +260,8 @@ This example trains the Crazyflie drone model to hover near a fixed position. It
 
 Training can be launched with command line argument `task=Crazyflie`.
 
+Running inference with pre-trained model can be launched with command line argument `task=Crazyflie test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/crazyflie.pth`
+
 Config files used for this task are:
 
 -   **Task config**: [Crazyflie.yaml](../omniisaacgymenvs/cfg/task/Crazyflie.yaml)
