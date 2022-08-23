@@ -16,6 +16,7 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 #### Load Time
 * At initial load up of Isaac Sim, the process may appear to be frozen at an `app ready` message. This is normal and may take a few minutes for everything to load on the first run of Isaac Sim. Subsequent runs should be faster to start up, but may still take some time.
 * Please note that once the Isaac Sim app loads, the environment creation time may scale linearly with the number of environments. Please expect a longer load time if running with thousands of environments or if each environment contains a larger number of assets. We are continually working on improving the time needed for this.
+* When an instance of Isaac Sim is already running, launching another Isaac Sim instance in a different process may appear to hang at startup for the first time. Please be patient and give it some time as the second process will take longer to start up due to shader compilation.
 
 
 #### Memory Consumption
