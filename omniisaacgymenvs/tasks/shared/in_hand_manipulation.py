@@ -312,7 +312,7 @@ class InHandManipulationTask(RLTask):
         # reset hand
         delta_max = self.hand_dof_upper_limits - self.hand_dof_default_pos
         delta_min = self.hand_dof_lower_limits - self.hand_dof_default_pos
-        rand_delta = delta_min + (delta_max - delta_min) * rand_floats[:, 5:5+self.num_hand_dofs]
+        rand_delta = delta_min + (delta_max - delta_min) * 0.5 * (rand_floats[:, 5:5+self.num_hand_dofs] + 1.0)
 
         pos = self.hand_dof_default_pos + self.reset_dof_pos_noise * rand_delta
         dof_pos = torch.zeros((self.num_envs, self.num_hand_dofs), device=self.device)
