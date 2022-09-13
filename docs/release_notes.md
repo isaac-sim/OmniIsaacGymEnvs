@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+Additions
+---------
+
+
+Fixes
+-----
+- Remove fix_base option from articulation configs
+- Fix in_hand_manipulation random joint position sampling on reset
+
+
 1.1.0 - August 22, 2022
 -----------------------
 
@@ -20,7 +30,6 @@ Fixes
 - Correctly sets simulation device for GPU simulation
 - Fix omni.client import order
 - Fix episode length reset condition for ShadowHand and AllegroHand
-- Fix in_hand_manipulation random joint position sampling on reset
 
 
 1.0.0 - June 03, 2022
