@@ -150,7 +150,6 @@ sim:
   anymal:
     # -1 to use default values
     override_usd_defaults: False
-    fixed_base: False
     enable_self_collisions: True
     enable_gyroscopic_forces: False
     # also in stage params
