@@ -387,7 +387,6 @@ class SimConfig():
                 self.apply_rigid_shape_settings(name, cur_prim, cfg)
 
             if articulation:
-                print(cur_prim.GetPath(), articulation)
                 articulation_api = UsdPhysics.ArticulationRootAPI.Get(stage, cur_prim.GetPath())
                 physx_articulation_api = PhysxSchema.PhysxArticulationAPI.Get(stage, cur_prim.GetPath())
 

@@ -3,7 +3,7 @@ Release Notes
 
 Additions
 ---------
-
+- Update to Viewport 2.0
 
 Fixes
 -----

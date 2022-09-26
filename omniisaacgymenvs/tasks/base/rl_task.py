@@ -38,6 +38,9 @@ from omni.isaac.cloner import GridCloner
 from omniisaacgymenvs.tasks.utils.usd_utils import create_distant_light
 from omniisaacgymenvs.utils.domain_randomization.randomize import Randomizer
 import omni.kit
+from omni.kit.viewport.utility.camera_state import ViewportCameraState
+from omni.kit.viewport.utility import get_viewport_from_window_name
+from pxr import Gf
 
 class RLTask(BaseTask):
 
@@ -132,9 +135,11 @@ class RLTask(BaseTask):
     
     def set_initial_camera_params(self, camera_position=[10, 10, 3], camera_target=[0, 0, 0]):
         if self._env._render:
-            viewport = omni.kit.viewport_legacy.get_default_viewport_window()
-            viewport.set_camera_position("/OmniverseKit_Persp", camera_position[0], camera_position[1], camera_position[2], True)
-            viewport.set_camera_target("/OmniverseKit_Persp", camera_target[0], camera_target[1], camera_target[2], True)
+            viewport_api_2 = get_viewport_from_window_name("Viewport")
+            viewport_api_2.set_active_camera("/OmniverseKit_Persp")
+            camera_state = ViewportCameraState("/OmniverseKit_Persp", viewport_api_2)
+            camera_state.set_position_world(Gf.Vec3d(camera_position[0], camera_position[1], camera_position[2]), True)
+            camera_state.set_target_world(Gf.Vec3d(camera_target[0], camera_target[1], camera_target[2]), True)
 
     @property
     def default_base_env_path(self):
