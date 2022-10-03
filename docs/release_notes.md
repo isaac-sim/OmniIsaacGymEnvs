@@ -1,6 +1,9 @@
 Release Notes
 =============
 
+2.0.0
+-----
+
 Additions
 ---------
 - Update to Viewport 2.0
@@ -9,6 +12,7 @@ Fixes
 -----
 - Remove fix_base option from articulation configs
 - Fix in_hand_manipulation random joint position sampling on reset
+- Fix mass and density randomization in MT training script
 
 
 1.1.0 - August 22, 2022

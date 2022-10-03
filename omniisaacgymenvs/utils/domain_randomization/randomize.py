@@ -544,7 +544,7 @@ class Randomizer():
         view.set_local_scales(scales=scales)
     
     def randomize_mass_on_startup(self, view, distribution, distribution_parameters, operation):
-        if isinstance(view, omni.isaac.core.prims.RigidPrimView):
+        if isinstance(view, omni.isaac.core.prims.RigidPrimView) or isinstance(view, RigidPrimView):
             masses = view.get_masses()
             dist_params = np.asarray(self._sanitize_distribution_parameters(attribute=f"{view.name} mass", dimension=1, params=distribution_parameters))
             noise = self._generate_noise(distribution, dist_params.squeeze(), (view.count,), view._device)
@@ -561,7 +561,7 @@ class Randomizer():
         set_masses(masses)
 
     def randomize_density_on_startup(self, view, distribution, distribution_parameters, operation):
-        if isinstance(view, omni.isaac.core.prims.RigidPrimView):
+        if isinstance(view, omni.isaac.core.prims.RigidPrimView) or isinstance(view, RigidPrimView):
             densities = view.get_densities()
             dist_params = np.asarray(self._sanitize_distribution_parameters(attribute=f"{view.name} density", dimension=1, params=distribution_parameters))
             noise = self._generate_noise(distribution, dist_params.squeeze(), (view.count,), view._device)
