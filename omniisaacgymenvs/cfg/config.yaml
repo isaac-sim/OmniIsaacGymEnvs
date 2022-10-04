@@ -38,6 +38,8 @@ checkpoint: ''
 
 # disables rendering
 headless: False
+# timeout for MT script
+mt_timeout: 30
 
 wandb_activate: False
 wandb_group: ''
