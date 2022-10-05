@@ -225,7 +225,6 @@ class BallBalanceTask(RLTask):
         ball_velocities[env_ids_64, 3:6] = 0
 
         # reset root state for bbots and balls in selected envs
-        self._balance_bots.set_world_poses(self.initial_bot_pos[env_ids_64], self.initial_bot_rot[env_ids_64].clone(), indices=env_ids_32)
         self._balls.set_world_poses(ball_pos[env_ids_64], ball_rot[env_ids_64], indices=env_ids_32)
         self._balls.set_velocities(ball_velocities[env_ids_64], indices=env_ids_32)
 

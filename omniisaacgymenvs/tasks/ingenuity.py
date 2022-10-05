@@ -198,7 +198,8 @@ class IngenuityTask(RLTask):
     def reset_idx(self, env_ids):
         num_resets = len(env_ids)
 
-        self.dof_pos[env_ids, :] = torch_rand_float(-0.2, 0.2, (num_resets, self._copters.num_dof), device=self._device)
+        self.dof_pos[env_ids, 1] = torch_rand_float(-0.2, 0.2, (num_resets, 1), device=self._device).squeeze()
+        self.dof_pos[env_ids, 3] = torch_rand_float(-0.2, 0.2, (num_resets, 1), device=self._device).squeeze()
         self.dof_vel[env_ids, :] = 0
 
         root_pos = self.initial_root_pos.clone()
