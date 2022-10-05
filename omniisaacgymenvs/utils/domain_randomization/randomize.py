@@ -188,8 +188,8 @@ class Randomizer():
                 raise ValueError(f"Please ensure the following observations on_interval randomization parameters are provided: " + \
                     "frequency_interval, operation, distribution, distribution_parameters.")
             self.active_domain_randomizations[("observations", "on_interval")] = np.array(self._observations_dr_params["on_interval"]["distribution_parameters"])
-        self._observations_counter_buffer = torch.zeros((self._cfg["env"]["numEnvs"]), dtype=torch.int, device=self._config["sim_device"])
-        self._observations_correlated_noise = torch.zeros((self._cfg["env"]["numEnvs"], task.num_observations), device=self._config["sim_device"])
+        self._observations_counter_buffer = torch.zeros((self._cfg["env"]["numEnvs"]), dtype=torch.int, device=self._config["rl_device"])
+        self._observations_correlated_noise = torch.zeros((self._cfg["env"]["numEnvs"], task.num_observations), device=self._config["rl_device"])
         
     def _set_up_actions_randomization(self, task):
         task.randomize_actions = True
@@ -206,8 +206,8 @@ class Randomizer():
                 raise ValueError(f"Please ensure the following actions on_interval randomization parameters are provided: " + \
                     "frequency_interval, operation, distribution, distribution_parameters.")
             self.active_domain_randomizations[("actions", "on_interval")] = np.array(self._actions_dr_params["on_interval"]["distribution_parameters"])
-        self._actions_counter_buffer = torch.zeros((self._cfg["env"]["numEnvs"]), dtype=torch.int, device=self._config["sim_device"])
-        self._actions_correlated_noise = torch.zeros((self._cfg["env"]["numEnvs"], task.num_actions), device=self._config["sim_device"])
+        self._actions_counter_buffer = torch.zeros((self._cfg["env"]["numEnvs"]), dtype=torch.int, device=self._config["rl_device"])
+        self._actions_correlated_noise = torch.zeros((self._cfg["env"]["numEnvs"], task.num_actions), device=self._config["rl_device"])
 
     def apply_observations_randomization(self, observations, reset_buf):
         env_ids = reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -264,11 +264,11 @@ class Randomizer():
     
     def _apply_uncorrelated_noise(self, buffer, randomize_ids, operation, distribution, distribution_parameters):
         if distribution == "gaussian" or distribution == "normal":
-            noise = torch.normal(mean=distribution_parameters[0], std=distribution_parameters[1], size=(len(randomize_ids), buffer.shape[1]), device=self._config["sim_device"])
+            noise = torch.normal(mean=distribution_parameters[0], std=distribution_parameters[1], size=(len(randomize_ids), buffer.shape[1]), device=self._config["rl_device"])
         elif distribution == "uniform":
-            noise = (distribution_parameters[1] - distribution_parameters[0]) * torch.rand((len(randomize_ids), buffer.shape[1]), device=self._config["sim_device"]) + distribution_parameters[0]
+            noise = (distribution_parameters[1] - distribution_parameters[0]) * torch.rand((len(randomize_ids), buffer.shape[1]), device=self._config["rl_device"]) + distribution_parameters[0]
         elif distribution == "loguniform" or distribution == "log_uniform":
-            noise = torch.exp((np.log(distribution_parameters[1]) - np.log(distribution_parameters[0])) * torch.rand((len(randomize_ids), buffer.shape[1]), device=self._config["sim_device"]) + np.log(distribution_parameters[0]))
+            noise = torch.exp((np.log(distribution_parameters[1]) - np.log(distribution_parameters[0])) * torch.rand((len(randomize_ids), buffer.shape[1]), device=self._config["rl_device"]) + np.log(distribution_parameters[0]))
         else:
             print(f"The specified {distribution} distribution is not supported.")
 
@@ -288,11 +288,11 @@ class Randomizer():
 
         if len(reset_ids) > 0:
             if distribution == "gaussian" or distribution == "normal":
-                correlated_noise_buffer[reset_ids] = torch.normal(mean=distribution_parameters[0], std=distribution_parameters[1], size=(len(reset_ids), buffer.shape[1]), device=self._config["sim_device"])
+                correlated_noise_buffer[reset_ids] = torch.normal(mean=distribution_parameters[0], std=distribution_parameters[1], size=(len(reset_ids), buffer.shape[1]), device=self._config["rl_device"])
             elif distribution == "uniform":
-                correlated_noise_buffer[reset_ids] = (distribution_parameters[1] - distribution_parameters[0]) * torch.rand((len(reset_ids), buffer.shape[1]), device=self._config["sim_device"]) + distribution_parameters[0]
+                correlated_noise_buffer[reset_ids] = (distribution_parameters[1] - distribution_parameters[0]) * torch.rand((len(reset_ids), buffer.shape[1]), device=self._config["rl_device"]) + distribution_parameters[0]
             elif distribution == "loguniform" or distribution == "log_uniform":
-                correlated_noise_buffer[reset_ids] = torch.exp((np.log(distribution_parameters[1]) - np.log(distribution_parameters[0])) * torch.rand((len(reset_ids), buffer.shape[1]), device=self._config["sim_device"]) + np.log(distribution_parameters[0]))
+                correlated_noise_buffer[reset_ids] = torch.exp((np.log(distribution_parameters[1]) - np.log(distribution_parameters[0])) * torch.rand((len(reset_ids), buffer.shape[1]), device=self._config["rl_device"]) + np.log(distribution_parameters[0]))
             else:
                 print(f"The specified {distribution} distribution is not supported.")
         
