@@ -18,6 +18,7 @@ from omni.isaac.core.prims import RigidPrim, RigidPrimView
 from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.stage import get_current_stage
 from omni.isaac.core.utils.torch.transformations import *
+from omni.isaac.core.utils.torch.rotations import *
 
 from omni.isaac.cloner import Cloner
 
@@ -248,7 +249,7 @@ class FrankaCabinetTask(RLTask):
 
         self.actions = actions.clone().to(self._device)
         targets = self.franka_dof_targets + self.franka_dof_speed_scales * self.dt * self.actions * self.action_scale
-        self.franka_dof_targets[:] = torch.clamp(targets, self.franka_dof_lower_limits, self.franka_dof_upper_limits)
+        self.franka_dof_targets[:] = tensor_clamp(targets, self.franka_dof_lower_limits, self.franka_dof_upper_limits)
         env_ids_int32 = torch.arange(self._frankas.count, dtype=torch.int32, device=self._device)
 
         self._frankas.set_joint_position_targets(self.franka_dof_targets, indices=env_ids_int32)
@@ -258,7 +259,7 @@ class FrankaCabinetTask(RLTask):
         num_indices = len(indices)
 
         # reset franka
-        pos = torch.clamp(
+        pos = tensor_clamp(
             self.franka_default_dof_pos.unsqueeze(0)
             + 0.25 * (torch.rand((len(env_ids), self.num_franka_dofs), device=self._device) - 0.5),
             self.franka_dof_lower_limits,
