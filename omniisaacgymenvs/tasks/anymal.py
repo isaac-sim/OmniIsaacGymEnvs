@@ -183,7 +183,7 @@ class AnymalTask(RLTask):
         indices = torch.arange(self._anymals.count, dtype=torch.int32, device=self._device)
         self.actions[:] = actions.clone().to(self._device)
         current_targets = self.current_targets + self.action_scale * self.actions * self.dt 
-        self.current_targets[:] = torch.clamp(current_targets, self.anymal_dof_lower_limits, self.anymal_dof_upper_limits)
+        self.current_targets[:] = tensor_clamp(current_targets, self.anymal_dof_lower_limits, self.anymal_dof_upper_limits)
         self._anymals.set_joint_position_targets(self.current_targets, indices)
 
     def reset_idx(self, env_ids):
