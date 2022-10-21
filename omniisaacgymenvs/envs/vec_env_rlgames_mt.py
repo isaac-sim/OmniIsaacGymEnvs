@@ -50,16 +50,16 @@ class VecEnvRLGamesMT(VecEnvRLGames, VecEnvMT):
         if self._stop:
             raise TaskStopException()
 
-        actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device).clone()
-
         if self._task.randomize_actions:
             actions = self._task._dr_randomizer.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
+
+        actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device).clone()
 
         self.send_actions(actions)
         data = self.get_data()
 
         if self._task.randomize_observations:
-            self._obs = self._task._dr_randomizer.apply_observations_randomization(observations=self._obs, reset_buf=self._task.reset_buf)
+            self._obs = self._task._dr_randomizer.apply_observations_randomization(observations=self._obs.to(self._task.rl_device), reset_buf=self._task.reset_buf)
         
         self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device)
         
