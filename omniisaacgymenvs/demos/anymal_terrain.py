@@ -40,6 +40,10 @@ import math
 import omni
 import carb
 
+from omni.kit.viewport.utility.camera_state import ViewportCameraState
+from omni.kit.viewport.utility import get_viewport_from_window_name
+from pxr import Sdf
+
 
 class AnymalTerrainDemo(AnymalTerrainTask):
     def __init__(
@@ -68,13 +72,17 @@ class AnymalTerrainDemo(AnymalTerrainTask):
     
     def create_camera(self):
         stage = omni.usd.get_context().get_stage()
-        self.view_port = omni.kit.viewport_legacy.get_default_viewport_window()
+        self.view_port = get_viewport_from_window_name("Viewport")
         # Create camera
         self.camera_path = "/World/Camera"
         self.perspective_path = "/OmniverseKit_Persp"
         camera_prim = stage.DefinePrim(self.camera_path, "Camera")
-        self.view_port.set_active_camera(self.camera_path)
         camera_prim.GetAttribute("focalLength").Set(8.5)
+        coi_prop = camera_prim.GetProperty("omni:kit:centerOfInterest")
+        if not coi_prop or not coi_prop.IsValid():
+            camera_prim.CreateAttribute(
+                "omni:kit:centerOfInterest", Sdf.ValueTypeNames.Vector3d, True, Sdf.VariabilityUniform
+            ).Set(Gf.Vec3d(0, 0, -10))
         self.view_port.set_active_camera(self.perspective_path)
 
     def set_up_keyboard(self):
@@ -137,8 +145,11 @@ class AnymalTerrainDemo(AnymalTerrainTask):
         camera_local_transform = torch.tensor([-1.8, 0.0, 0.6], device=self.device)
         camera_pos = quat_apply(base_quat, camera_local_transform) + base_pos
 
-        self.view_port.set_camera_position(self.camera_path, camera_pos[0], camera_pos[1], camera_pos[2], True)
-        self.view_port.set_camera_target(self.camera_path, base_pos[0], base_pos[1], base_pos[2]+0.6, True)
+        camera_state = ViewportCameraState(self.camera_path, self.view_port)
+        eye = Gf.Vec3d(camera_pos[0].item(), camera_pos[1].item(), camera_pos[2].item())
+        target = Gf.Vec3d(base_pos[0].item(), base_pos[1].item(), base_pos[2].item()+0.6)
+        camera_state.set_position_world(eye, True)
+        camera_state.set_target_world(target, True)
 
     def post_physics_step(self):
         self.progress_buf[:] += 1
