@@ -157,7 +157,7 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
             bolt_translation = torch.tensor([0.0, 0.0, self.cfg_base.env.table_height], device=self._device)
             bolt_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self._device)
 
-            bolt_width = assets_root_path + self.asset_info_nut_bolt[subassembly][components[1]]['width']
+            bolt_width = self.asset_info_nut_bolt[subassembly][components[1]]['width']
 
             bolt_head_height = self.asset_info_nut_bolt[subassembly][components[1]]['head_height']
             bolt_shank_length = self.asset_info_nut_bolt[subassembly][components[1]]['shank_length']
@@ -165,7 +165,7 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
             self.bolt_head_heights.append(bolt_head_height)
             self.bolt_shank_lengths.append(bolt_shank_length)
 
-            bolt_file = self.asset_info_nut_bolt[subassembly][components[1]]['usd_path']
+            bolt_file = assets_root_path + self.asset_info_nut_bolt[subassembly][components[1]]['usd_path']
             add_reference_to_stage(bolt_file, f"/World/envs/env_{i}" + "/bolt")
             XFormPrim(
                 prim_path=f"/World/envs/env_{i}" + "/bolt",
