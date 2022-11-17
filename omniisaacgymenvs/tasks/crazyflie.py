@@ -254,17 +254,17 @@ class CrazyflieTask(RLTask):
         self.dof_vel[:, 2] = prop_rot[:, 2]
         self.dof_vel[:, 3] = -1.0 * prop_rot[:, 3]
 
-        self._copters.set_joint_velocities(self.dof_vel, indices=self.all_indices)
+        self._copters.set_joint_velocities(self.dof_vel)
 
         # apply actions
         for i in range(4):
             self._copters.physics_rotors[i].apply_forces(self.thrusts[:, i], indices=self.all_indices)
 
     def post_reset(self):
-        self.root_pos, self.root_rot = self._copters.get_world_poses(clone=False)
-        self.root_velocities = self._copters.get_velocities(clone=False)
-        self.dof_pos = self._copters.get_joint_positions(clone=False)
-        self.dof_vel = self._copters.get_joint_velocities(clone=False)
+        self.root_pos, self.root_rot = self._copters.get_world_poses()
+        self.root_velocities = self._copters.get_velocities()
+        self.dof_pos = self._copters.get_joint_positions()
+        self.dof_vel = self._copters.get_joint_velocities()
 
         self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses(clone=False)
         self.initial_root_pos, self.initial_root_rot = self.root_pos.clone(), self.root_rot.clone()
