@@ -8,6 +8,12 @@ Additions
 ---------
 - Update to Viewport 2.0
 - Additional example: Factory
+- Allow for runtime mass randomization on GPU pipeline
+- Add runtime mass randomization to ShadowHand environments
+
+Changes
+-------
+- Update Quadcopter example to apply local forces
 
 Fixes
 -----

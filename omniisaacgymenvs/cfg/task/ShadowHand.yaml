@@ -176,7 +176,7 @@ domain_randomization:
             distribution: "uniform"
             distribution_parameters: [0.95, 1.05]
         mass:
-          on_startup:
+          on_reset:
             operation: "scaling"
             distribution: "uniform"
             distribution_parameters: [0.5, 1.5]
