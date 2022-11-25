@@ -32,6 +32,7 @@ import copy
 import omni.usd
 import numpy as np
 import torch
+import carb
 
 class SimConfig():
     def __init__(self, config: dict = None):
@@ -49,6 +50,8 @@ class SimConfig():
             self._sim_params["use_flatcache"] = False
             self._sim_params["enable_viewport"] = False
 
+        if self._sim_params["disable_contact_processing"]:
+            carb.settings.get_settings().set_bool("/physics/disableContactProcessing", True)
 
     def _parse_config(self):
         # general sim parameter

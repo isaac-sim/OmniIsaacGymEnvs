@@ -10,10 +10,14 @@ Additions
 - Additional example: Factory
 - Allow for runtime mass randomization on GPU pipeline
 - Add runtime mass randomization to ShadowHand environments
+- Introduce disable_contact_processing simulation parameter for faster contact processing
+- Use physics replication for cloning by default for faster load time
 
 Changes
 -------
+- Update AnymalTerrain environment to use contact forces
 - Update Quadcopter example to apply local forces
+- Rename rlgames_play.py to rlgames_demo.py
 
 Fixes
 -----

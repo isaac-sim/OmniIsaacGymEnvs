@@ -10,6 +10,7 @@ sim:
   disable_franka_collisions: False
   disable_nut_collisions: False
   disable_bolt_collisions: False
+  disable_contact_processing: False
 
 
 env:

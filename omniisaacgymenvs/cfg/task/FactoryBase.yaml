@@ -18,6 +18,7 @@ sim:
   num_vel_iters: 0
   gravity_mag: 9.81
   add_damping: True
+  disable_contact_processing: False
 
     
 env:

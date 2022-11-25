@@ -37,6 +37,8 @@ class AnymalView(ArticulationView):
         self,
         prim_paths_expr: str,
         name: Optional[str] = "AnymalView",
+        track_contact_forces=False,
+        prepare_contact_sensors=False
     ) -> None:
         """[summary]
         """
@@ -46,8 +48,10 @@ class AnymalView(ArticulationView):
             name=name,
             reset_xform_properties=False
         )
-        self._knees = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/.*_SHANK", name="knees_view", reset_xform_properties=False)
-        self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/base", name="base_view", reset_xform_properties=False)
+        self._knees = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/.*_THIGH",
+            name="knees_view", reset_xform_properties=False, track_contact_forces=track_contact_forces, prepare_contact_sensors=prepare_contact_sensors)
+        self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/anymal/base",
+            name="base_view", reset_xform_properties=False, track_contact_forces=track_contact_forces, prepare_contact_sensors=prepare_contact_sensors)
 
     def get_knee_transforms(self):
         return self._knees.get_world_poses()

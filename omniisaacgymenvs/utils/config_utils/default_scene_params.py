@@ -88,6 +88,7 @@ default_sim_params = {
     "use_flatcache": True,
     "enable_scene_query_support": False,
     "enable_cameras": False,
+    "disable_contact_processing": False,
     "default_physics_material": default_physics_material
 }
 

@@ -23,6 +23,7 @@ sim:
   enable_scene_query_support: False
   # set to True if you use camera sensors in the environment
   enable_cameras: False
+  disable_contact_processing: False
 
   physx:
     num_threads: ${....num_threads}

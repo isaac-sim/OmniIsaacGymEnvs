@@ -224,7 +224,7 @@ the ANYmals in the scene to go into third-person mode and manually control the r
 Launch this demo with the following command. Note that this demo limits the maximum number of ANYmals in the scene to 128.
 
 ```
-PYTHON_PATH scripts/rlgames_play.py task=AnymalTerrain num_envs=64 checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth 
+PYTHON_PATH scripts/rlgames_demo.py task=AnymalTerrain num_envs=64 checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth 
 ```
 
 <img src="https://user-images.githubusercontent.com/34286328/184688654-6e7899b2-5847-4184-8944-2a96b129b1ff.gif" width="600" height="300"/>

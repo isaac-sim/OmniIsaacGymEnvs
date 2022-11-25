@@ -194,11 +194,10 @@ class AnymalTerrainTask(RLTask):
         self.get_terrain()
         self.get_anymal()
         super().set_up_scene(scene)
-        self._anymals = AnymalView(prim_paths_expr="/World/envs/.*/anymal", name="anymal_view")
+        self._anymals = AnymalView(prim_paths_expr="/World/envs/.*/anymal", name="anymal_view", track_contact_forces=True)
         scene.add(self._anymals)
         scene.add(self._anymals._knees)
         scene.add(self._anymals._base)
-        return
 
     def get_terrain(self):
         self.env_origins = torch.zeros((self.num_envs, 3), device=self.device, requires_grad=False)
@@ -218,6 +217,7 @@ class AnymalTerrainTask(RLTask):
                         orientation=anymal_orientation,)
         self._sim_config.apply_articulation_settings("anymal", get_prim_at_path(anymal.prim_path), self._sim_config.parse_actor_config("anymal"))
         anymal.set_anymal_properties(self._stage, anymal.prim)
+        anymal.prepare_contacts(self._stage, anymal.prim)
 
         self.dof_names = anymal.dof_names
         for i in range(self.num_actions):
@@ -358,11 +358,8 @@ class AnymalTerrainTask(RLTask):
     
     def check_termination(self):
         self.timeout_buf = torch.where(self.progress_buf >= self.max_episode_length - 1, torch.ones_like(self.timeout_buf), torch.zeros_like(self.timeout_buf))
-        ground_heights_below_base = self.get_ground_heights_below_base().squeeze()
-        self.has_base_fallen = self._anymals.is_base_below_threshold(threshold=self.base_threshold, ground_heights=ground_heights_below_base)
-        ground_heights_below_knees = self.get_ground_heights_below_knees()
-        self.has_knees_fallen = self._anymals.is_knee_below_threshold(threshold=self.knee_threshold, ground_heights=ground_heights_below_knees)
-        self.has_fallen = self.has_base_fallen | self.has_knees_fallen
+        knee_contact = torch.norm(self._anymals._knees.get_net_contact_forces(clone=False).view(self._num_envs, 4, 3), dim=-1) > 1.
+        self.has_fallen = (torch.norm(self._anymals._base.get_net_contact_forces(clone=False), dim=1) > 1.) | (torch.sum(knee_contact, dim=-1) > 1.)
         self.reset_buf = self.has_fallen.clone()
         self.reset_buf = torch.where(self.timeout_buf.bool(), torch.ones_like(self.reset_buf), self.reset_buf)
 

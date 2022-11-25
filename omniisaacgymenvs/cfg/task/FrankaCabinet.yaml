@@ -38,6 +38,7 @@ sim:
   add_ground_plane: True
   use_flatcache: True
   enable_scene_query_support: False
+  disable_contact_processing: False
 
   # set to True if you use camera sensors in the environment
   enable_cameras: False
