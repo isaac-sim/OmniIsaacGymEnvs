@@ -139,7 +139,8 @@ class FrankaCabinetTask(RLTask):
         prop_cloner.clone(
             source_prim_path=self.default_zero_env_path + "/prop/prop_0", 
             prim_paths=prop_paths, 
-            positions=np.array(prop_pos)+drawer_pos.numpy()
+            positions=np.array(prop_pos)+drawer_pos.numpy(),
+            replicate_physics=False
         )
 
     def init_data(self) -> None:

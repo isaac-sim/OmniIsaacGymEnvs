@@ -109,12 +109,13 @@ class RLTask(BaseTask):
         self.progress_buf = torch.zeros(self._num_envs, device=self._device, dtype=torch.long)
         self.extras = {}
 
-    def set_up_scene(self, scene) -> None:
+    def set_up_scene(self, scene, replicate_physics=True) -> None:
         """ Clones environments based on value provided in task config and applies collision filters to mask 
             collisions across environments.
 
         Args:
             scene (Scene): Scene to add objects to.
+            replicate_physics (bool): Clone physics using PhysX API for better performance
         """
 
         super().set_up_scene(scene)
@@ -125,7 +126,7 @@ class RLTask(BaseTask):
             collision_filter_global_paths.append(self._ground_plane_path)
             scene.add_default_ground_plane(prim_path=self._ground_plane_path)
         prim_paths = self._cloner.generate_paths("/World/envs/env", self._num_envs)
-        self._env_pos = self._cloner.clone(source_prim_path="/World/envs/env_0", prim_paths=prim_paths)
+        self._env_pos = self._cloner.clone(source_prim_path="/World/envs/env_0", prim_paths=prim_paths, replicate_physics=replicate_physics)
         self._env_pos = torch.tensor(np.array(self._env_pos), device=self._device, dtype=torch.float)
         self._cloner.filter_collisions(
             self._env._world.get_physics_context().prim_path, "/World/collisions", prim_paths, collision_filter_global_paths)
