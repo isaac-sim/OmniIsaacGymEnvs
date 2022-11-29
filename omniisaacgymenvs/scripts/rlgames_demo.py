@@ -64,11 +64,11 @@ def parse_hydra_configs(cfg: DictConfig):
     cfg_dict = omegaconf_to_dict(cfg)
     print_dict(cfg_dict)
 
-    task = initialize_demo(cfg_dict, env)
-
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
+    cfg_dict['seed'] = cfg.seed
+    task = initialize_demo(cfg_dict, env)
 
     if cfg.wandb_activate:
         # Make sure to install WandB if you actually use this.

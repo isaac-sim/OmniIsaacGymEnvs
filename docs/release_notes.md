@@ -25,6 +25,7 @@ Fixes
 - Fix in_hand_manipulation random joint position sampling on reset
 - Fix mass and density randomization in MT training script
 - Fix actions/observations noise randomization in MT training script
+- Fix random seed when domain randomization is enabled
 
 
 1.1.0 - August 22, 2022

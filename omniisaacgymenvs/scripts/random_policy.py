@@ -48,6 +48,10 @@ def parse_hydra_configs(cfg: DictConfig):
     render = not headless
 
     env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
+    # sets seed. if seed is -1 will pick a random one
+    from omni.isaac.core.utils.torch.maths import set_seed
+    cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
+    cfg_dict['seed'] = cfg.seed
     task = initialize_task(cfg_dict, env)
 
     while env._simulation_app.is_running():

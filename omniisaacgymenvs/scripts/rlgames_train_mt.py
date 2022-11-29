@@ -197,6 +197,7 @@ def parse_hydra_configs(cfg: DictConfig):
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
+    cfg_dict['seed'] = cfg.seed
 
     rlg_trainer = RLGTrainer(cfg, cfg_dict)
     trainer = Trainer(rlg_trainer, env)
