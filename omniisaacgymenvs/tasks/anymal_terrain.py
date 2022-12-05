@@ -307,6 +307,9 @@ class AnymalTerrainTask(RLTask):
         self.knee_pos, self.knee_quat = self._anymals._knees.get_world_poses(clone=False)
 
     def pre_physics_step(self, actions):
+        if not self._env._world.is_playing():
+            return
+
         self.actions = actions.clone().to(self.device)
         for i in range(self.decimation):
             torques = torch.clip(self.Kp*(self.action_scale*self.actions + self.default_dof_pos - self.dof_pos) - self.Kd*self.dof_vel, -80., 80.)

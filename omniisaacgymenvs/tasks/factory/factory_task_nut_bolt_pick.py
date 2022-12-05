@@ -118,6 +118,9 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
     def pre_physics_step(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
+        if not self._env._world.is_playing():
+            return
+
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(env_ids) > 0:
             self.reset_idx(env_ids)

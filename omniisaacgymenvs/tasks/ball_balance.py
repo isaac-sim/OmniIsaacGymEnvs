@@ -168,6 +168,9 @@ class BallBalanceTask(RLTask):
         return observations
 
     def pre_physics_step(self, actions) -> None:
+        if not self._env._world.is_playing():
+            return
+
         if not self.anchored:
             # Adding extra joints after ArticulationView is initialized
             self.set_up_table_anchors()
