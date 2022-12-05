@@ -48,7 +48,7 @@ params:
     reward_shaper:
       scale_value: 0.01 
     normalize_advantage: True
-    gamma: 0.99
+    gamma: 0.998
     tau: 0.95
     learning_rate: 5e-4 
     lr_schedule: adaptive
@@ -65,15 +65,15 @@ params:
     e_clip: 0.2
     horizon_length: 16
     minibatch_size: 16384
-    mini_epochs: 8
+    mini_epochs: 4
     critic_coef: 4
     clip_value: True
     seq_len: 4
     bounds_loss_coef: 0.0001
 
     central_value_config:
-      minibatch_size: 8192
-      mini_epochs: 8
+      minibatch_size: 32864
+      mini_epochs: 4
       learning_rate: 5e-4
       lr_schedule: adaptive
       schedule_type: standard

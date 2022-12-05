@@ -103,8 +103,8 @@ class AllegroHandTask(InHandManipulationTask):
     def get_observations(self):
         self.get_object_goal_observations()
 
-        self.hand_dof_pos = self._hands.get_joint_positions()
-        self.hand_dof_vel = self._hands.get_joint_velocities()
+        self.hand_dof_pos = self._hands.get_joint_positions(clone=False)
+        self.hand_dof_vel = self._hands.get_joint_velocities(clone=False)
 
         if self.obs_type == "full_no_vel":
             self.compute_full_observations(True)

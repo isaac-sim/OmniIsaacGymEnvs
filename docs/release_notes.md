@@ -17,6 +17,7 @@ Changes
 -------
 - Update AnymalTerrain environment to use contact forces
 - Update Quadcopter example to apply local forces
+- Update training parameters for ShadowHandOpenAI_FF environment
 - Rename rlgames_play.py to rlgames_demo.py
 
 Fixes

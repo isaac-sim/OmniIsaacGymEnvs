@@ -116,12 +116,12 @@ class ShadowHandTask(InHandManipulationTask):
     def get_observations(self):
         self.get_object_goal_observations()
 
-        self.fingertip_pos, self.fingertip_rot = self._hands._fingers.get_world_poses()
+        self.fingertip_pos, self.fingertip_rot = self._hands._fingers.get_world_poses(clone=False)
         self.fingertip_pos -= self._env_pos.repeat((1, self.num_fingertips)).reshape(self.num_envs * self.num_fingertips, 3)
-        self.fingertip_velocities = self._hands._fingers.get_velocities()
+        self.fingertip_velocities = self._hands._fingers.get_velocities(clone=False)
 
-        self.hand_dof_pos = self._hands.get_joint_positions()
-        self.hand_dof_vel = self._hands.get_joint_velocities()
+        self.hand_dof_pos = self._hands.get_joint_positions(clone=False)
+        self.hand_dof_vel = self._hands.get_joint_velocities(clone=False)
 
         if self.obs_type == "full_state" or self.asymmetric_obs:
             self.vec_sensor_tensor = self._hands._physics_view.get_force_sensor_forces().reshape(self.num_envs, 6*self.num_fingertips)

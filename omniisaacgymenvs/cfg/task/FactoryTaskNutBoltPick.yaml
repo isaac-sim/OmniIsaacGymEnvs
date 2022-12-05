@@ -72,7 +72,7 @@ sim:
 
 env:
   controlFrequencyInv: 2 # 60 hz
-  numEnvs: 128
+  numEnvs: ${resolve_default:128,${...num_envs}}
   numObservations: 20
   numActions: 12
 
