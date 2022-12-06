@@ -22,6 +22,7 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Crazyflie crazyflie.py](#crazyflie-crazyfliepy)
   - [Ball Balance ball_balance.py](#ball-balance-ball_balancepy)
   - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
+  - [Factory](#factory-fast-contact-for-robotic-assembly)
 
 
 ### Cartpole [cartpole.py](../omniisaacgymenvs/tasks/cartpole.py)
@@ -305,3 +306,25 @@ Config files used for this task are:
 
 <img src="https://user-images.githubusercontent.com/34286328/184174894-03767aa0-936c-4bfe-bbe9-a6865f539bb4.gif" width="300" height="150"/>
 
+### Factory: Fast Contact for Robotic Assembly
+We provide a Factory example task, **FactoryTaskNutBoltPick**, which can be executed with `python train.py task=FactoryTaskNutBoltPick`. This task trains policy for the Pick task, a simplified version of the corresponding task in the Factory paper. The policy may take ~1 hour to achieve high success rates on a modern GPU.
+
+- The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
+- The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
+
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_nut_bolt_pick.pth`
+
+If you use the Factory simulation methods (e.g., SDF collisions, contact reduction) or Factory learning tools (e.g., assets, environments, or controllers) in your work, please cite the following paper:
+```
+@inproceedings{
+  narang2022factory,
+  author = {Yashraj Narang and Kier Storey and Iretiayo Akinola and Miles Macklin and Philipp Reist and Lukasz Wawrzyniak and Yunrong Guo and Adam Moravanszky and Gavriel State and Michelle Lu and Ankur Handa and Dieter Fox},
+  title = {Factory: Fast contact for robotic assembly},
+  booktitle = {Robotics: Science and Systems},
+  year = {2022}
+} 
+```
+
+Also note that our original formulations of SDF collisions and contact reduction were developed by [Macklin, et al.](https://dl.acm.org/doi/abs/10.1145/3384538) and [Moravanszky and Terdiman](https://scholar.google.com/scholar?q=Game+Programming+Gems+4%2C+chapter+Fast+Contact+Reduction+for+Dynamics+Simulation), respectively.
+
+<img src="https://user-images.githubusercontent.com/6352136/205978286-fa2ae714-a3cb-4acd-9f5f-a467338a8bb3.gif"/>

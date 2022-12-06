@@ -1,13 +1,13 @@
 Release Notes
 =============
 
-2.0.0
------
+2.0.0 - December 12, 2022
+-------------------------
 
 Additions
 ---------
 - Update to Viewport 2.0
-- Additional example: Factory
+- Additional example: FactoryTaskNutBoltPick
 - Allow for runtime mass randomization on GPU pipeline
 - Add runtime mass randomization to ShadowHand environments
 - Introduce disable_contact_processing simulation parameter for faster contact processing
@@ -27,6 +27,7 @@ Fixes
 - Fix mass and density randomization in MT training script
 - Fix actions/observations noise randomization in MT training script
 - Fix random seed when domain randomization is enabled
+- Check whether simulation is running before executing pre_physics_step logic
 
 
 1.1.0 - August 22, 2022
