@@ -312,11 +312,12 @@ class AnymalTerrainTask(RLTask):
 
         self.actions = actions.clone().to(self.device)
         for i in range(self.decimation):
-            torques = torch.clip(self.Kp*(self.action_scale*self.actions + self.default_dof_pos - self.dof_pos) - self.Kd*self.dof_vel, -80., 80.)
-            self._anymals.set_joint_efforts(torques)
-            self.torques = torques
-            SimulationContext.step(self._env._world, render=False)
-            self.refresh_dof_state_tensors()
+            if self._env._world.is_playing():
+                torques = torch.clip(self.Kp*(self.action_scale*self.actions + self.default_dof_pos - self.dof_pos) - self.Kd*self.dof_vel, -80., 80.)
+                self._anymals.set_joint_efforts(torques)
+                self.torques = torques
+                SimulationContext.step(self._env._world, render=False)
+                self.refresh_dof_state_tensors()
     
     def post_physics_step(self):
         self.progress_buf[:] += 1
