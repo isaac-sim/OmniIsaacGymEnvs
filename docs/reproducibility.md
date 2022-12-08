@@ -69,4 +69,7 @@ environment.
 Another known cause of non-determinism is from resetting actors into contact states. 
 If actors within a scene is reset to a state where contacts are registered 
 between actors, the simulation may not be able to produce deterministic results.
+This is because contacts are not recorded and will be re-computed from scratch for 
+each reset scenario where actors come into contact, which cannot guarantee 
+deterministic behavior across different compuations.
 
