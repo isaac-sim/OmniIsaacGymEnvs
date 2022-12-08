@@ -20,7 +20,7 @@ This repository contains Reinforcement Learning examples that can be run with th
 
 Follow the Isaac Sim [documentation](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html) to install the latest Isaac Sim release. 
 
-*Examples in this repository rely on features from the most recent Isaac Sim release. Please make sure to update any existing Isaac Sim build to the latest release version, 2022.1.1, to ensure examples work as expected.*
+*Examples in this repository rely on features from the most recent Isaac Sim release. Please make sure to update any existing Isaac Sim build to the latest release version, 2022.2.0, to ensure examples work as expected.*
 
 Once installed, this repository can be used as a python module, `omniisaacgymenvs`, with the python executable provided in Isaac Sim.
 
@@ -37,6 +37,7 @@ To set a `PYTHON_PATH` variable in the terminal that links to the python executa
 ```
 For Linux: alias PYTHON_PATH=~/.local/share/ov/pkg/isaac_sim-*/python.sh
 For Windows: doskey PYTHON_PATH=C:\Users\user\AppData\Local\ov\pkg\isaac_sim-*\python.bat $*
+For IsaacSim Docker: alias PYTHON_PATH=/isaac-sim/python.sh
 ```
 
 Install `omniisaacgymenvs` as a python module for `PYTHON_PATH`:
@@ -48,7 +49,7 @@ PYTHON_PATH -m pip install -e .
 
 ### Running the examples
 
-*Note: All commands should be executed from `omniisaacgymenvs/omniisaacgymenvs`.*
+*Note: All commands should be executed from `OmniIsaacGymEnvs/omniisaacgymenvs`.*
 
 To train your first policy, run:
 
