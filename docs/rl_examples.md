@@ -137,6 +137,8 @@ In addition to the basic version of this task, there is an additional variant ma
 observations in the policy network, but asymmetric observations of the **full_state** in the value network.
 This can be launched with command line argument `task=ShadowHandOpenAI_FF`.
 
+Running inference with pre-trained model can be launched with command line argument `task=ShadowHandOpenAI_FF test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand_openai_ff.pth`
+
 Config files used for this are:
 
 -   **Task config**: [ShadowHandOpenAI_FF.yaml](../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_FF.yaml)
@@ -146,6 +148,8 @@ Config files used for this are:
 This variant uses LSTM policy and value networks instead of feed forward networks, and also asymmetric
 LSTM critic designed for the OpenAI variant of the task. This can be launched with command line argument 
 `task=ShadowHandOpenAI_LSTM`.
+
+Running inference with pre-trained model can be launched with command line argument `task=ShadowHandOpenAI_LSTM test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand_openai_lstm.pth`
 
 Config files used for this are:
 
@@ -312,7 +316,7 @@ We provide a Factory example task, **FactoryTaskNutBoltPick**, which can be exec
 - The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
 - The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
 
-Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_nut_bolt_pick.pth`
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_pick.pth`
 
 If you use the Factory simulation methods (e.g., SDF collisions, contact reduction) or Factory learning tools (e.g., assets, environments, or controllers) in your work, please cite the following paper:
 ```

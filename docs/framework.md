@@ -247,3 +247,16 @@ To eliminate this issue, users should also reset any position/velocity targets o
 to the reset state or zero state when resetting actor states. For setting joint positions and velocities
 using the omni.isaac.core ArticulationView APIs, position targets and velocity targets will 
 automatically be set to the same states as joint positions and velocities.
+
+
+#### Massless Links
+
+It may be helpful in some scenarios to introduce dummy bodies into articulations for
+retrieving transformations at certain locations of the articulation. Although it is possible
+to introduce rigid bodies with no mass and colliders APIs and attach them to the articulation
+with fixed joints, this can sometimes cause physics instabilities in simulation. To prevent 
+instabilities from occurring, it is recommended to add a dummy geometry to the rigid body
+and include both Mass and Collision APIs. The mass of the geometry can be set to a very
+small value, such as 0.0001, to avoid modifying physical behaviors of the articulation.
+Similarly, we can also disable collision on the Collision API of the geometry to preserve
+contact behavior of the articulation.

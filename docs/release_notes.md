@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-2.0.0 - December 12, 2022
+2.0.0 - December 15, 2022
 -------------------------
 
 Additions
