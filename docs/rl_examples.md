@@ -22,7 +22,6 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Crazyflie crazyflie.py](#crazyflie-crazyfliepy)
   - [Ball Balance ball_balance.py](#ball-balance-ball_balancepy)
   - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
-  - [Factory](#factory-fast-contact-for-robotic-assembly)
 
 
 ### Cartpole [cartpole.py](../omniisaacgymenvs/tasks/cartpole.py)

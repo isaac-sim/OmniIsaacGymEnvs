@@ -121,11 +121,6 @@ Similary, `dof_states` are retrieved individually in Isaac Sim as `joint_positio
 APIs in Isaac Sim also no longer follow the explicit `_tensors` or `_tensor_indexed` suffixes in naming.
 Indexed versions of APIs now happen implicitly through the optional `indices` parameter.
 
-As part of our API improvements, we are defining a new set of contact APIs that aim to provide more useful details
-on contacts and collisions. This will be a replacement of `net_contact_force` in the Isaac Gym Preview Release and 
-will be available in the next release of Isaac Sim. For now, Isaac Sim does not provide a tensorized API for 
-collecting contacts.
-
 
 ### Task Configuration Files
 
