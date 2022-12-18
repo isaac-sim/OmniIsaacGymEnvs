@@ -53,7 +53,7 @@ the `on_startup` condition for Domain Randomization.
 
 At this time, we do not believe that other domain randomizations offered by this
 framework cause issues with deterministic execution when running GPU simulation, 
-but directly manipulating other simulation parameters outside of the Isaac Gym tensor 
+but directly manipulating other simulation parameters outside of the omni.isaac.core View 
 APIs may induce similar issues.
 
 Also due to floating point precision, states across different environments in the simulation
@@ -71,5 +71,5 @@ If actors within a scene is reset to a state where contacts are registered
 between actors, the simulation may not be able to produce deterministic results.
 This is because contacts are not recorded and will be re-computed from scratch for 
 each reset scenario where actors come into contact, which cannot guarantee 
-deterministic behavior across different compuations.
+deterministic behavior across different computations.
 

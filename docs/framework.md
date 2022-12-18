@@ -232,8 +232,10 @@ For example:
 
 ```python
 my_view.set_world_poses(positions=[[0, 0, 1]], orientations=[[1, 0, 0, 0]], indices=[0])
+# Values may be stale when called before step
 positions, orientations = my_view.get_world_poses()    # positions and orientations may not match [[0, 0, 1]] and [[1, 0, 0, 0]]
 my_world.step()
+# Values will be updated when called after step
 positions, orientations = my_view.get_world_poses()    # positions and orientations will reflect the new states
 ```
 
