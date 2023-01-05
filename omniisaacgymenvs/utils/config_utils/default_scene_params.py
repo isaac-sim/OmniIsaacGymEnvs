@@ -98,7 +98,7 @@ default_actor_options = {
     # If an attribute value is not explicitly authored in USD, add one with the value given here,
     # which overrides the USD default.
     "override_usd_defaults": False,
-    "fixed_base": -1,
+    "make_kinematic": -1,
     "enable_self_collisions": -1,
     "enable_gyroscopic_forces": -1,
     "solver_position_iteration_count": -1,

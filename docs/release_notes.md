@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+2.1.0
+-----
+
+Changes
+-------
+- Change rigid body fixed_base option to make_kinematic, avoiding creation of unnecessary articulations
+
+
 2.0.0 - December 15, 2022
 -------------------------
 

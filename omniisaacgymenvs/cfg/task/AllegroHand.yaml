@@ -97,7 +97,7 @@ sim:
   object:
     # -1 to use default values
     override_usd_defaults: False
-    fixed_base: False
+    make_kinematic: False
     enable_self_collisions: False
     enable_gyroscopic_forces: True
     # also in stage params
@@ -112,7 +112,7 @@ sim:
   goal_object:
     # -1 to use default values
     override_usd_defaults: False
-    fixed_base: True
+    make_kinematic: True
     enable_self_collisions: False
     enable_gyroscopic_forces: True
     # also in stage params
