@@ -6,6 +6,7 @@ Release Notes
 
 Additions
 ---------
+- Add Ant and Humanoid SAC training examples
 - Add multi-GPU support for training
 - Add utility scripts for launching Isaac Sim docker with OIGE
 - Add support for livestream through the Omniverse Streaming Client
@@ -27,7 +28,6 @@ Additions
 - Add runtime mass randomization to ShadowHand environments
 - Introduce `disable_contact_processing` simulation parameter for faster contact processing
 - Use physics replication for cloning by default for faster load time
-- Added Ant and Humanoid SAC training examples
 
 Changes
 -------
