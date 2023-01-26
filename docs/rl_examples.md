@@ -65,14 +65,14 @@ Actions are applied onto the ants via `set_joint_efforts`, which moves the ants 
 torques to the DOFs. Force sensors are also placed on each of the legs to observe contacts
 with the ground plane; the sensor values can be retrieved using `get_force_sensor_forces`. 
 
-Training can be launched with command line argument `task=Ant`.
+Training with PPO can be launched with command line argument `task=Ant`. Training with SAC with command line arguments `task=AntSAC train=AntSAC`.
 
 Running inference with pre-trained model can be launched with command line argument `task=Ant test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.2.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth`
 
 Config files used for this task are:
 
--   **Task config**: [Ant.yaml](../omniisaacgymenvs/cfg/task/Ant.yaml)
--   **rl_games training config**: [AntPPO.yaml](../omniisaacgymenvs/cfg/train/AntPPO.yaml)
+-   **PPO task config**: [Ant.yaml](../omniisaacgymenvs/cfg/task/Ant.yaml)
+-   **rl_games PPO training config**: [AntPPO.yaml](../omniisaacgymenvs/cfg/train/AntPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/171454182-0be1b830-bceb-4cfd-93fb-e1eb8871ec68.gif" width="300" height="150"/>
 
@@ -85,14 +85,14 @@ Humanoid is another environment that uses
 very similar to the Ant example, where the goal for the humanoid is to run forward
 as fast as possible.
 
-Training can be launched with command line argument `task=Humanoid`.
+Training can be launched with command line argument `task=Humanoid`. Training with SAC with command line arguments `task=HumanoidSAC train=HumanoidSAC`.
 
 Running inference with pre-trained model can be launched with command line argument `task=Humanoid test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2022.2.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/humanoid.pth`
 
 Config files used for this task are:
 
--   **Task config**: [Humanoid.yaml](../omniisaacgymenvs/cfg/task/Humanoid.yaml)
--   **rl_games training config**: [HumanoidPPO.yaml](../omniisaacgymenvs/cfg/train/HumanoidPPO.yaml)
+-   **PPO task config**: [Humanoid.yaml](../omniisaacgymenvs/cfg/task/Humanoid.yaml)
+-   **rl_games PPO training config**: [HumanoidPPO.yaml](../omniisaacgymenvs/cfg/train/HumanoidPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/171454193-e027885d-1510-4ef4-b838-06b37f70c1c7.gif" width="300" height="150"/>
 

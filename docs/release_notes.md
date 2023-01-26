@@ -26,6 +26,7 @@ Additions
 - Add runtime mass randomization to ShadowHand environments
 - Introduce `disable_contact_processing` simulation parameter for faster contact processing
 - Use physics replication for cloning by default for faster load time
+- Added Ant and Humanoid SAC training examples
 
 Changes
 -------
