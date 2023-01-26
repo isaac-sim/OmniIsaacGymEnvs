@@ -104,7 +104,6 @@ env:
 
 sim:
   dt: 0.005
-  up_axis: "z"
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
   add_ground_plane: False

@@ -89,9 +89,6 @@ sim:
     # per-body
     density: -1
     max_depenetration_velocity: 1000.0
-    # per-shape
-    contact_offset: 0.005
-    rest_offset: 0.0
   cabinet:
     # -1 to use default values
     override_usd_defaults: False
@@ -106,9 +103,6 @@ sim:
     # per-body
     density: -1
     max_depenetration_velocity: 1000.0
-    # per-shape
-    contact_offset: 0.005
-    rest_offset: 0.0
   prop:
     # -1 to use default values
     override_usd_defaults: False

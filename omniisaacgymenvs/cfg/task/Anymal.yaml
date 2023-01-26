@@ -121,6 +121,4 @@ sim:
     # per-body
     density: -1
     max_depenetration_velocity: 100.0
-    # per-shape
-    contact_offset: 0.02
-    rest_offset: 0.0
+
