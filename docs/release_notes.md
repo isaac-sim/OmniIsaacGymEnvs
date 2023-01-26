@@ -4,9 +4,16 @@ Release Notes
 2.1.0
 -----
 
+Additions
+---------
+- Add multi-GPU support for training
+- Add utility scripts for launching Isaac Sim docker with OIGE
+
 Changes
 -------
 - Change rigid body fixed_base option to make_kinematic, avoiding creation of unnecessary articulations
+- Update ShadowHand, Ingenuity, Quadcopter and Crazyflie marker objects to use kinematics
+- Update ShadowHand GPU buffer parameters
 
 
 2.0.0 - December 15, 2022

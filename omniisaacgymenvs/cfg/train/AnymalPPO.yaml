@@ -41,6 +41,7 @@ params:
     device: ${....rl_device}
     device_name: ${....rl_device}
     env_name: rlgpu
+    multi_gpu: ${....multi_gpu}
     ppo: True
     mixed_precision: True
     normalize_input: True

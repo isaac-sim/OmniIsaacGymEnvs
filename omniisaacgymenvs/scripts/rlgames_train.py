@@ -90,6 +90,10 @@ def parse_hydra_configs(cfg: DictConfig):
     time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     headless = cfg.headless
+    rank = int(os.getenv("LOCAL_RANK", "0"))
+    if cfg.multi_gpu:
+        cfg.device_id = rank
+        cfg.rl_device = f'cuda:{rank}'
     env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
 
     # ensure checkpoints can be specified as relative paths
@@ -108,7 +112,7 @@ def parse_hydra_configs(cfg: DictConfig):
 
     task = initialize_task(cfg_dict, env)
 
-    if cfg.wandb_activate:
+    if cfg.wandb_activate and rank == 0:
         # Make sure to install WandB if you actually use this.
         import wandb
 
@@ -120,9 +124,8 @@ def parse_hydra_configs(cfg: DictConfig):
             entity=cfg.wandb_entity,
             config=cfg_dict,
             sync_tensorboard=True,
-            id=run_name,
+            name=run_name,
             resume="allow",
-            monitor_gym=True,
         )
 
 
@@ -131,7 +134,7 @@ def parse_hydra_configs(cfg: DictConfig):
     rlg_trainer.run()
     env.close()
 
-    if cfg.wandb_activate:
+    if cfg.wandb_activate and rank == 0:
         wandb.finish()
 
 

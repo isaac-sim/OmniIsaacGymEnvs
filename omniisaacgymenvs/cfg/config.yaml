@@ -25,6 +25,8 @@ sim_device: 'gpu'
 device_id: 0
 # device to run RL
 rl_device: 'cuda:0'
+# multi-GPU training
+multi_gpu: False
 
 ## PhysX arguments
 num_threads: 4 # Number of worker threads per scene used by PhysX - for CPU PhysX only.
