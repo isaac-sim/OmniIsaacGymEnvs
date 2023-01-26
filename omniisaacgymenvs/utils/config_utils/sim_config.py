@@ -46,7 +46,7 @@ class SimConfig():
         if self._config["test"] == True:
             self._sim_params["enable_scene_query_support"] = True
 
-        if self._config["headless"] == True and not self._sim_params["enable_cameras"]:
+        if self._config["headless"] == True and not self._sim_params["enable_cameras"] and not self._config["enable_livestream"]:
             self._sim_params["use_flatcache"] = False
             self._sim_params["enable_viewport"] = False
 

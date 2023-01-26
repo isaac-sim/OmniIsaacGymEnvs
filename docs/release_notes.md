@@ -8,6 +8,7 @@ Additions
 ---------
 - Add multi-GPU support for training
 - Add utility scripts for launching Isaac Sim docker with OIGE
+- Add support for livestream through the Omniverse Streaming Client
 
 Changes
 -------

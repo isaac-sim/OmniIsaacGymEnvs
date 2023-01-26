@@ -47,7 +47,7 @@ def parse_hydra_configs(cfg: DictConfig):
     headless = cfg.headless
     render = not headless
 
-    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
+    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id, enable_livestream=cfg.enable_livestream)
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)

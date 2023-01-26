@@ -121,6 +121,7 @@ PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=http://omniverse-conten
 When running with a pre-trained checkpoint for the first time, we will automatically download the checkpoint file to `omniisaacgymenvs/checkpoints`. For subsequent runs, we will re-use the file that has already been downloaded, and will not overwrite existing checkpoints with the same name in the `checkpoints` folder.
 
 ## Runing from Docker
+
 Latest Isaac Sim Docker image can be found on [NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/isaac-sim). A utility script is provided at `docker/run_docker.sh` to help initialize this repository and launch the Isaac Sim docker container. The script can be run with:
 
 ```bash
@@ -144,6 +145,17 @@ Then, training can be launched from the container with:
 ```bash
 /isaac-sim/python.sh scripts/rlgames_train.py task=Ant
 ```
+
+## Livestream
+
+OmniIsaacGymEnvs supports livestream through the [Omniverse Streaming Client](https://docs.omniverse.nvidia.com/app_streaming-client/app_streaming-client/overview.html). To enable this feature, add the commandline argument `enable_livestream=True`:
+
+```bash
+PYTHON_PATH scripts/rlgames_train.py task=Ant headless=True enable_livestream=True
+```
+
+Connect from the Omniverse Streaming Client once the SimulationApp has been created. Note that enabling livestream is equivalent to training with the viewer enabled, thus the speed of training/inferencing will decrease compared to running in headless mode.
+
 
 ## Training Scripts
 
@@ -194,6 +206,7 @@ Common arguments for the training scripts are:
 * `test=TEST`- If set to `True`, only runs inference on the policy and does not do any training.
 * `checkpoint=CHECKPOINT_PATH` - Path to the checkpoint to load for training or testing.
 * `headless=HEADLESS` - Whether to run in headless mode.
+* `enable_livestream=ENABLE_LIVESTREAM` - Whether to enable Omniverse streaming.
 * `experiment=EXPERIMENT` - Sets the name of the experiment.
 * `max_iterations=MAX_ITERATIONS` - Sets how many iterations to run for. Reasonable defaults are provided for the provided environments.
 

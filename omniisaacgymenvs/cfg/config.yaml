@@ -40,6 +40,8 @@ checkpoint: ''
 
 # disables rendering
 headless: False
+# enables native livestream
+enable_livestream: False
 # timeout for MT script
 mt_timeout: 30
 
