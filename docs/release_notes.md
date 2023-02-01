@@ -6,6 +6,7 @@ Release Notes
 
 Additions
 ---------
+- Add FactoryTaskNutBoltPick example
 - Add Ant and Humanoid SAC training examples
 - Add multi-GPU support for training
 - Add utility scripts for launching Isaac Sim docker with OIGE

@@ -34,6 +34,7 @@ def initialize_task(config, env, init_sim=True):
     from omniisaacgymenvs.tasks.anymal_terrain import AnymalTerrainTask
     from omniisaacgymenvs.tasks.ball_balance import BallBalanceTask
     from omniisaacgymenvs.tasks.cartpole import CartpoleTask
+    from omniisaacgymenvs.tasks.factory.factory_task_nut_bolt_pick import FactoryTaskNutBoltPick
     from omniisaacgymenvs.tasks.franka_cabinet import FrankaCabinetTask
     from omniisaacgymenvs.tasks.humanoid import HumanoidLocomotionTask
     from omniisaacgymenvs.tasks.ingenuity import IngenuityTask
@@ -49,6 +50,7 @@ def initialize_task(config, env, init_sim=True):
         "AnymalTerrain": AnymalTerrainTask,
         "BallBalance": BallBalanceTask,
         "Cartpole": CartpoleTask,
+        "FactoryTaskNutBoltPick": FactoryTaskNutBoltPick,
         "FrankaCabinet": FrankaCabinetTask,
         "Humanoid": HumanoidLocomotionTask,
         "Ingenuity": IngenuityTask,
