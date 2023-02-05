@@ -53,6 +53,8 @@ class SimConfig():
         if self._sim_params["disable_contact_processing"]:
             carb.settings.get_settings().set_bool("/physics/disableContactProcessing", True)
 
+        carb.settings.get_settings().set_bool("/physics/physxDispatcher", True)
+
     def _parse_config(self):
         # general sim parameter
         self._sim_params = copy.deepcopy(default_sim_params)

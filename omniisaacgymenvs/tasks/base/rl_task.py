@@ -61,6 +61,9 @@ class RLTask(BaseTask):
 
         super().__init__(name=name, offset=offset)
 
+        # optimization flags for pytorch JIT
+        torch._C._jit_set_nvfuser_enabled(False)
+
         self.test = self._cfg["test"]
         self._device = self._cfg["sim_device"]
         self._dr_randomizer = Randomizer(self._sim_config)
