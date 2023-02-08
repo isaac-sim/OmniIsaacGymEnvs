@@ -1,8 +1,8 @@
 Release Notes
 =============
 
-2.1.0
------
+2022.2.1.0
+----------
 
 Additions
 ---------
@@ -11,13 +11,18 @@ Additions
 - Add multi-GPU support for training
 - Add utility scripts for launching Isaac Sim docker with OIGE
 - Add support for livestream through the Omniverse Streaming Client
-- Disable PyTorch nvFuser for better performance
 
 Changes
 -------
 - Change rigid body fixed_base option to make_kinematic, avoiding creation of unnecessary articulations
 - Update ShadowHand, Ingenuity, Quadcopter and Crazyflie marker objects to use kinematics
 - Update ShadowHand GPU buffer parameters
+- Disable PyTorch nvFuser for better performance
+
+Fixes
+-----
+- Fix material property randomization at run-time, including friction and restitution (requires Isaac Sim update)
+- Fix a bug in contact reporting API where incorrect values were being reported (requires Isaac Sim update)
 
 
 2.0.0 - December 15, 2022
