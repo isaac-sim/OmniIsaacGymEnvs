@@ -18,6 +18,7 @@ Changes
 - Update ShadowHand, Ingenuity, Quadcopter and Crazyflie marker objects to use kinematics
 - Update ShadowHand GPU buffer parameters
 - Disable PyTorch nvFuser for better performance
+- Enable viewport and replicator extensions dynamically to maintain order of extension startup
 
 Fixes
 -----

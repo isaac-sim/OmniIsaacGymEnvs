@@ -28,6 +28,9 @@
 
 
 def initialize_task(config, env, init_sim=True):
+    from .config_utils.sim_config import SimConfig
+    sim_config = SimConfig(config)
+
     from omniisaacgymenvs.tasks.allegro_hand import AllegroHandTask
     from omniisaacgymenvs.tasks.ant import AntLocomotionTask
     from omniisaacgymenvs.tasks.anymal import AnymalTask
@@ -60,9 +63,6 @@ def initialize_task(config, env, init_sim=True):
         "ShadowHandOpenAI_FF": ShadowHandTask,
         "ShadowHandOpenAI_LSTM": ShadowHandTask,
     }
-
-    from .config_utils.sim_config import SimConfig
-    sim_config = SimConfig(config)
 
     cfg = sim_config.config
     task = task_map[cfg["task_name"]](
