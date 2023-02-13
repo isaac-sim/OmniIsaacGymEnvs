@@ -21,16 +21,19 @@ params:
         name: default
     log_std_bounds: [-5, 2]
 
-  load_checkpoint: False
-  load_path: nn/Ant.pth
+  load_checkpoint: ${if:${...checkpoint},True,False} # flag which sets whether to load the checkpoint
+  load_path: ${...checkpoint} # path to the checkpoint to load
 
   config:
     name: ${resolve_default:HumanoidSAC,${....experiment}}
     env_name: rlgpu
+    device: ${....rl_device}
+    device_name: ${....rl_device}
+    multi_gpu: ${....multi_gpu}
     normalize_input: True
     reward_shaper:
       scale_value: 1.0
-    max_epochs: 50000
+    max_epochs: ${resolve_default:50000,${....max_iterations}}
     num_steps_per_episode: 8
     save_best_after: 100
     save_frequency: 1000
