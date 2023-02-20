@@ -231,23 +231,27 @@ class BallBalanceTask(RLTask):
         self._balls.set_world_poses(ball_pos[env_ids_64], ball_rot[env_ids_64], indices=env_ids_32)
         self._balls.set_velocities(ball_velocities[env_ids_64], indices=env_ids_32)
 
+        # reset root pose and velocity
+        self._balance_bots.set_world_poses(self.initial_bot_pos[env_ids_64].clone(), self.initial_bot_rot[env_ids_64].clone(), indices=env_ids_32)
+        self._balance_bots.set_velocities(self.initial_bot_velocities[env_ids_64].clone(), indices=env_ids_32)
+
         # reset DOF states for bbots in selected envs
-        self._balance_bots.set_joint_positions(self.initial_dof_positions.clone()[env_ids_64], indices=env_ids_32)
+        self._balance_bots.set_joint_positions(self.initial_dof_positions[env_ids_64].clone(), indices=env_ids_32)
 
         # bookkeeping
         self.reset_buf[env_ids] = 0
         self.progress_buf[env_ids] = 0
 
     def post_reset(self):
-        
         dof_limits = self._balance_bots.get_dof_limits()
         self.bbot_dof_lower_limits, self.bbot_dof_upper_limits = torch.t(dof_limits[0].to(device=self._device))
 
-        self.initial_dof_positions = self._balance_bots.get_joint_positions(clone=False)
-        self.initial_bot_pos, self.initial_bot_rot = self._balance_bots.get_world_poses(clone=False)
+        self.initial_dof_positions = self._balance_bots.get_joint_positions()
+        self.initial_bot_pos, self.initial_bot_rot = self._balance_bots.get_world_poses()
         self.initial_bot_pos[..., 2] = 0.559  # tray_height
-        self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses(clone=False)
-        self.initial_ball_velocities = self._balls.get_velocities().clone()
+        self.initial_bot_velocities = self._balance_bots.get_velocities()
+        self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses()
+        self.initial_ball_velocities = self._balls.get_velocities()
 
         self.dof_position_targets = torch.zeros(
             (self.num_envs, self._balance_bots.num_dof), dtype=torch.float32, device=self._device, requires_grad=False

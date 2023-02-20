@@ -25,6 +25,7 @@ Fixes
 - Fix material property randomization at run-time, including friction and restitution (requires Isaac Sim update)
 - Fix a bug in contact reporting API where incorrect values were being reported (requires Isaac Sim update)
 - Enable render flag in Isaac Sim when enable_cameras is set to True
+- Add root pose and velocity reset to BallBalance environment
 
 
 2.0.0 - December 15, 2022
