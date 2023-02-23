@@ -19,6 +19,7 @@ Changes
 - Update ShadowHand GPU buffer parameters
 - Disable PyTorch nvFuser for better performance
 - Enable viewport and replicator extensions dynamically to maintain order of extension startup
+- Update rl-games to v1.6.0
 
 Fixes
 -----

@@ -240,7 +240,7 @@ You can run (WandB)[https://wandb.ai/] with OmniIsaacGymEnvs by setting `wandb_a
 
 To train with multiple GPUs, use the following command, where `--proc_per_node` represents the number of available GPUs:
 ```bash
-PYTHON_PATH -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_addr='127.0.0.1' scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
+PYTHON_PATH -m torch.distributed.run --nnodes=1 --nproc_per_node=2 scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
 ```
 
 ## Tasks
