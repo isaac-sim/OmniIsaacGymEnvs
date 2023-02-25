@@ -171,8 +171,8 @@ class QuadcopterTask(RLTask):
         self.initial_root_pos, self.initial_root_rot = self.root_pos.clone(), self.root_rot.clone()
 
         dof_limits = self._copters.get_dof_limits()
-        self.dof_lower_limits = torch.tensor(dof_limits[0][:, 0], device=self._device)
-        self.dof_upper_limits = torch.tensor(dof_limits[0][:, 1], device=self._device)
+        self.dof_lower_limits = dof_limits[0][:, 0].to(device=self._device)
+        self.dof_upper_limits = dof_limits[0][:, 1].to(device=self._device)
 
     def reset_idx(self, env_ids):
         num_resets = len(env_ids)

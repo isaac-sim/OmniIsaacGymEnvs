@@ -197,7 +197,7 @@ class BallBalanceTask(RLTask):
         env_ids_64 = env_ids.type(torch.int64)
 
         min_d = 0.001  # min horizontal dist from origin
-        max_d = 0.5  # max horizontal dist from origin
+        max_d = 0.4  # max horizontal dist from origin
         min_height = 1.0
         max_height = 2.0
         min_horizontal_speed = 0

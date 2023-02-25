@@ -126,8 +126,9 @@ class InHandManipulationTask(RLTask):
             name="goal_view", 
             reset_xform_properties=False
         )
+        self._goals._non_root_link = True # hack to ignore kinematics
         scene.add(self._goals)
-   
+
         if self._dr_randomizer.randomize:
             self._dr_randomizer.apply_on_startup_domain_randomization(self)
     

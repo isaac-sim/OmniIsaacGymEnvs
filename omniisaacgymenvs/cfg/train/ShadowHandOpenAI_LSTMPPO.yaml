@@ -104,6 +104,7 @@ params:
           layers: 1
           before_mlp: True
           layer_norm: True
+          zero_rnn_on_done: False
 
     player:
       deterministic: True

@@ -7,7 +7,7 @@ physics_engine: ${..physics_engine}
 env: 
   numEnvs: ${resolve_default:4096,${...num_envs}}
   envSpacing: 2.0
-  maxEpisodeLength: 500
+  maxEpisodeLength: 600
   actionSpeedScale: 20
   
   clipObservations: 5.0
