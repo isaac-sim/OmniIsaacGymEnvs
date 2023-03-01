@@ -183,7 +183,8 @@ class PPOTrainer(threading.Thread):
 def parse_hydra_configs(cfg: DictConfig):
 
     headless = cfg.headless
-    env = VecEnvRLGamesMT(headless=headless, sim_device=cfg.device_id, enable_livestream=cfg.enable_livestream)
+    enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
+    env = VecEnvRLGamesMT(headless=headless, sim_device=cfg.device_id, enable_livestream=cfg.enable_livestream, enable_viewport=enable_viewport)
 
     # ensure checkpoints can be specified as relative paths
     if cfg.checkpoint:
