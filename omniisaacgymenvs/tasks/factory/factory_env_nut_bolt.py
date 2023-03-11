@@ -82,7 +82,7 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         self.import_franka_assets()
         self.create_nut_bolt_material()
 
-        RLTask.set_up_scene(self, scene)
+        RLTask.set_up_scene(self, scene, replicate_physics=False)
         
         self._import_env_assets()
 
