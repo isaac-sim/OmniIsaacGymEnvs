@@ -48,6 +48,12 @@ Install `omniisaacgymenvs` as a python module for `PYTHON_PATH`:
 PYTHON_PATH -m pip install -e .
 ```
 
+The following error may appear during the initial installation. This error is harmless and can be ignored.
+
+```
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+```
+
 
 ### Running the examples
 

@@ -22,6 +22,7 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Crazyflie crazyflie.py](#crazyflie-crazyfliepy)
   - [Ball Balance ball_balance.py](#ball-balance-ball_balancepy)
   - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
+  - [Factory: Fast Contact for Robotic Assembly](#factory-fast-contact-for-robotic-assembly)
 
 
 ### Cartpole [cartpole.py](../omniisaacgymenvs/tasks/cartpole.py)
@@ -310,7 +311,8 @@ Config files used for this task are:
 <img src="https://user-images.githubusercontent.com/34286328/184174894-03767aa0-936c-4bfe-bbe9-a6865f539bb4.gif" width="300" height="150"/>
 
 ### Factory: Fast Contact for Robotic Assembly
-We provide a Factory example task, **FactoryTaskNutBoltPick**, which can be executed with `python train.py task=FactoryTaskNutBoltPick`. This task trains policy for the Pick task, a simplified version of the corresponding task in the Factory paper. The policy may take ~1 hour to achieve high success rates on a modern GPU.
+
+We provide a Factory example task, [**FactoryTaskNutBoltPick**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_pick.py), which can be executed with `python train.py task=FactoryTaskNutBoltPick`. This task trains policy for the Pick task, a simplified version of the corresponding task in the Factory paper. The policy may take ~1 hour to achieve high success rates on a modern GPU.
 
 - The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
 - The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
