@@ -72,3 +72,20 @@ sim:
     # per-body
     density: -1
     max_depenetration_velocity: 1000.0
+
+
+  ball:
+    # -1 to use default values
+    override_usd_defaults: False
+    make_kinematic: True
+    enable_self_collisions: False
+    enable_gyroscopic_forces: True
+    # also in stage params
+    # per-actor
+    solver_position_iteration_count: 6
+    solver_velocity_iteration_count: 0
+    sleep_threshold: 0.005
+    stabilization_threshold: 0.001
+    # per-body
+    density: -1
+    max_depenetration_velocity: 1000.0

@@ -204,7 +204,7 @@ class SimConfig():
         physx_rb_api = self._get_physx_rigid_body_api(prim)
         solver_velocity_iteration_count = physx_rb_api.GetSolverVelocityIterationCountAttr()
         if value is None:
-            value = self._get_actor_config_value(name, "solver_velocity_iteration_count", solver_position_iteration_count)
+            value = self._get_actor_config_value(name, "solver_velocity_iteration_count", solver_velocity_iteration_count)
         if value != -1:
             solver_velocity_iteration_count.Set(value)
 
@@ -270,7 +270,7 @@ class SimConfig():
         stage = omni.usd.get_context().get_stage()
         if value is None:
             value = self._get_actor_config_value(name, "make_kinematic")
-        if value:
+        if value == True:
             # parse through all children prims
             prims = [prim]
             while len(prims) > 0:
