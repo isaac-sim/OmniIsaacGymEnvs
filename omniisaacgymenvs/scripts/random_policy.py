@@ -59,7 +59,12 @@ def parse_hydra_configs(cfg: DictConfig):
         if env._world.is_playing():
             if env._world.current_time_step_index == 0:
                 env._world.reset(soft=True)
-            actions = torch.tensor(np.array([env.action_space.sample() for _ in range(env.num_envs)]), device=task.rl_device)
+
+            # get upper and lower bounds of action space, sample actions randomly on this interval
+            action_high = env.action_space.high[0]
+            action_low = env.action_space.low[0]
+            actions = (action_high - action_low) * torch.rand(env.num_envs, env.action_space.shape[0]), device=task.rl_device) - action_high
+
             env._task.pre_physics_step(actions)
             env._world.step(render=render)
             env.sim_frame_count += 1
