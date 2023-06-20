@@ -48,7 +48,7 @@ class SimConfig():
 
         from omni.isaac.core.utils.extensions import enable_extension
         if self._config["headless"] == True and not self._sim_params["enable_cameras"] and not self._config["enable_livestream"]:
-            self._sim_params["use_flatcache"] = False
+            self._sim_params["use_fabric"] = False
             self._sim_params["enable_viewport"] = False
         else:
             self._sim_params["enable_viewport"] = True

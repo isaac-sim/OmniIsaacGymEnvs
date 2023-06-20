@@ -110,6 +110,8 @@ class HumanoidLocomotionTask(LocomotionTask):
         dof_limits = self._humanoids.get_dof_limits()
         self.dof_limits_lower = dof_limits[0, :, 0].to(self._device)
         self.dof_limits_upper = dof_limits[0, :, 1].to(self._device)
+        force_links = ["left_foot", "right_foot"]
+        self._sensor_indices = torch.tensor([self._humanoids._body_indices[j] for j in force_links], device=self._device, dtype=torch.long)
 
         LocomotionTask.post_reset(self)
 

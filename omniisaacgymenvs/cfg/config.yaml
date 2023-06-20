@@ -53,9 +53,10 @@ wandb_project: 'omniisaacgymenvs'
 
 # set default task and default training config based on task
 defaults:
+  - _self_
   - task: Cartpole
   - train: ${task}PPO
-  - hydra/job_logging: disabled
+  - override hydra/job_logging: disabled
 
 # set the directory where the output files get saved
 hydra:

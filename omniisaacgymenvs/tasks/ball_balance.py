@@ -78,8 +78,8 @@ class BallBalanceTask(RLTask):
     def set_up_scene(self, scene) -> None:
         self.get_balance_table()
         self.add_ball()
-        super().set_up_scene(scene)
-        self._balance_bots = ArticulationView(prim_paths_expr="/World/envs/.*/BalanceBot", name="balance_bot_view", reset_xform_properties=False)
+        super().set_up_scene(scene, replicate_physics=False)
+        self._balance_bots = ArticulationView(prim_paths_expr="/World/envs/.*/BalanceBot/tray", name="balance_bot_view", reset_xform_properties=False)
         scene.add(self._balance_bots)
         self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/Ball/ball", name="ball_view", reset_xform_properties=False)
         scene.add(self._balls)
@@ -146,7 +146,7 @@ class BallBalanceTask(RLTask):
         dof_pos = self._balance_bots.get_joint_positions(clone=False)
         dof_vel = self._balance_bots.get_joint_velocities(clone=False)
 
-        sensor_force_torques = self._balance_bots._physics_view.get_force_sensor_forces() # (num_envs, num_sensors, 6)
+        sensor_force_torques = self._balance_bots._physics_view.get_link_incoming_joint_force()[:, self._sensor_indices] # (num_envs, num_sensors, 6)
 
         self.obs_buf[..., 0:3] = dof_pos[..., self.actuated_dof_indices]
         self.obs_buf[..., 3:6] = dof_vel[..., self.actuated_dof_indices]
@@ -171,10 +171,6 @@ class BallBalanceTask(RLTask):
         if not self._env._world.is_playing():
             return
 
-        if not self.anchored:
-            # Adding extra joints after ArticulationView is initialized
-            self.set_up_table_anchors()
-            self.anchored = True
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(reset_env_ids) > 0:
             self.reset_idx(reset_env_ids)
@@ -257,7 +253,12 @@ class BallBalanceTask(RLTask):
             (self.num_envs, self._balance_bots.num_dof), dtype=torch.float32, device=self._device, requires_grad=False
         )
 
-        self.actuated_dof_indices = torch.LongTensor([3, 4, 5]).to(self._device)
+        actuated_joints = ["lower_leg0", "lower_leg1", "lower_leg2"]
+        self.actuated_dof_indices = torch.tensor([self._balance_bots._dof_indices[j] for j in actuated_joints], device=self._device, dtype=torch.long)
+        force_links = ["upper_leg0", "upper_leg1", "upper_leg2"]
+        self._sensor_indices = torch.tensor([self._balance_bots._body_indices[j] for j in force_links], device=self._device, dtype=torch.long)
+
+        self.set_up_table_anchors()
 
     def calculate_metrics(self) -> None:
         ball_dist = torch.sqrt(

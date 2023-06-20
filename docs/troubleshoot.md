@@ -10,7 +10,7 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 ```
 
 * When running with the GPU pipeline, updates to states in the scene will not sync to USD. Therefore, values in the UI may appear wrong when simulation is running. Although objects may be updating in the Viewport, attribute values in the UI will not update along with them. Similarly, during simulation, any updates made through the USD APIs will not be synced with physics.
-* To enable USD sync, please use the CPU pipeline with `pipeline=cpu` and disable flatcache by setting `use_flatcache: False` in the task config.
+* To enable USD sync, please use the CPU pipeline with `pipeline=cpu` and disable fabric by setting `use_fabric: False` in the task config.
 
 
 #### Load Time

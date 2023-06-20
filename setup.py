@@ -11,8 +11,8 @@ import os
 # Minimum dependencies required prior to installation
 INSTALL_REQUIRES = [
     "protobuf==3.20.2",
-    "omegaconf==2.1.1",
-    "hydra-core==1.1.1",
+    "omegaconf==2.3.0",
+    "hydra-core==1.3.2",
     "redis==3.5.3", # needed by Ray on Windows
     "rl-games==1.6.0"
 ]
@@ -21,7 +21,7 @@ INSTALL_REQUIRES = [
 setup(
     name="omniisaacgymenvs",
     author="NVIDIA",
-    version="2022.2.1.0",
+    version="2023.1.0",
     description="RL environments for robot learning in NVIDIA Isaac Sim.",
     keywords=["robotics", "rl"],
     include_package_data=True,

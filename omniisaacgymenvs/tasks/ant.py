@@ -82,6 +82,8 @@ class AntLocomotionTask(LocomotionTask):
         self.dof_limits_lower = dof_limits[0, :, 0].to(self._device)
         self.dof_limits_upper = dof_limits[0, :, 1].to(self._device)
         self.motor_effort_ratio = torch.ones_like(self.joint_gears, device=self._device)
+        force_links = ["front_left_foot", "front_right_foot", "left_back_foot", "right_back_foot"]
+        self._sensor_indices = torch.tensor([self._ants._body_indices[j] for j in force_links], device=self._device, dtype=torch.long)
 
         LocomotionTask.post_reset(self)
 

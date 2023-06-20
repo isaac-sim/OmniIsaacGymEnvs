@@ -86,7 +86,7 @@ class LocomotionTask(RLTask):
         dof_vel = self._robots.get_joint_velocities(clone=False)
 
         # force sensors attached to the feet
-        sensor_force_torques = self._robots._physics_view.get_force_sensor_forces() # (num_envs, num_sensors, 6)
+        sensor_force_torques = self._robots._physics_view.get_link_incoming_joint_force()[:, self._sensor_indices]
 
         self.obs_buf[:], self.potentials[:], self.prev_potentials[:], self.up_vec[:], self.heading_vec[:] = get_observations(
             torso_position, torso_rotation, velocity, ang_velocity, dof_pos, dof_vel, self.targets, self.potentials, self.dt,

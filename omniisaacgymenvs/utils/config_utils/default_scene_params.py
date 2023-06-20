@@ -85,7 +85,7 @@ default_sim_params = {
     "use_gpu_pipeline": True,
     "add_ground_plane": True,
     "add_distant_light": True,
-    "use_flatcache": True,
+    "use_fabric": True,
     "enable_scene_query_support": False,
     "enable_cameras": False,
     "disable_contact_processing": False,

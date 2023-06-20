@@ -38,7 +38,7 @@ from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_d
 from omniisaacgymenvs.utils.task_util import initialize_task
 from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
 
-@hydra.main(config_name="config", config_path="../cfg")
+@hydra.main(version_base=None, config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
     cfg_dict = omegaconf_to_dict(cfg)

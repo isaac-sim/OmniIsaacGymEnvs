@@ -109,8 +109,7 @@ class InHandManipulationTask(RLTask):
         self.get_object(hand_start_translation, pose_dy, pose_dz)
         self.get_goal()
 
-        replicate_physics = False if self._dr_randomizer.randomize else True
-        super().set_up_scene(scene, replicate_physics)
+        super().set_up_scene(scene, replicate_physics=True)
    
         self._hands = self.get_hand_view(scene)
         scene.add(self._hands)

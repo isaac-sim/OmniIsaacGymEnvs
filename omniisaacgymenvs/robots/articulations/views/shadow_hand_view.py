@@ -71,3 +71,6 @@ class ShadowHandView(ArticulationView):
         limit_stiffness = torch.tensor([30.0] * self.num_fixed_tendons, device=self._device)
         damping = torch.tensor([0.1] * self.num_fixed_tendons, device=self._device)
         self.set_fixed_tendon_properties(dampings=damping, limit_stiffnesses=limit_stiffness)
+
+        fingertips = ["robot0_ffdistal", "robot0_mfdistal", "robot0_rfdistal", "robot0_lfdistal", "robot0_thdistal"]
+        self._sensor_indices = torch.tensor([self._body_indices[j] for j in fingertips], device=self._device, dtype=torch.long)

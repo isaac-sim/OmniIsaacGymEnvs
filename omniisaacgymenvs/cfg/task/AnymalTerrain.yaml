@@ -107,7 +107,7 @@ sim:
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
   add_ground_plane: False
-  use_flatcache: True
+  use_fabric: True
   enable_scene_query_support: False
   disable_contact_processing: True
 

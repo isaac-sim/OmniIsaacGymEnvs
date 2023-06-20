@@ -1,8 +1,23 @@
 Release Notes
 =============
 
-2022.2.1.0 - March 16, 2023
----------------------------
+2023.1.0
+--------
+
+Additions
+---------
+
+Changes
+-------
+- `use_flatcache` flag has been renamed to `use_fabric`
+- Updated hydra-core version to 1.3.2, omegaconf version to 2.3.0
+- The `get_force_sensor_forces` API for articulations is now deprecated and replaced with `get_link_incoming_joint_force`
+
+Fixes
+-----
+
+2022.2.1 - March 16, 2023
+-------------------------
 
 Additions
 ---------

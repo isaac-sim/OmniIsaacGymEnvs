@@ -179,7 +179,7 @@ class PPOTrainer(threading.Thread):
             print("Task Stopped!")
 
 
-@hydra.main(config_name="config", config_path="../cfg")
+@hydra.main(version_base=None, config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
     headless = cfg.headless

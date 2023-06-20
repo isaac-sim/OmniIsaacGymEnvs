@@ -124,7 +124,7 @@ class ShadowHandTask(InHandManipulationTask):
         self.hand_dof_vel = self._hands.get_joint_velocities(clone=False)
 
         if self.obs_type == "full_state" or self.asymmetric_obs:
-            self.vec_sensor_tensor = self._hands._physics_view.get_force_sensor_forces().reshape(self.num_envs, 6*self.num_fingertips)
+            self.vec_sensor_tensor = self._hands._physics_view.get_link_incoming_joint_force()[:, self._sensor_indices]
 
         if self.obs_type == "openai":
             self.compute_fingertip_observations(True)

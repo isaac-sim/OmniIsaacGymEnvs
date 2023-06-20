@@ -213,8 +213,8 @@ self._sim_config.apply_articulation_settings("Humanoid", get_prim_at_path(humano
 ```
 #### Additional Simulation Parameters
 
-- `use_flatcache`: Setting this paramter to `True` enables [PhysX Flatcache](https://docs.omniverse.nvidia.com/prod_extensions/prod_extensions/ext_physics.html#flatcache), which offers a significant increase in simulation speed. However, this parameter must 
-be set to `False` if soft-body simulation is required because `PhysX Flatcache` curently only supports rigid-body simulation.
+- `use_fabric`: Setting this paramter to `True` enables [PhysX Fabric](https://docs.omniverse.nvidia.com/prod_extensions/prod_extensions/ext_physics.html#flatcache), which offers a significant increase in simulation speed. However, this parameter must 
+be set to `False` if soft-body simulation is required because `PhysX Fabric` curently only supports rigid-body simulation.
 - `enable_scene_query_support`: Setting this paramter to `True` allows the user to interact with prims in the scene. Keeping this setting to `False` during
 training improves simulation speed. Note that this parameter is always set to `True` if in test/inference mode to enable user interaction with trained models.
 

@@ -53,7 +53,7 @@ sim:
   add_ground_plane: True
   add_distant_light: True
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
-  use_flatcache: True
+  use_fabric: True
   enable_scene_query_support: False
   disable_contact_processing: False
 
