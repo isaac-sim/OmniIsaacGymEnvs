@@ -27,8 +27,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omniisaacgymenvs.tasks.shared.locomotion import LocomotionTask
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
+from omniisaacgymenvs.tasks.warp.shared.locomotion import LocomotionTask
+from omniisaacgymenvs.tasks.base.rl_task import RLTaskWarp
 from omniisaacgymenvs.robots.articulations.humanoid import Humanoid
 
 from omni.isaac.core.articulations import ArticulationView
@@ -36,6 +36,7 @@ from omni.isaac.core.utils.prims import get_prim_at_path
 
 import numpy as np
 import torch
+import warp as wp
 import math
 
 
@@ -60,7 +61,7 @@ class HumanoidLocomotionTask(LocomotionTask):
 
     def set_up_scene(self, scene) -> None:
         self.get_humanoid()
-        RLTask.set_up_scene(self, scene)
+        RLTaskWarp.set_up_scene(self, scene)
         self._humanoids = ArticulationView(prim_paths_expr="/World/envs/.*/Humanoid/torso", name="humanoid_view", reset_xform_properties=False)
         scene.add(self._humanoids)
         return
@@ -74,7 +75,7 @@ class HumanoidLocomotionTask(LocomotionTask):
         return self._humanoids
 
     def post_reset(self):
-        self.joint_gears = torch.tensor(
+        self.joint_gears = wp.array(
             [
                 67.5000, # lower_waist
                 67.5000, # lower_waist
@@ -99,26 +100,54 @@ class HumanoidLocomotionTask(LocomotionTask):
                 22.5, # left_foot
             ],
             device=self._device,
+            dtype=wp.float32
         )
-        self.max_motor_effort = torch.max(self.joint_gears)
-        self.motor_effort_ratio = self.joint_gears / self.max_motor_effort
-        dof_limits = self._humanoids.get_dof_limits()
-        self.dof_limits_lower = dof_limits[0, :, 0].to(self._device)
-        self.dof_limits_upper = dof_limits[0, :, 1].to(self._device)
+        self.max_motor_effort = 135.0
+        self.motor_effort_ratio = wp.zeros(self._humanoids._num_dof, dtype=wp.float32, device=self._device)
+        wp.launch(compute_effort_ratio, dim=self._humanoids._num_dof, 
+            inputs=[self.motor_effort_ratio, self.joint_gears, self.max_motor_effort], device=self._device)
+
+        dof_limits = self._humanoids.get_dof_limits().to(self._device)
+        self.dof_limits_lower = wp.zeros(self._humanoids._num_dof, dtype=wp.float32, device=self._device)
+        self.dof_limits_upper = wp.zeros(self._humanoids._num_dof, dtype=wp.float32, device=self._device)
+        wp.launch(parse_dof_limits, dim=self._humanoids._num_dof,
+            inputs=[self.dof_limits_lower, self.dof_limits_upper, dof_limits], device=self._device)
+        self.dof_at_limit_cost = wp.zeros(self._num_envs, dtype=wp.float32, device=self._device)
         force_links = ["left_foot", "right_foot"]
-        self._sensor_indices = torch.tensor([self._humanoids._body_indices[j] for j in force_links], device=self._device, dtype=torch.long)
+        self._sensor_indices = wp.array([self._humanoids._body_indices[j] for j in force_links], device=self._device, dtype=wp.int32)
 
         LocomotionTask.post_reset(self)
 
     def get_dof_at_limit_cost(self):
-        return get_dof_at_limit_cost(self.obs_buf, self.motor_effort_ratio, self.joints_at_limit_cost_scale)
+        wp.launch(get_dof_at_limit_cost, dim=(self._num_envs, self._humanoids._num_dof),
+            inputs=[self.dof_at_limit_cost, self.obs_buf, self.motor_effort_ratio, self.joints_at_limit_cost_scale])
+        return self.dof_at_limit_cost
 
+@wp.kernel
+def compute_effort_ratio(motor_effort_ratio: wp.array(dtype=wp.float32),
+                         joint_gears: wp.array(dtype=wp.float32),
+                         max_motor_effort: float):
+    tid = wp.tid()
+    motor_effort_ratio[tid] = joint_gears[tid] / max_motor_effort
 
-@torch.jit.script
-def get_dof_at_limit_cost(obs_buf, motor_effort_ratio, joints_at_limit_cost_scale):
-    # type: (Tensor, Tensor, float) -> Tensor
-    scaled_cost = joints_at_limit_cost_scale * (torch.abs(obs_buf[:, 12:33]) - 0.98) / 0.02
-    dof_at_limit_cost = torch.sum(
-        (torch.abs(obs_buf[:, 12:33]) > 0.98) * scaled_cost * motor_effort_ratio.unsqueeze(0), dim=-1
-    )
-    return dof_at_limit_cost
+@wp.kernel
+def parse_dof_limits(dof_limits_lower: wp.array(dtype=wp.float32),
+                     dof_limits_upper: wp.array(dtype=wp.float32),
+                     dof_limits: wp.array(dtype=wp.float32, ndim=3)):
+    tid = wp.tid()
+    dof_limits_lower[tid] = dof_limits[0, tid, 0]
+    dof_limits_upper[tid] = dof_limits[0, tid, 1]
+
+@wp.kernel
+def get_dof_at_limit_cost(dof_at_limit_cost: wp.array(dtype=wp.float32),
+                          obs_buf: wp.array(dtype=wp.float32, ndim=2), 
+                          motor_effort_ratio: wp.array(dtype=wp.float32), 
+                          joints_at_limit_cost_scale: float):
+    i, j = wp.tid()
+    dof_i = j + 12
+
+    scaled_cost = joints_at_limit_cost_scale * (wp.abs(obs_buf[i, dof_i]) - 0.98) / 0.02
+    cost = 0.0
+    if wp.abs(obs_buf[i, dof_i]) > 0.98:
+        cost = scaled_cost * motor_effort_ratio[j]
+    dof_at_limit_cost[i] = cost

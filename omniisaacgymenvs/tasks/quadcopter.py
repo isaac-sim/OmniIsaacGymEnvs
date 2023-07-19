@@ -79,6 +79,7 @@ class QuadcopterTask(RLTask):
         RLTask.set_up_scene(self, scene)
         self._copters = QuadcopterView(prim_paths_expr="/World/envs/.*/Quadcopter", name="quadcopter_view")
         self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
+        self._balls._non_root_link = True # do not set states for kinematics
         scene.add(self._copters)
         scene.add(self._copters.rotors)
         scene.add(self._balls)

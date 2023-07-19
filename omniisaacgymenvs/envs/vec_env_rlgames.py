@@ -39,11 +39,11 @@ from datetime import datetime
 class VecEnvRLGames(VecEnvBase):
 
     def _process_data(self):
-        self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device).clone()
-        self._rew = self._rew.to(self._task.rl_device).clone()
-        self._states = torch.clamp(self._states, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device).clone()
-        self._resets = self._resets.to(self._task.rl_device).clone()
-        self._extras = self._extras.copy()
+        self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device)
+        self._rew = self._rew.to(self._task.rl_device)
+        self._states = torch.clamp(self._states, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device)
+        self._resets = self._resets.to(self._task.rl_device)
+        self._extras = self._extras
 
     def set_task(
         self, task, backend="numpy", sim_params=None, init_sim=True
@@ -57,7 +57,7 @@ class VecEnvRLGames(VecEnvBase):
         if self._task.randomize_actions:
             actions = self._task._dr_randomizer.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
 
-        actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device).clone()
+        actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device)
 
         self._task.pre_physics_step(actions)
         

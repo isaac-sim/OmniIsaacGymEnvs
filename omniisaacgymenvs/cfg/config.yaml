@@ -51,6 +51,9 @@ wandb_name: ${train.params.config.name}
 wandb_entity: ''
 wandb_project: 'omniisaacgymenvs'
 
+# Warp
+warp: False
+
 # set default task and default training config based on task
 defaults:
   - _self_

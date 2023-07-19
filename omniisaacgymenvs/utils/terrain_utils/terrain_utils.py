@@ -64,7 +64,7 @@ def random_uniform_terrain(terrain, min_height, max_height, step=1, downsampled_
     x = np.linspace(0, terrain.width * terrain.horizontal_scale, height_field_downsampled.shape[0])
     y = np.linspace(0, terrain.length * terrain.horizontal_scale, height_field_downsampled.shape[1])
 
-    f = interpolate.interp2d(y, x, height_field_downsampled, kind='linear')
+    f = interpolate.RectBivariateSpline(y, x, height_field_downsampled)
 
     x_upsampled = np.linspace(0, terrain.width * terrain.horizontal_scale, terrain.width)
     y_upsampled = np.linspace(0, terrain.length * terrain.horizontal_scale, terrain.length)

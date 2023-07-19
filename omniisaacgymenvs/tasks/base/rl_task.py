@@ -30,16 +30,19 @@
 from abc import abstractmethod
 import numpy as np
 import torch
+import warp as wp
 from gym import spaces
+
 from omni.isaac.core.tasks import BaseTask
 from omni.isaac.core.utils.types import ArticulationAction
 from omni.isaac.core.utils.prims import define_prim
+import omni.isaac.core.utils.warp.tensor as wp_utils
 from omni.isaac.cloner import GridCloner
+
 from omniisaacgymenvs.tasks.utils.usd_utils import create_distant_light
 from omniisaacgymenvs.utils.domain_randomization.randomize import Randomizer
+
 import omni.kit
-from omni.kit.viewport.utility.camera_state import ViewportCameraState
-from omni.kit.viewport.utility import get_viewport_from_window_name
 from pxr import Gf
 
 class RLTask(BaseTask):
@@ -61,12 +64,17 @@ class RLTask(BaseTask):
 
         super().__init__(name=name, offset=offset)
 
+        self._rand_seed = self._sim_config._config["seed"]
         # optimization flags for pytorch JIT
         torch._C._jit_set_nvfuser_enabled(False)
 
         self.test = self._cfg["test"]
         self._device = self._cfg["sim_device"]
         self._dr_randomizer = Randomizer(self._sim_config)
+        if self._dr_randomizer.randomize:
+            import omni.replicator.isaac as dr
+            self.dr = dr
+
         print("Task Device:", self._device)
 
         self.randomize_actions = False
@@ -133,17 +141,20 @@ class RLTask(BaseTask):
         self._env_pos = torch.tensor(np.array(self._env_pos), device=self._device, dtype=torch.float)
         self._cloner.filter_collisions(
             self._env._world.get_physics_context().prim_path, "/World/collisions", prim_paths, collision_filter_global_paths)
-        self.set_initial_camera_params(camera_position=[10, 10, 3], camera_target=[0, 0, 0])
-        if self._sim_config.task_config["sim"].get("add_distant_light", True):
-            create_distant_light()
-    
-    def set_initial_camera_params(self, camera_position=[10, 10, 3], camera_target=[0, 0, 0]):
         if self._env._render:
-            viewport_api_2 = get_viewport_from_window_name("Viewport")
-            viewport_api_2.set_active_camera("/OmniverseKit_Persp")
-            camera_state = ViewportCameraState("/OmniverseKit_Persp", viewport_api_2)
-            camera_state.set_position_world(Gf.Vec3d(camera_position[0], camera_position[1], camera_position[2]), True)
-            camera_state.set_target_world(Gf.Vec3d(camera_target[0], camera_target[1], camera_target[2]), True)
+            self.set_initial_camera_params(camera_position=[10, 10, 3], camera_target=[0, 0, 0])
+            if self._sim_config.task_config["sim"].get("add_distant_light", True):
+                create_distant_light()
+
+    def set_initial_camera_params(self, camera_position=[10, 10, 3], camera_target=[0, 0, 0]):
+        from omni.kit.viewport.utility.camera_state import ViewportCameraState
+        from omni.kit.viewport.utility import get_viewport_from_window_name
+
+        viewport_api_2 = get_viewport_from_window_name("Viewport")
+        viewport_api_2.set_active_camera("/OmniverseKit_Persp")
+        camera_state = ViewportCameraState("/OmniverseKit_Persp", viewport_api_2)
+        camera_state.set_position_world(Gf.Vec3d(camera_position[0], camera_position[1], camera_position[2]), True)
+        camera_state.set_target_world(Gf.Vec3d(camera_target[0], camera_target[1], camera_target[2]), True)
 
     @property
     def default_base_env_path(self):
@@ -258,3 +269,80 @@ class RLTask(BaseTask):
             self.get_extras()
 
         return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
+
+
+class RLTaskWarp(RLTask):
+
+    def cleanup(self) -> None:
+        """ Prepares torch buffers for RL data collection."""
+        # prepare tensors
+        self.obs_buf = wp.zeros((self._num_envs, self.num_observations), device=self._device, dtype=wp.float32)
+        self.states_buf = wp.zeros((self._num_envs, self.num_states), device=self._device, dtype=wp.float32)
+        self.rew_buf = wp.zeros(self._num_envs, device=self._device, dtype=wp.float32)
+        self.reset_buf = wp_utils.ones(self._num_envs, device=self._device, dtype=wp.int32)
+        self.progress_buf = wp.zeros(self._num_envs, device=self._device, dtype=wp.int32)
+        self.zero_states_buf_torch = torch.zeros((self._num_envs, self.num_states), device=self._device, dtype=torch.float32)
+        self.extras = {}
+
+    def reset(self):
+        """ Flags all environments for reset.
+        """
+        wp.launch(reset_progress, dim=self._num_envs, inputs=[self.progress_buf], device=self._device)
+
+    def post_physics_step(self):
+        """ Processes RL required computations for observations, states, rewards, resets, and extras.
+            Also maintains progress buffer for tracking step count per environment.
+
+        Returns:
+            obs_buf(torch.Tensor): Tensor of observation data.
+            rew_buf(torch.Tensor): Tensor of rewards data.
+            reset_buf(torch.Tensor): Tensor of resets/dones data.
+            extras(dict): Dictionary of extras data.
+        """
+
+        wp.launch(increment_progress, dim=self._num_envs, inputs=[self.progress_buf], device=self._device)
+
+        if self._env._world.is_playing():
+            self.get_observations()
+            self.get_states()
+            self.calculate_metrics()
+            self.is_done()
+            self.get_extras()
+
+        obs_buf_torch = wp.to_torch(self.obs_buf)
+        rew_buf_torch = wp.to_torch(self.rew_buf)
+        reset_buf_torch = wp.to_torch(self.reset_buf)
+
+        return obs_buf_torch, rew_buf_torch, reset_buf_torch, self.extras
+
+    def get_states(self):
+        """ API for retrieving states buffer, used for asymmetric AC training.
+
+        Returns:
+            states_buf(torch.Tensor): States buffer.
+        """
+        if self.num_states > 0:
+            return wp.to_torch(self.states_buf)
+        else:
+            return self.zero_states_buf_torch
+
+    def set_up_scene(self, scene) -> None:
+        """ Clones environments based on value provided in task config and applies collision filters to mask 
+            collisions across environments.
+
+        Args:
+            scene (Scene): Scene to add objects to.
+        """
+
+        super().set_up_scene(scene)
+        self._env_pos = wp.from_torch(self._env_pos)
+
+@wp.kernel
+def increment_progress(progress_buf: wp.array(dtype=wp.int32)):
+    i = wp.tid()
+    progress_buf[i] = progress_buf[i] + 1
+
+@wp.kernel
+def reset_progress(progress_buf: wp.array(dtype=wp.int32)):
+    i = wp.tid()
+    progress_buf[i] = 1

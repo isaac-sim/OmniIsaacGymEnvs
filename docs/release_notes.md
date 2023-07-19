@@ -6,15 +6,21 @@ Release Notes
 
 Additions
 ---------
+- Add support for Warp backend task implementation
+- Add Warp examples: Cartpole, Ant, Humanoid
 
 Changes
 -------
 - `use_flatcache` flag has been renamed to `use_fabric`
 - Updated hydra-core version to 1.3.2, omegaconf version to 2.3.0
 - The `get_force_sensor_forces` API for articulations is now deprecated and replaced with `get_link_incoming_joint_force`
+- Remove unnecessary cloning of buffers in VecEnv classes
+- Only enable omni.replicator.isaac when domain randomization is enabled
 
 Fixes
 -----
+- Fix errors related to setting velocities to kinematic markers in Ingenuity and Quadcopter environments
+
 
 2022.2.1 - March 16, 2023
 -------------------------

@@ -86,6 +86,7 @@ class IngenuityTask(RLTask):
         RLTask.set_up_scene(self, scene)
         self._copters = IngenuityView(prim_paths_expr="/World/envs/.*/Ingenuity", name="ingenuity_view")
         self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
+        self._balls._non_root_link = True # do not set states for kinematics
         scene.add(self._copters)
         scene.add(self._balls)
         for i in range(2):

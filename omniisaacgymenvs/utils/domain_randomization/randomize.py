@@ -28,13 +28,11 @@
 
 
 import copy
-import omni
-import omni.replicator.core as rep
-import omni.replicator.isaac as dr
 import numpy as np
 import torch
 
 from omni.isaac.core.prims import RigidPrimView
+from omni.isaac.core.utils.extensions import enable_extension
 
 class Randomizer():
     def __init__(self, sim_config):
@@ -54,6 +52,13 @@ class Randomizer():
             if randomize and randomization_params is not None:
                 self.randomize = True
                 self.min_frequency = dr_config.get("min_frequency", 1)
+
+                # import DR extensions
+                enable_extension("omni.replicator.isaac")
+                import omni.replicator.core as rep
+                import omni.replicator.isaac as dr
+                self.rep = rep
+                self.dr = dr
 
     def apply_on_startup_domain_randomization(self, task):
         if self.randomize:
@@ -126,8 +131,8 @@ class Randomizer():
     def set_up_domain_randomization(self, task):
         if self.randomize:
             randomization_params = self._cfg["domain_randomization"]["randomization_params"]
-            rep.set_global_seed(self._config["seed"])
-            with dr.trigger.on_rl_frame(num_envs=self._cfg["env"]["numEnvs"]):
+            self.rep.set_global_seed(self._config["seed"])
+            with self.dr.trigger.on_rl_frame(num_envs=self._cfg["env"]["numEnvs"]):
                 for opt in randomization_params.keys():
                     if opt == "observations":
                         self._set_up_observations_randomization(task)
@@ -136,7 +141,7 @@ class Randomizer():
                     elif opt == "simulation":
                         if randomization_params["simulation"] is not None:
                             self.distributions["simulation"] = dict()
-                            dr.physics_view.register_simulation_context(task._env._world)
+                            self.dr.physics_view.register_simulation_context(task._env._world)
                             for attribute, params in randomization_params["simulation"].items():
                                 self._set_up_simulation_randomization(attribute, params)
                     elif opt == "rigid_prim_views":
@@ -145,7 +150,7 @@ class Randomizer():
                             for view_name in randomization_params["rigid_prim_views"].keys():
                                 if randomization_params["rigid_prim_views"][view_name] is not None:
                                     self.distributions["rigid_prim_views"][view_name] = dict()
-                                    dr.physics_view.register_rigid_prim_view(
+                                    self.dr.physics_view.register_rigid_prim_view(
                                         rigid_prim_view=task._env._world.scene._scene_registry.rigid_prim_views[view_name],
                                     )
                                     for attribute, params in randomization_params["rigid_prim_views"][view_name].items():
@@ -157,13 +162,13 @@ class Randomizer():
                             for view_name in randomization_params["articulation_views"].keys():
                                 if randomization_params["articulation_views"][view_name] is not None:
                                     self.distributions["articulation_views"][view_name] = dict()
-                                    dr.physics_view.register_articulation_view(
+                                    self.dr.physics_view.register_articulation_view(
                                         articulation_view=task._env._world.scene._scene_registry.articulated_views[view_name],
                                     )
                                     for attribute, params in randomization_params["articulation_views"][view_name].items():
                                         if attribute not in ["scale"]:
                                             self._set_up_articulation_view_randomization(view_name, attribute, params)
-            rep.orchestrator.run()
+            self.rep.orchestrator.run()
         else:
             dr_config = self._cfg.get("domain_randomization", None)
             if dr_config is None:
@@ -308,7 +313,7 @@ class Randomizer():
     def _set_up_simulation_randomization(self, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for simulation {attribute} is not provided.")
-        if attribute in dr.SIMULATION_CONTEXT_ATTRIBUTES:
+        if attribute in self.dr.SIMULATION_CONTEXT_ATTRIBUTES:
             self.distributions["simulation"][attribute] = dict()
             if "on_reset" in params.keys():
                 if not set(('operation','distribution', 'distribution_parameters')).issubset(params["on_reset"]):
@@ -317,14 +322,14 @@ class Randomizer():
                 self.active_domain_randomizations[("simulation", attribute, "on_reset")] = np.array(params["on_reset"]["distribution_parameters"])
                 kwargs = {"operation": params["on_reset"]["operation"]}
                 self.distributions["simulation"][attribute]["on_reset"] = self._generate_distribution(
-                    dimension=dr.physics_view._simulation_context_initial_values[attribute].shape[0],
+                    dimension=self.dr.physics_view._simulation_context_initial_values[attribute].shape[0],
                     view_name="simulation", 
                     attribute=attribute,
                     params=params["on_reset"],
                 )
                 kwargs[attribute] = self.distributions["simulation"][attribute]["on_reset"]
-                with dr.gate.on_env_reset():
-                    dr.physics_view.randomize_simulation_context(**kwargs)
+                with self.dr.gate.on_env_reset():
+                    self.dr.physics_view.randomize_simulation_context(**kwargs)
             if "on_interval" in params.keys():
                 if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(params["on_interval"]):
                     raise ValueError(f"Please ensure the following randomization parameters for simulation {attribute} on_interval are provided: " + \
@@ -332,19 +337,19 @@ class Randomizer():
                 self.active_domain_randomizations[("simulation", attribute, "on_interval")] = np.array(params["on_interval"]["distribution_parameters"])
                 kwargs = {"operation": params["on_interval"]["operation"]}
                 self.distributions["simulation"][attribute]["on_interval"] = self._generate_distribution(
-                    dimension=dr.physics_view._simulation_context_initial_values[attribute].shape[0],
+                    dimension=self.dr.physics_view._simulation_context_initial_values[attribute].shape[0],
                     view_name="simulation", 
                     attribute=attribute,
                     params=params["on_interval"],
                 )
                 kwargs[attribute] = self.distributions["simulation"][attribute]["on_interval"]
-                with dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
-                    dr.physics_view.randomize_simulation_context(**kwargs)
+                with self.dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
+                    self.dr.physics_view.randomize_simulation_context(**kwargs)
             
     def _set_up_rigid_prim_view_randomization(self, view_name, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for rigid prim view {view_name} {attribute} is not provided.")
-        if attribute in dr.RIGID_PRIM_ATTRIBUTES:
+        if attribute in self.dr.RIGID_PRIM_ATTRIBUTES:
             self.distributions["rigid_prim_views"][view_name][attribute] = dict()
             if "on_reset" in params.keys():
                 if not set(('operation','distribution', 'distribution_parameters')).issubset(params["on_reset"]):
@@ -356,14 +361,14 @@ class Randomizer():
                     kwargs["num_buckets"] = params["on_reset"]["num_buckets"]
                 
                 self.distributions["rigid_prim_views"][view_name][attribute]["on_reset"] = self._generate_distribution(
-                    dimension=dr.physics_view._rigid_prim_views_initial_values[view_name][attribute].shape[1],
+                    dimension=self.dr.physics_view._rigid_prim_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
                     attribute=attribute,
                     params=params["on_reset"],
                 )
                 kwargs[attribute] = self.distributions["rigid_prim_views"][view_name][attribute]["on_reset"]
-                with dr.gate.on_env_reset():
-                    dr.physics_view.randomize_rigid_prim_view(**kwargs)
+                with self.dr.gate.on_env_reset():
+                    self.dr.physics_view.randomize_rigid_prim_view(**kwargs)
             if "on_interval" in params.keys():
                 if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(params["on_interval"]):
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_interval are provided: " + \
@@ -374,21 +379,21 @@ class Randomizer():
                     kwargs["num_buckets"] = params["on_interval"]["num_buckets"]
 
                 self.distributions["rigid_prim_views"][view_name][attribute]["on_interval"] = self._generate_distribution(
-                    dimension=dr.physics_view._rigid_prim_views_initial_values[view_name][attribute].shape[1],
+                    dimension=self.dr.physics_view._rigid_prim_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
                     attribute=attribute,
                     params=params["on_interval"],
                 )
                 kwargs[attribute] = self.distributions["rigid_prim_views"][view_name][attribute]["on_interval"]
-                with dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
-                    dr.physics_view.randomize_rigid_prim_view(**kwargs)
+                with self.dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
+                    self.dr.physics_view.randomize_rigid_prim_view(**kwargs)
         else:
             raise ValueError(f"The attribute {attribute} for {view_name} is invalid for domain randomization.")
 
     def _set_up_articulation_view_randomization(self, view_name, attribute, params):
         if params is None:
             raise ValueError(f"Randomization parameters for articulation view {view_name} {attribute} is not provided.")
-        if attribute in dr.ARTICULATION_ATTRIBUTES:
+        if attribute in self.dr.ARTICULATION_ATTRIBUTES:
             self.distributions["articulation_views"][view_name][attribute] = dict()
             if "on_reset" in params.keys():
                 if not set(('operation','distribution', 'distribution_parameters')).issubset(params["on_reset"]):
@@ -400,14 +405,14 @@ class Randomizer():
                     kwargs["num_buckets"] = params["on_reset"]["num_buckets"]
 
                 self.distributions["articulation_views"][view_name][attribute]["on_reset"] = self._generate_distribution(
-                    dimension=dr.physics_view._articulation_views_initial_values[view_name][attribute].shape[1],
+                    dimension=self.dr.physics_view._articulation_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
                     attribute=attribute,
                     params=params["on_reset"],
                 )
                 kwargs[attribute] = self.distributions["articulation_views"][view_name][attribute]["on_reset"]
-                with dr.gate.on_env_reset():
-                    dr.physics_view.randomize_articulation_view(**kwargs)
+                with self.dr.gate.on_env_reset():
+                    self.dr.physics_view.randomize_articulation_view(**kwargs)
             if "on_interval" in params.keys():
                 if not set(('frequency_interval', 'operation','distribution', 'distribution_parameters')).issubset(params["on_interval"]):
                     raise ValueError(f"Please ensure the following randomization parameters for {view_name} {attribute} on_interval are provided: " + \
@@ -418,25 +423,25 @@ class Randomizer():
                     kwargs["num_buckets"] = params["on_interval"]["num_buckets"]
                 
                 self.distributions["articulation_views"][view_name][attribute]["on_interval"]  = self._generate_distribution(
-                    dimension=dr.physics_view._articulation_views_initial_values[view_name][attribute].shape[1],
+                    dimension=self.dr.physics_view._articulation_views_initial_values[view_name][attribute].shape[1],
                     view_name=view_name, 
                     attribute=attribute,
                     params=params["on_interval"],
                 )
                 kwargs[attribute] = self.distributions["articulation_views"][view_name][attribute]["on_interval"]
-                with dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
-                    dr.physics_view.randomize_articulation_view(**kwargs)
+                with self.dr.gate.on_interval(interval=params["on_interval"]["frequency_interval"]):
+                    self.dr.physics_view.randomize_articulation_view(**kwargs)
         else:
             raise ValueError(f"The attribute {attribute} for {view_name} is invalid for domain randomization.")
     
     def _generate_distribution(self, view_name, attribute, dimension, params):        
         dist_params = self._sanitize_distribution_parameters(attribute, dimension, params["distribution_parameters"])
         if params["distribution"] == "uniform":
-            return rep.distribution.uniform(tuple(dist_params[0]), tuple(dist_params[1]))
+            return self.rep.distribution.uniform(tuple(dist_params[0]), tuple(dist_params[1]))
         elif params["distribution"] == "gaussian" or params["distribution"] == "normal":
-            return rep.distribution.normal(tuple(dist_params[0]), tuple(dist_params[1]))
+            return self.rep.distribution.normal(tuple(dist_params[0]), tuple(dist_params[1]))
         elif params["distribution"] == "loguniform" or params["distribution"] == "log_uniform":
-            return rep.distribution.log_uniform(tuple(dist_params[0]), tuple(dist_params[1]))
+            return self.rep.distribution.log_uniform(tuple(dist_params[0]), tuple(dist_params[1]))
         else:
             raise ValueError(f"The provided distribution for {view_name} {attribute} is not supported. "
                 + "Options: uniform, gaussian/normal, loguniform/log_uniform"
@@ -479,13 +484,13 @@ class Randomizer():
                 replicator_distribution = replicator_distribution[distribution_path[3]]
             if replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleUniform" \
                 or replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleLogUniform":
-                dimension = len(dr.utils.get_distribution_params(replicator_distribution, ["lower"])[0])
+                dimension = len(self.dr.utils.get_distribution_params(replicator_distribution, ["lower"])[0])
                 dist_params = self._sanitize_distribution_parameters(distribution_path[-2], dimension, distribution_parameters)
-                dr.utils.set_distribution_params(replicator_distribution, {"lower": dist_params[0], "upper": dist_params[1]})
+                self.dr.utils.set_distribution_params(replicator_distribution, {"lower": dist_params[0], "upper": dist_params[1]})
             elif replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleNormal":
-                dimension = len(dr.utils.get_distribution_params(replicator_distribution, ["mean"])[0])
+                dimension = len(self.dr.utils.get_distribution_params(replicator_distribution, ["mean"])[0])
                 dist_params = self._sanitize_distribution_parameters(distribution_path[-2], dimension, distribution_parameters)
-                dr.utils.set_distribution_params(replicator_distribution, {"mean": dist_params[0], "std": dist_params[1]})
+                self.dr.utils.set_distribution_params(replicator_distribution, {"mean": dist_params[0], "std": dist_params[1]})
     
     def get_dr_distribution_parameters(self, *distribution_path):
         if distribution_path not in self.active_domain_randomizations.keys():
@@ -500,9 +505,9 @@ class Randomizer():
                 replicator_distribution = replicator_distribution[distribution_path[3]]
             if replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleUniform" \
                 or replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleLogUniform":
-                return dr.utils.get_distribution_params(replicator_distribution, ["lower", "upper"])
+                return self.dr.utils.get_distribution_params(replicator_distribution, ["lower", "upper"])
             elif replicator_distribution.node.get_node_type().get_node_type() == "omni.replicator.core.OgnSampleNormal":
-                return dr.utils.get_distribution_params(replicator_distribution, ["mean", "std"])
+                return self.dr.utils.get_distribution_params(replicator_distribution, ["mean", "std"])
     
     def get_initial_dr_distribution_parameters(self, *distribution_path):
         if distribution_path not in self.active_domain_randomizations.keys():

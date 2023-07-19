@@ -129,7 +129,7 @@ def parse_hydra_configs(cfg: DictConfig):
             resume="allow",
         )
 
-
+    torch.cuda.set_device(rank)
     rlg_trainer = RLGTrainer(cfg, cfg_dict)
     rlg_trainer.launch_rlg_hydra(env)
     rlg_trainer.run()

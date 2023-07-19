@@ -40,7 +40,6 @@ import numpy as np
 import torch
 import math
 
-import omni.replicator.isaac as dr
 
 class InHandManipulationTask(RLTask):
     def __init__(
@@ -275,7 +274,7 @@ class InHandManipulationTask(RLTask):
         if self._dr_randomizer.randomize:
             rand_envs = torch.where(self.randomization_buf >= self._dr_randomizer.min_frequency, torch.ones_like(self.randomization_buf), torch.zeros_like(self.randomization_buf))
             rand_env_ids = torch.nonzero(torch.logical_and(rand_envs, reset_buf))
-            dr.physics_view.step_randomization(rand_env_ids)
+            self.dr.physics_view.step_randomization(rand_env_ids)
             self.randomization_buf[rand_env_ids] = 0
 
     def is_done(self):
