@@ -6,16 +6,20 @@ Release Notes
 
 Additions
 ---------
-- Add support for Warp backend task implementation
-- Add Warp examples: Cartpole, Ant, Humanoid
+- Add support for Warp backend task implementation (requires Isaac Sim 2023.1)
+- Add Warp-based RL examples: Cartpole, Ant, Humanoid
+- Add support for running OIGE as an extension in Isaac Sim (requires Isaac Sim 2023.1)
+- Add options to filter collisions between environments and specify global collision filter paths to `RLTask.set_to_scene()`
 
 Changes
 -------
-- `use_flatcache` flag has been renamed to `use_fabric`
+- `use_flatcache` flag has been renamed to `use_fabric` (requires Isaac Sim 2023.1)
 - Updated hydra-core version to 1.3.2, omegaconf version to 2.3.0
 - The `get_force_sensor_forces` API for articulations is now deprecated and replaced with `get_link_incoming_joint_force`
 - Remove unnecessary cloning of buffers in VecEnv classes
 - Only enable omni.replicator.isaac when domain randomization is enabled
+- The multi-threaded launch script `rlgames_train_mt.py` has been re-designed to support the extension workflow. This script can no longer be used to launch a training run from python. Please use `rlgames_train.py` instead.
+- Restructures for environments to support the new extension-based workflow.
 
 Fixes
 -----

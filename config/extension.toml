@@ -1,0 +1,24 @@
+[gym]
+reloadable = true
+
+[package]
+version = "0.0.0"
+category = "Simulation"
+title = "Isaac Gym Envs"
+description = "RL environments"
+authors = ["Isaac Sim Team"]
+repository = "https://gitlab-master.nvidia.com/carbon-gym/omniisaacgymenvs"
+keywords = ["isaac"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+writeTarget.kit = true
+
+[dependencies]
+"omni.isaac.gym" = {}
+"omni.isaac.core" = {}
+"omni.isaac.cloner" = {}
+"omni.isaac.ml_archive" = {} # torch
+
+[[python.module]]
+name = "omniisaacgymenvs"

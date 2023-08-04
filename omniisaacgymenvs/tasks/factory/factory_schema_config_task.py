@@ -33,6 +33,7 @@ Used by Hydra. Defines template for task class YAML files. Not enforced.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 
@@ -131,14 +132,14 @@ class HybridForceMotion:
 
 @dataclass
 class Ctrl:
-    ctrl_type: str # {gym_default,
-                   #  joint_space_ik,
-                   #  joint_space_id,
-                   #  task_space_impedance,
-                   #  operational_space_motion,
-                   #  open_loop_force,
-                   #  closed_loop_force,
-                   #  hybrid_force_motion}
+    ctrl_type: str  # {gym_default,
+    #  joint_space_ik,
+    #  joint_space_id,
+    #  task_space_impedance,
+    #  operational_space_motion,
+    #  open_loop_force,
+    #  closed_loop_force,
+    #  hybrid_force_motion}
     gym_default: GymDefault
     joint_space_ik: JointSpaceIK
     joint_space_id: JointSpaceID
@@ -157,4 +158,3 @@ class FactorySchemaConfigTask:
     env: Env
     rl: RL
     ctrl: Ctrl
-

@@ -27,42 +27,43 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omni.isaac.gym.vec_env import VecEnvMT
-from omni.isaac.gym.vec_env import TaskStopException
+import numpy as np
+import torch
+from omni.isaac.gym.vec_env import TaskStopException, VecEnvMT
 
 from .vec_env_rlgames import VecEnvRLGames
-
-import torch
-import numpy as np
 
 
 # VecEnv Wrapper for RL training
 class VecEnvRLGamesMT(VecEnvRLGames, VecEnvMT):
-
     def _parse_data(self, data):
-        self._obs = data["obs"].clone()
-        self._rew = data["rew"].to(self._task.rl_device).clone()
-        self._states = torch.clamp(data["states"], -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device).clone()
-        self._resets = data["reset"].to(self._task.rl_device).clone()
-        self._extras = data["extras"].copy()
+        self._obs = data["obs"]
+        self._rew = data["rew"].to(self._task.rl_device)
+        self._states = torch.clamp(data["states"], -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device)
+        self._resets = data["reset"].to(self._task.rl_device)
+        self._extras = data["extras"]
 
     def step(self, actions):
         if self._stop:
             raise TaskStopException()
 
         if self._task.randomize_actions:
-            actions = self._task._dr_randomizer.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
+            actions = self._task._dr_randomizer.apply_actions_randomization(
+                actions=actions, reset_buf=self._task.reset_buf
+            )
 
-        actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device).clone()
+        actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device)
 
         self.send_actions(actions)
         data = self.get_data()
 
         if self._task.randomize_observations:
-            self._obs = self._task._dr_randomizer.apply_observations_randomization(observations=self._obs.to(self._task.rl_device), reset_buf=self._task.reset_buf)
-        
+            self._obs = self._task._dr_randomizer.apply_observations_randomization(
+                observations=self._obs.to(self._task.rl_device), reset_buf=self._task.reset_buf
+            )
+
         self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device)
-        
+
         obs_dict = {}
         obs_dict["obs"] = self._obs
         obs_dict["states"] = self._states

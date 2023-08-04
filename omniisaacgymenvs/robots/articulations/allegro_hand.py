@@ -28,14 +28,14 @@
 
 
 from typing import Optional
+
+import carb
 import numpy as np
 import torch
 from omni.isaac.core.robots.robot import Robot
 from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
-
-import carb
-from pxr import Usd, UsdGeom, Sdf, Gf, PhysxSchema, UsdPhysics
+from pxr import Gf, PhysxSchema, Sdf, Usd, UsdGeom, UsdPhysics
 
 
 class AllegroHand(Robot):
@@ -57,10 +57,12 @@ class AllegroHand(Robot):
             self._usd_path = assets_root_path + "/Isaac/Robots/AllegroHand/allegro_hand_instanceable.usd"
 
         self._position = torch.tensor([0.0, 0.0, 0.5]) if translation is None else translation
-        self._orientation = torch.tensor([0.257551, 0.283045, 0.683330, -0.621782]) if orientation is None else orientation
-            
+        self._orientation = (
+            torch.tensor([0.257551, 0.283045, 0.683330, -0.621782]) if orientation is None else orientation
+        )
+
         add_reference_to_stage(self._usd_path, prim_path)
-        
+
         super().__init__(
             prim_path=prim_path,
             name=name,
@@ -71,26 +73,29 @@ class AllegroHand(Robot):
 
     def set_allegro_hand_properties(self, stage, allegro_hand_prim):
         for link_prim in allegro_hand_prim.GetChildren():
-            if not(link_prim == stage.GetPrimAtPath("/allegro/Looks") or link_prim == stage.GetPrimAtPath("/allegro/root_joint")):
+            if not (
+                link_prim == stage.GetPrimAtPath("/allegro/Looks")
+                or link_prim == stage.GetPrimAtPath("/allegro/root_joint")
+            ):
                 rb = PhysxSchema.PhysxRigidBodyAPI.Apply(link_prim)
                 rb.GetDisableGravityAttr().Set(True)
                 rb.GetRetainAccelerationsAttr().Set(False)
                 rb.GetEnableGyroscopicForcesAttr().Set(False)
                 rb.GetAngularDampingAttr().Set(0.01)
                 rb.GetMaxLinearVelocityAttr().Set(1000)
-                rb.GetMaxAngularVelocityAttr().Set(64/np.pi*180)
+                rb.GetMaxAngularVelocityAttr().Set(64 / np.pi * 180)
                 rb.GetMaxDepenetrationVelocityAttr().Set(1000)
                 rb.GetMaxContactImpulseAttr().Set(1e32)
 
     def set_motor_control_mode(self, stage, allegro_hand_path):
         prim = stage.GetPrimAtPath(allegro_hand_path)
         self._set_joint_properties(stage, prim)
-    
+
     def _set_joint_properties(self, stage, prim):
         if prim.HasAPI(UsdPhysics.DriveAPI):
             drive = UsdPhysics.DriveAPI.Apply(prim, "angular")
-            drive.GetStiffnessAttr().Set(3*np.pi/180)
-            drive.GetDampingAttr().Set(0.1*np.pi/180)
+            drive.GetStiffnessAttr().Set(3 * np.pi / 180)
+            drive.GetDampingAttr().Set(0.1 * np.pi / 180)
             drive.GetMaxForceAttr().Set(0.5)
             revolute_joint = PhysxSchema.PhysxJointAPI.Get(stage, prim.GetPath())
             revolute_joint.GetJointFrictionAttr().Set(0.01)

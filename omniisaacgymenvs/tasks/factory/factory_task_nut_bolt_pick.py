@@ -33,48 +33,49 @@ python train.py task=FactoryTaskNutBoltPick
 """
 
 
+import os
+
 import hydra
 import omegaconf
-import os
+import omni.isaac.core.utils.torch as torch_utils
+import omniisaacgymenvs.tasks.factory.factory_control as fc
 import torch
-
+# from omni.isaac.core.simulation_context import SimulationContext
+from omni.isaac.core.utils.torch.transformations import *
 from omniisaacgymenvs.tasks.factory.factory_env_nut_bolt import FactoryEnvNutBolt
 from omniisaacgymenvs.tasks.factory.factory_schema_class_task import FactoryABCTask
 from omniisaacgymenvs.tasks.factory.factory_schema_config_task import FactorySchemaConfigTask
-import omniisaacgymenvs.tasks.factory.factory_control as fc
-
-from omni.isaac.core.simulation_context import SimulationContext
-from omni.isaac.core.utils.torch.transformations import *
-import omni.isaac.core.utils.torch as torch_utils
-
 
 
 class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
     def __init__(self, name, sim_config, env, offset=None) -> None:
         super().__init__(name, sim_config, env)
         self._get_task_yaml_params()
-    
+
     def _get_task_yaml_params(self):
         """Initialize instance variables from YAML files."""
 
         cs = hydra.core.config_store.ConfigStore.instance()
-        cs.store(name='factory_schema_config_task', node=FactorySchemaConfigTask)
+        cs.store(name="factory_schema_config_task", node=FactorySchemaConfigTask)
 
         self.cfg_task = omegaconf.OmegaConf.create(self._task_cfg)
         self.max_episode_length = self.cfg_task.rl.max_episode_length  # required instance var for VecTask
 
-        asset_info_path = '../tasks/factory/yaml/factory_asset_info_nut_bolt.yaml'  # relative to Gym's Hydra search path (cfg dir)
+        asset_info_path = (
+            "../tasks/factory/yaml/factory_asset_info_nut_bolt.yaml"  # relative to Gym's Hydra search path (cfg dir)
+        )
         self.asset_info_nut_bolt = hydra.compose(config_name=asset_info_path)
-        self.asset_info_nut_bolt = self.asset_info_nut_bolt['']['']['']['tasks']['factory']['yaml']  # strip superfluous nesting
+        self.asset_info_nut_bolt = self.asset_info_nut_bolt[""][""][""]["tasks"]["factory"][
+            "yaml"
+        ]  # strip superfluous nesting
 
-        ppo_path = 'train/FactoryTaskNutBoltPickPPO.yaml'  # relative to Gym's Hydra search path (cfg dir)
+        ppo_path = "train/FactoryTaskNutBoltPickPPO.yaml"  # relative to Gym's Hydra search path (cfg dir)
         self.cfg_ppo = hydra.compose(config_name=ppo_path)
-        self.cfg_ppo = self.cfg_ppo['train']  # strip superfluous nesting
-    
+        self.cfg_ppo = self.cfg_ppo["train"]  # strip superfluous nesting
 
     def post_reset(self):
         """
-        This method is called only one time right before sim begins. 
+        This method is called only one time right before sim begins.
         The 'reset' here is referring to the reset of the world, which occurs before the sim starts.
         """
 
@@ -91,7 +92,6 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         # randomize all envs
         indices = torch.arange(self._num_envs, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
-    
 
     def _acquire_task_tensors(self):
         """Acquire tensors."""
@@ -99,22 +99,24 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         # Grasp pose tensors
         nut_grasp_heights = self.bolt_head_heights + self.nut_heights * 0.5  # nut COM
         self.nut_grasp_pos_local = nut_grasp_heights * torch.tensor([0.0, 0.0, 1.0], device=self._device).repeat(
-            (self._num_envs, 1))
-        self.nut_grasp_quat_local = torch.tensor([0.0, 0.0, 1.0, 0.0], device=self._device).unsqueeze(0).repeat(
-            self._num_envs, 1)
+            (self._num_envs, 1)
+        )
+        self.nut_grasp_quat_local = (
+            torch.tensor([0.0, 0.0, 1.0, 0.0], device=self._device).unsqueeze(0).repeat(self._num_envs, 1)
+        )
 
         # Keypoint tensors
-        self.keypoint_offsets = self._get_keypoint_offsets(
-            self.cfg_task.rl.num_keypoints) * self.cfg_task.rl.keypoint_scale
+        self.keypoint_offsets = (
+            self._get_keypoint_offsets(self.cfg_task.rl.num_keypoints) * self.cfg_task.rl.keypoint_scale
+        )
         self.keypoints_gripper = torch.zeros(
-            (self._num_envs, self.cfg_task.rl.num_keypoints, 3),
-            dtype=torch.float32,
-            device=self._device
+            (self._num_envs, self.cfg_task.rl.num_keypoints, 3), dtype=torch.float32, device=self._device
         )
         self.keypoints_nut = torch.zeros_like(self.keypoints_gripper, device=self._device)
-        self.identity_quat = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self._device).unsqueeze(0).repeat(self._num_envs, 1)
+        self.identity_quat = (
+            torch.tensor([1.0, 0.0, 0.0, 0.0], device=self._device).unsqueeze(0).repeat(self._num_envs, 1)
+        )
 
-    
     def pre_physics_step(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
@@ -130,9 +132,8 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self._apply_actions_as_ctrl_targets(
             actions=self.actions,
             ctrl_target_gripper_dof_pos=self.asset_info_franka_table.franka_gripper_width_max,
-            do_scale=True
+            do_scale=True,
         )
-
 
     def reset_idx(self, env_ids):
         """Reset specified environments."""
@@ -143,23 +144,28 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self._randomize_gripper_pose(env_ids, sim_steps=self.cfg_task.env.num_gripper_move_sim_steps)
 
         self._reset_buffers(env_ids)
-    
 
     def _reset_franka(self, env_ids):
         """Reset DOF states and DOF targets of Franka."""
         indices = env_ids.to(dtype=torch.int32)
 
-        self.dof_pos[env_ids] = torch.cat(
-            (torch.tensor(self.cfg_task.randomize.franka_arm_initial_dof_pos, device=self.device),
-             torch.tensor([self.asset_info_franka_table.franka_gripper_width_max], device=self.device),
-             torch.tensor([self.asset_info_franka_table.franka_gripper_width_max], device=self.device)),
-            dim=-1).unsqueeze(0).repeat((self.num_envs, 1))  # shape = (num_envs, num_dofs)
+        self.dof_pos[env_ids] = (
+            torch.cat(
+                (
+                    torch.tensor(self.cfg_task.randomize.franka_arm_initial_dof_pos, device=self.device),
+                    torch.tensor([self.asset_info_franka_table.franka_gripper_width_max], device=self.device),
+                    torch.tensor([self.asset_info_franka_table.franka_gripper_width_max], device=self.device),
+                ),
+                dim=-1,
+            )
+            .unsqueeze(0)
+            .repeat((self.num_envs, 1))
+        )  # shape = (num_envs, num_dofs)
         self.dof_vel[env_ids] = 0.0  # shape = (num_envs, num_dofs)
         self.ctrl_target_dof_pos[env_ids] = self.dof_pos[env_ids]
 
         self.frankas.set_joint_positions(self.dof_pos[env_ids], indices=indices)
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
-    
 
     def _reset_object(self, env_ids):
         """Reset root states of nut and bolt."""
@@ -168,13 +174,16 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         # Randomize root state of nut
         nut_noise_xy = 2 * (torch.rand((self.num_envs, 2), dtype=torch.float32, device=self.device) - 0.5)  # [-1, 1]
         nut_noise_xy = nut_noise_xy @ torch.diag(
-            torch.tensor(self.cfg_task.randomize.nut_pos_xy_initial_noise, device=self.device))
-        
+            torch.tensor(self.cfg_task.randomize.nut_pos_xy_initial_noise, device=self.device)
+        )
+
         self.nut_pos[env_ids, 0] = self.cfg_task.randomize.nut_pos_xy_initial[0] + nut_noise_xy[env_ids, 0]
         self.nut_pos[env_ids, 1] = self.cfg_task.randomize.nut_pos_xy_initial[1] + nut_noise_xy[env_ids, 1]
         self.nut_pos[env_ids, 2] = self.cfg_base.env.table_height - self.bolt_head_heights.squeeze(-1)
 
-        self.nut_quat[env_ids, :] = torch.tensor([1.0, 0.0, 0.0, 0.0], dtype=torch.float32, device=self.device).repeat(len(env_ids), 1)
+        self.nut_quat[env_ids, :] = torch.tensor([1.0, 0.0, 0.0, 0.0], dtype=torch.float32, device=self.device).repeat(
+            len(env_ids), 1
+        )
 
         self.nut_linvel[env_ids, :] = 0.0
         self.nut_angvel[env_ids, :] = 0.0
@@ -185,23 +194,24 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         # Randomize root state of bolt
         bolt_noise_xy = 2 * (torch.rand((self.num_envs, 2), dtype=torch.float32, device=self.device) - 0.5)  # [-1, 1]
         bolt_noise_xy = bolt_noise_xy @ torch.diag(
-            torch.tensor(self.cfg_task.randomize.bolt_pos_xy_noise, device=self.device))
+            torch.tensor(self.cfg_task.randomize.bolt_pos_xy_noise, device=self.device)
+        )
 
         self.bolt_pos[env_ids, 0] = self.cfg_task.randomize.bolt_pos_xy_initial[0] + bolt_noise_xy[env_ids, 0]
         self.bolt_pos[env_ids, 1] = self.cfg_task.randomize.bolt_pos_xy_initial[1] + bolt_noise_xy[env_ids, 1]
         self.bolt_pos[env_ids, 2] = self.cfg_base.env.table_height
 
-        self.bolt_quat[env_ids, :] = torch.tensor([1.0, 0.0, 0.0, 0.0], dtype=torch.float32, device=self.device).repeat(len(env_ids), 1)
+        self.bolt_quat[env_ids, :] = torch.tensor([1.0, 0.0, 0.0, 0.0], dtype=torch.float32, device=self.device).repeat(
+            len(env_ids), 1
+        )
 
         self.bolts.set_world_poses(self.bolt_pos[env_ids] + self.env_pos[env_ids], self.bolt_quat[env_ids], indices)
-
 
     def _reset_buffers(self, env_ids):
         """Reset buffers."""
 
         self.reset_buf[env_ids] = 0
         self.progress_buf[env_ids] = 0
-    
 
     def _apply_actions_as_ctrl_targets(self, actions, ctrl_target_gripper_dof_pos, do_scale):
         """Apply actions from policy as position/rotation targets."""
@@ -225,28 +235,29 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
             rot_actions_quat = torch.where(
                 angle.unsqueeze(-1).repeat(1, 4) > self.cfg_task.rl.clamp_rot_thresh,
                 rot_actions_quat,
-                torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device).repeat(self.num_envs,1)
+                torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device).repeat(self.num_envs, 1),
             )
         self.ctrl_target_fingertip_midpoint_quat = torch_utils.quat_mul(rot_actions_quat, self.fingertip_midpoint_quat)
 
-        if self.cfg_ctrl['do_force_ctrl']:
+        if self.cfg_ctrl["do_force_ctrl"]:
             # Interpret actions as target forces and target torques
             force_actions = actions[:, 6:9]
             if do_scale:
                 force_actions = force_actions @ torch.diag(
-                    torch.tensor(self.cfg_task.rl.force_action_scale, device=self.device))
+                    torch.tensor(self.cfg_task.rl.force_action_scale, device=self.device)
+                )
 
             torque_actions = actions[:, 9:12]
             if do_scale:
                 torque_actions = torque_actions @ torch.diag(
-                    torch.tensor(self.cfg_task.rl.torque_action_scale, device=self.device))
+                    torch.tensor(self.cfg_task.rl.torque_action_scale, device=self.device)
+                )
 
             self.ctrl_target_fingertip_contact_wrench = torch.cat((force_actions, torque_actions), dim=-1)
 
         self.ctrl_target_gripper_dof_pos = ctrl_target_gripper_dof_pos
 
         self.generate_ctrl_signals()
-
 
     def post_physics_step(self):
         """Step buffers. Refresh tensors. Compute observations and reward. Reset environments."""
@@ -256,7 +267,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         if self._env._world.is_playing():
 
             # In this policy, episode length is constant
-            is_last_step = (self.progress_buf[0] == self.max_episode_length - 1)
+            is_last_step = self.progress_buf[0] == self.max_episode_length - 1
 
             if self.cfg_task.env.close_and_lift:
                 # At this point, robot has executed RL policy. Now close gripper and lift (open-loop)
@@ -273,8 +284,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
             self.get_extras()
 
         return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
-    
-    
+
     def _refresh_task_tensors(self):
         """Refresh tensors."""
 
@@ -292,36 +302,29 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 self.fingertip_midpoint_quat,
                 self.fingertip_midpoint_pos,
                 self.identity_quat,
-                keypoint_offset.repeat(self.num_envs, 1)
+                keypoint_offset.repeat(self.num_envs, 1),
             )[1]
             self.keypoints_nut[:, idx] = tf_combine(
-                self.nut_grasp_quat,
-                self.nut_grasp_pos,
-                self.identity_quat,
-                keypoint_offset.repeat(self.num_envs, 1)
+                self.nut_grasp_quat, self.nut_grasp_pos, self.identity_quat, keypoint_offset.repeat(self.num_envs, 1)
             )[1]
-
 
     def get_observations(self):
         """Compute observations."""
 
         # Shallow copies of tensors
-        obs_tensors = [self.fingertip_midpoint_pos,
-                       self.fingertip_midpoint_quat,
-                       self.fingertip_midpoint_linvel,
-                       self.fingertip_midpoint_angvel,
-                       self.nut_grasp_pos,
-                       self.nut_grasp_quat]
+        obs_tensors = [
+            self.fingertip_midpoint_pos,
+            self.fingertip_midpoint_quat,
+            self.fingertip_midpoint_linvel,
+            self.fingertip_midpoint_angvel,
+            self.nut_grasp_pos,
+            self.nut_grasp_quat,
+        ]
 
         self.obs_buf = torch.cat(obs_tensors, dim=-1)  # shape = (num_envs, num_observations)
 
-        observations = {
-            self.frankas.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self.frankas.name: {"obs_buf": self.obs_buf}}
         return observations
-
 
     def calculate_metrics(self) -> None:
         """Update reward and reset buffers."""
@@ -329,17 +332,13 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self._update_reset_buf()
         self._update_rew_buf()
 
-
     def _update_reset_buf(self):
         """Assign environments for reset if successful or failed."""
 
         # If max episode length has been reached
         self.reset_buf[:] = torch.where(
-            self.progress_buf[:] >= self.max_episode_length - 1,
-            torch.ones_like(self.reset_buf),
-            self.reset_buf
+            self.progress_buf[:] >= self.max_episode_length - 1, torch.ones_like(self.reset_buf), self.reset_buf
         )
-    
 
     def _update_rew_buf(self):
         """Compute reward at current timestep."""
@@ -347,18 +346,19 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         keypoint_reward = -self._get_keypoint_dist()
         action_penalty = torch.norm(self.actions, p=2, dim=-1) * self.cfg_task.rl.action_penalty_scale
 
-        self.rew_buf[:] = keypoint_reward * self.cfg_task.rl.keypoint_reward_scale \
-                          - action_penalty * self.cfg_task.rl.action_penalty_scale
+        self.rew_buf[:] = (
+            keypoint_reward * self.cfg_task.rl.keypoint_reward_scale
+            - action_penalty * self.cfg_task.rl.action_penalty_scale
+        )
 
         # In this policy, episode length is constant across all envs
-        is_last_step = (self.progress_buf[0] == self.max_episode_length - 1)
+        is_last_step = self.progress_buf[0] == self.max_episode_length - 1
 
         if is_last_step:
             # Check if nut is picked up and above table
             lift_success = self._check_lift_success(height_multiple=3.0)
             self.rew_buf[:] += lift_success * self.cfg_task.rl.success_bonus
-            self.extras['successes'] = torch.mean(lift_success.float())
-
+            self.extras["successes"] = torch.mean(lift_success.float())
 
     def _get_keypoint_offsets(self, num_keypoints):
         """Get uniformly-spaced keypoints along a line of unit length, centered at 0."""
@@ -367,7 +367,6 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         keypoint_offsets[:, -1] = torch.linspace(0.0, 1.0, num_keypoints, device=self._device) - 0.5
 
         return keypoint_offsets
-    
 
     def _get_keypoint_dist(self):
         """Get keypoint distance."""
@@ -375,22 +374,21 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         keypoint_dist = torch.sum(torch.norm(self.keypoints_nut - self.keypoints_gripper, p=2, dim=-1), dim=-1)
         return keypoint_dist
 
-
     def _close_gripper(self, sim_steps=20):
         """Fully close gripper using controller. Called outside RL loop (i.e., after last step of episode)."""
         self._move_gripper_to_dof_pos(gripper_dof_pos=0.0, sim_steps=sim_steps)
-    
 
     def _move_gripper_to_dof_pos(self, gripper_dof_pos, sim_steps=20):
         """Move gripper fingers to specified DOF position using controller."""
 
-        delta_hand_pose = torch.zeros((self.num_envs, self.cfg_task.env.numActions), device=self.device)  # No hand motion
+        delta_hand_pose = torch.zeros(
+            (self.num_envs, self.cfg_task.env.numActions), device=self.device
+        )  # No hand motion
         self._apply_actions_as_ctrl_targets(delta_hand_pose, gripper_dof_pos, do_scale=False)
-        
+
         # Step sim
         for _ in range(sim_steps):
-            SimulationContext.step(self._env._world, render=True)
-    
+            self._env._world._physics_context._step(current_time=self._env._world.current_time)
 
     def _lift_gripper(self, franka_gripper_width=0.0, lift_distance=0.3, sim_steps=20):
         """Lift gripper by specified distance. Called outside RL loop (i.e., after last step of episode)."""
@@ -401,8 +399,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         # Step sim
         for _ in range(sim_steps):
             self._apply_actions_as_ctrl_targets(delta_hand_pose, franka_gripper_width, do_scale=False)
-            SimulationContext.step(self._env._world, render=True)
-    
+            self._env._world._physics_context._step(current_time=self._env._world.current_time)
 
     def _check_lift_success(self, height_multiple):
         """Check if nut is above table by more than specified multiple times height of nut."""
@@ -410,42 +407,51 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         lift_success = torch.where(
             self.nut_pos[:, 2] > self.cfg_base.env.table_height + self.nut_heights.squeeze(-1) * height_multiple,
             torch.ones((self.num_envs,), device=self.device),
-            torch.zeros((self.num_envs,), device=self.device))
+            torch.zeros((self.num_envs,), device=self.device),
+        )
 
         return lift_success
-    
 
     def _randomize_gripper_pose(self, env_ids, sim_steps):
         """Move gripper to random pose."""
 
         # step once to update physx with the newly set joint positions from reset_franka()
-        SimulationContext.step(self._env._world, render=True)
+        self._env._world._physics_context._step(current_time=self._env._world.current_time)
 
         # Set target pos above table
-        self.ctrl_target_fingertip_midpoint_pos = torch.tensor([0.0, 0.0, self.cfg_base.env.table_height], device=self.device) \
-            + torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_initial, device=self.device)
-        self.ctrl_target_fingertip_midpoint_pos = self.ctrl_target_fingertip_midpoint_pos.unsqueeze(0).repeat(self.num_envs, 1)
+        self.ctrl_target_fingertip_midpoint_pos = torch.tensor(
+            [0.0, 0.0, self.cfg_base.env.table_height], device=self.device
+        ) + torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_initial, device=self.device)
+        self.ctrl_target_fingertip_midpoint_pos = self.ctrl_target_fingertip_midpoint_pos.unsqueeze(0).repeat(
+            self.num_envs, 1
+        )
 
-        fingertip_midpoint_pos_noise = 2 * (torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5)  # [-1, 1]
+        fingertip_midpoint_pos_noise = 2 * (
+            torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5
+        )  # [-1, 1]
         fingertip_midpoint_pos_noise = fingertip_midpoint_pos_noise @ torch.diag(
-            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_noise,
-            device=self.device)
+            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_noise, device=self.device)
         )
         self.ctrl_target_fingertip_midpoint_pos += fingertip_midpoint_pos_noise
 
         # Set target rot
-        ctrl_target_fingertip_midpoint_euler = torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_initial,
-                                                            device=self.device).unsqueeze(0).repeat(self.num_envs, 1)
+        ctrl_target_fingertip_midpoint_euler = (
+            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_initial, device=self.device)
+            .unsqueeze(0)
+            .repeat(self.num_envs, 1)
+        )
 
-        fingertip_midpoint_rot_noise = \
-            2 * (torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5)  # [-1, 1]
+        fingertip_midpoint_rot_noise = 2 * (
+            torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5
+        )  # [-1, 1]
         fingertip_midpoint_rot_noise = fingertip_midpoint_rot_noise @ torch.diag(
-            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_noise, device=self.device))
+            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_noise, device=self.device)
+        )
         ctrl_target_fingertip_midpoint_euler += fingertip_midpoint_rot_noise
         self.ctrl_target_fingertip_midpoint_quat = torch_utils.quat_from_euler_xyz(
             ctrl_target_fingertip_midpoint_euler[:, 0],
             ctrl_target_fingertip_midpoint_euler[:, 1],
-            ctrl_target_fingertip_midpoint_euler[:, 2]
+            ctrl_target_fingertip_midpoint_euler[:, 2],
         )
 
         # Step sim and render
@@ -459,8 +465,8 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 fingertip_midpoint_quat=self.fingertip_midpoint_quat,
                 ctrl_target_fingertip_midpoint_pos=self.ctrl_target_fingertip_midpoint_pos,
                 ctrl_target_fingertip_midpoint_quat=self.ctrl_target_fingertip_midpoint_quat,
-                jacobian_type=self.cfg_ctrl['jacobian_type'],
-                rot_error_type='axis_angle'
+                jacobian_type=self.cfg_ctrl["jacobian_type"],
+                rot_error_type="axis_angle",
             )
 
             delta_hand_pose = torch.cat((pos_error, axis_angle_error), dim=-1)
@@ -473,12 +479,12 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            SimulationContext.step(self._env._world, render=True)
+            self._env._world._physics_context._step(current_time=self._env._world.current_time)
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
-        
+
         indices = env_ids.to(dtype=torch.int32)
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # step once to update physx with the newly set joint velocities
-        SimulationContext.step(self._env._world, render=True)
+        self._env._world._physics_context._step(current_time=self._env._world.current_time)

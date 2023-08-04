@@ -27,17 +27,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omni.isaac.gym.vec_env import VecEnvBase
-
-import torch
-import numpy as np
-
 from datetime import datetime
+
+import numpy as np
+import torch
+from omni.isaac.gym.vec_env import VecEnvBase
 
 
 # VecEnv Wrapper for RL training
 class VecEnvRLGames(VecEnvBase):
-
     def _process_data(self):
         self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device)
         self._rew = self._rew.to(self._task.rl_device)
@@ -45,22 +43,22 @@ class VecEnvRLGames(VecEnvBase):
         self._resets = self._resets.to(self._task.rl_device)
         self._extras = self._extras
 
-    def set_task(
-        self, task, backend="numpy", sim_params=None, init_sim=True
-    ) -> None:
-        super().set_task(task, backend, sim_params, init_sim)
+    def set_task(self, task, backend="numpy", sim_params=None, init_sim=True, rendering_dt=1.0 / 60.0) -> None:
+        super().set_task(task, backend, sim_params, init_sim, rendering_dt)
 
         self.num_states = self._task.num_states
         self.state_space = self._task.state_space
 
     def step(self, actions):
         if self._task.randomize_actions:
-            actions = self._task._dr_randomizer.apply_actions_randomization(actions=actions, reset_buf=self._task.reset_buf)
+            actions = self._task._dr_randomizer.apply_actions_randomization(
+                actions=actions, reset_buf=self._task.reset_buf
+            )
 
         actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device)
 
         self._task.pre_physics_step(actions)
-        
+
         for _ in range(self._task.control_frequency_inv):
             self._world.step(render=self._render)
             self.sim_frame_count += 1
@@ -69,17 +67,18 @@ class VecEnvRLGames(VecEnvBase):
 
         if self._task.randomize_observations:
             self._obs = self._task._dr_randomizer.apply_observations_randomization(
-                observations=self._obs.to(device=self._task.rl_device), reset_buf=self._task.reset_buf)
+                observations=self._obs.to(device=self._task.rl_device), reset_buf=self._task.reset_buf
+            )
 
         self._states = self._task.get_states()
         self._process_data()
-        
+
         obs_dict = {"obs": self._obs, "states": self._states}
 
         return obs_dict, self._rew, self._resets, self._extras
 
-    def reset(self):
-        """ Resets the task and applies default zero actions to recompute observations and states. """
+    def reset(self, seed=None, options=None):
+        """Resets the task and applies default zero actions to recompute observations and states."""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"[{now}] Running RL reset")
 

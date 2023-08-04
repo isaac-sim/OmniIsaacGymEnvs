@@ -27,25 +27,25 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
-from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
-from omniisaacgymenvs.utils.demo_util import initialize_demo
-from omniisaacgymenvs.utils.config_utils.path_utils import retrieve_checkpoint_path
-from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
-from omniisaacgymenvs.scripts.rlgames_train import RLGTrainer
-
-import hydra
-from omegaconf import DictConfig
-
 import datetime
 import os
+
+import hydra
 import torch
+from omegaconf import DictConfig
+from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
+from omniisaacgymenvs.scripts.rlgames_train import RLGTrainer
+from omniisaacgymenvs.utils.config_utils.path_utils import retrieve_checkpoint_path
+from omniisaacgymenvs.utils.demo_util import initialize_demo
+from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
+from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
+
 
 class RLGDemo(RLGTrainer):
     def __init__(self, cfg, cfg_dict):
         RLGTrainer.__init__(self, cfg, cfg_dict)
         self.cfg.test = True
-    
+
 
 @hydra.main(version_base=None, config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
@@ -66,8 +66,9 @@ def parse_hydra_configs(cfg: DictConfig):
 
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
+
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
-    cfg_dict['seed'] = cfg.seed
+    cfg_dict["seed"] = cfg.seed
     task = initialize_demo(cfg_dict, env)
 
     if cfg.wandb_activate:
@@ -96,5 +97,5 @@ def parse_hydra_configs(cfg: DictConfig):
         wandb.finish()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parse_hydra_configs()

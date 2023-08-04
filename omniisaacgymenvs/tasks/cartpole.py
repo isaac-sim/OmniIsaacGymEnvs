@@ -27,26 +27,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
-from omniisaacgymenvs.robots.articulations.cartpole import Cartpole
-
-from omni.isaac.core.articulations import ArticulationView
-from omni.isaac.core.utils.prims import get_prim_at_path
+import math
 
 import numpy as np
 import torch
-import math
+from omni.isaac.core.articulations import ArticulationView
+from omni.isaac.core.utils.prims import get_prim_at_path
+from omniisaacgymenvs.robots.articulations.cartpole import Cartpole
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
 
 
 class CartpoleTask(RLTask):
-    def __init__(
-        self,
-        name,
-        sim_config,
-        env,
-        offset=None
-    ) -> None:
+    def __init__(self, name, sim_config, env, offset=None) -> None:
 
+        self.update_config(sim_config)
+        self._max_episode_length = 500
+
+        self._num_observations = 4
+        self._num_actions = 1
+
+        RLTask.__init__(self, name, env)
+        return
+
+    def update_config(self, sim_config):
         self._sim_config = sim_config
         self._cfg = sim_config.config
         self._task_cfg = sim_config.task_config
@@ -57,25 +60,33 @@ class CartpoleTask(RLTask):
 
         self._reset_dist = self._task_cfg["env"]["resetDist"]
         self._max_push_effort = self._task_cfg["env"]["maxEffort"]
-        self._max_episode_length = 500
-
-        self._num_observations = 4
-        self._num_actions = 1
-
-        RLTask.__init__(self, name, env)
-        return
 
     def set_up_scene(self, scene) -> None:
         self.get_cartpole()
         super().set_up_scene(scene)
-        self._cartpoles = ArticulationView(prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False)
+        self._cartpoles = ArticulationView(
+            prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False
+        )
         scene.add(self._cartpoles)
         return
 
+    def initialize_views(self, scene):
+        super().initialize_views(scene)
+        if scene.object_exists("cartpole_view"):
+            scene.remove_object("cartpole_view", registry_only=True)
+        self._cartpoles = ArticulationView(
+            prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False
+        )
+        scene.add(self._cartpoles)
+
     def get_cartpole(self):
-        cartpole = Cartpole(prim_path=self.default_zero_env_path + "/Cartpole", name="Cartpole", translation=self._cartpole_positions)
+        cartpole = Cartpole(
+            prim_path=self.default_zero_env_path + "/Cartpole", name="Cartpole", translation=self._cartpole_positions
+        )
         # applies articulation settings from the task configuration yaml file
-        self._sim_config.apply_articulation_settings("Cartpole", get_prim_at_path(cartpole.prim_path), self._sim_config.parse_actor_config("Cartpole"))
+        self._sim_config.apply_articulation_settings(
+            "Cartpole", get_prim_at_path(cartpole.prim_path), self._sim_config.parse_actor_config("Cartpole")
+        )
 
     def get_observations(self) -> dict:
         dof_pos = self._cartpoles.get_joint_positions(clone=False)
@@ -91,11 +102,7 @@ class CartpoleTask(RLTask):
         self.obs_buf[:, 2] = pole_pos
         self.obs_buf[:, 3] = pole_vel
 
-        observations = {
-            self._cartpoles.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self._cartpoles.name: {"obs_buf": self.obs_buf}}
         return observations
 
     def pre_physics_step(self, actions) -> None:
@@ -149,7 +156,7 @@ class CartpoleTask(RLTask):
         pole_angle = self.obs_buf[:, 2]
         pole_vel = self.obs_buf[:, 3]
 
-        reward = 1.0 - pole_angle * pole_angle - 0.01 * torch.abs(cart_vel) - 0.005 * torch.abs(pole_vel)
+        reward = 1.0 - pole_angle * pole_angle - 0.01 * torch.abs(cart_vel) - 0.5 * torch.abs(pole_vel)
         reward = torch.where(torch.abs(cart_pos) > self._reset_dist, torch.ones_like(reward) * -2.0, reward)
         reward = torch.where(torch.abs(pole_angle) > np.pi / 2, torch.ones_like(reward) * -2.0, reward)
 

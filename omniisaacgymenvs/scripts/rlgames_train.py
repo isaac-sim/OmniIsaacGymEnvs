@@ -27,24 +27,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import datetime
+import os
+
+import hydra
+import torch
+from omegaconf import DictConfig
+from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
+from omniisaacgymenvs.utils.config_utils.path_utils import retrieve_checkpoint_path
 from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
 from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
 from omniisaacgymenvs.utils.rlgames.rlgames_utils import RLGPUAlgoObserver, RLGPUEnv
 from omniisaacgymenvs.utils.task_util import initialize_task
-from omniisaacgymenvs.utils.config_utils.path_utils import retrieve_checkpoint_path
-from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
-
-import hydra
-from omegaconf import DictConfig
-
 from rl_games.common import env_configurations, vecenv
 from rl_games.torch_runner import Runner
 
-import datetime
-import os
-import torch
 
-class RLGTrainer():
+class RLGTrainer:
     def __init__(self, cfg, cfg_dict):
         self.cfg = cfg
         self.cfg_dict = cfg_dict
@@ -55,12 +54,8 @@ class RLGTrainer():
         self.cfg_dict["task"]["test"] = self.cfg.test
 
         # register the rl-games adapter to use inside the runner
-        vecenv.register('RLGPU',
-                        lambda config_name, num_actors, **kwargs: RLGPUEnv(config_name, num_actors, **kwargs))
-        env_configurations.register('rlgpu', {
-            'vecenv_type': 'RLGPU',
-            'env_creator': lambda **kwargs: env
-        })
+        vecenv.register("RLGPU", lambda config_name, num_actors, **kwargs: RLGPUEnv(config_name, num_actors, **kwargs))
+        env_configurations.register("rlgpu", {"vecenv_type": "RLGPU", "env_creator": lambda **kwargs: env})
 
         self.rlg_config_dict = omegaconf_to_dict(self.cfg.train)
 
@@ -71,17 +66,14 @@ class RLGTrainer():
         runner.reset()
 
         # dump config dict
-        experiment_dir = os.path.join('runs', self.cfg.train.params.config.name)
+        experiment_dir = os.path.join("runs", self.cfg.train.params.config.name)
         os.makedirs(experiment_dir, exist_ok=True)
-        with open(os.path.join(experiment_dir, 'config.yaml'), 'w') as f:
+        with open(os.path.join(experiment_dir, "config.yaml"), "w") as f:
             f.write(OmegaConf.to_yaml(self.cfg))
 
-        runner.run({
-            'train': not self.cfg.test,
-            'play': self.cfg.test,
-            'checkpoint': self.cfg.checkpoint,
-            'sigma': None
-        })
+        runner.run(
+            {"train": not self.cfg.test, "play": self.cfg.test, "checkpoint": self.cfg.checkpoint, "sigma": None}
+        )
 
 
 @hydra.main(version_base=None, config_name="config", config_path="../cfg")
@@ -93,9 +85,14 @@ def parse_hydra_configs(cfg: DictConfig):
     rank = int(os.getenv("LOCAL_RANK", "0"))
     if cfg.multi_gpu:
         cfg.device_id = rank
-        cfg.rl_device = f'cuda:{rank}'
+        cfg.rl_device = f"cuda:{rank}"
     enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
-    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id, enable_livestream=cfg.enable_livestream, enable_viewport=enable_viewport)
+    env = VecEnvRLGames(
+        headless=headless,
+        sim_device=cfg.device_id,
+        enable_livestream=cfg.enable_livestream,
+        enable_viewport=enable_viewport,
+    )
 
     # ensure checkpoints can be specified as relative paths
     if cfg.checkpoint:
@@ -108,8 +105,9 @@ def parse_hydra_configs(cfg: DictConfig):
 
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
+
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
-    cfg_dict['seed'] = cfg.seed
+    cfg_dict["seed"] = cfg.seed
 
     task = initialize_task(cfg_dict, env)
 
@@ -139,5 +137,5 @@ def parse_hydra_configs(cfg: DictConfig):
         wandb.finish()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parse_hydra_configs()

@@ -49,18 +49,11 @@ class IngenuityTask(RLTask):
         env,
         offset=None
     ) -> None:
-        self._sim_config = sim_config
-        self._cfg = sim_config.config
-        self._task_cfg = sim_config.task_config
-
-        self._num_envs = self._task_cfg["env"]["numEnvs"]
-        self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._max_episode_length = self._task_cfg["env"]["maxEpisodeLength"]
+        
+        self.update_config(sim_config)
 
         self.thrust_limit = 2000
         self.thrust_lateral_component = 0.2
-
-        self.dt = self._task_cfg["sim"]["dt"]
 
         self._num_observations = 13
         self._num_actions = 6
@@ -69,16 +62,18 @@ class IngenuityTask(RLTask):
         self._ball_position = torch.tensor([0, 0, 1.0])
 
         RLTask.__init__(self, name=name, env=env)
-
-        self.force_indices = torch.tensor([0, 2], device=self._device)
-        self.spinning_indices = torch.tensor([1, 3], device=self._device)
-
-        self.target_positions = torch.zeros((self._num_envs, 3), device=self._device, dtype=torch.float32)
-        self.target_positions[:, 2] = 1
-
-        self.all_indices = torch.arange(self._num_envs, dtype=torch.int32, device=self._device)
-
         return
+
+    def update_config(self, sim_config):
+        self._sim_config = sim_config
+        self._cfg = sim_config.config
+        self._task_cfg = sim_config.task_config
+
+        self._num_envs = self._task_cfg["env"]["numEnvs"]
+        self._env_spacing = self._task_cfg["env"]["envSpacing"]
+        self._max_episode_length = self._task_cfg["env"]["maxEpisodeLength"]
+
+        self.dt = self._task_cfg["sim"]["dt"]
 
     def set_up_scene(self, scene) -> None:
         self.get_ingenuity()
@@ -93,6 +88,25 @@ class IngenuityTask(RLTask):
             scene.add(self._copters.physics_rotors[i])
             scene.add(self._copters.visual_rotors[i])
         return
+
+    def initialize_views(self, scene):
+        super().initialize_views(scene)
+        if scene.object_exists("ingenuity_view"):
+            scene.remove_object("ingenuity_view", registry_only=True)
+        for i in range(2):
+            if scene.object_exists(f"physics_rotor_{i}_view"):
+                scene.remove_object(f"physics_rotor_{i}_view", registry_only=True)
+            if scene.object_exists(f"visual_rotor_{i}_view"):
+                scene.remove_object(f"visual_rotor_{i}_view", registry_only=True)
+        if scene.object_exists("targets_view"):
+            scene.remove_object("targets_view", registry_only=True)
+        self._copters = IngenuityView(prim_paths_expr="/World/envs/.*/Ingenuity", name="ingenuity_view")
+        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
+        scene.add(self._copters)
+        scene.add(self._balls)
+        for i in range(2):
+            scene.add(self._copters.physics_rotors[i])
+            scene.add(self._copters.visual_rotors[i])
 
     def get_ingenuity(self):
         copter = Ingenuity(prim_path=self.default_zero_env_path + "/Ingenuity", name="ingenuity", translation=self._ingenuity_position)
@@ -176,6 +190,12 @@ class IngenuityTask(RLTask):
             self._copters.physics_rotors[i].apply_forces(self.thrusts[:, i], indices=self.all_indices)
 
     def post_reset(self):
+        self.spinning_indices = torch.tensor([1, 3], device=self._device)
+        self.all_indices = torch.arange(self._num_envs, dtype=torch.int32, device=self._device)
+
+        self.target_positions = torch.zeros((self._num_envs, 3), device=self._device, dtype=torch.float32)
+        self.target_positions[:, 2] = 1
+
         self.root_pos, self.root_rot = self._copters.get_world_poses()
         self.root_velocities = self._copters.get_velocities()
         self.dof_pos = self._copters.get_joint_positions()

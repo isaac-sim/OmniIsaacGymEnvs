@@ -33,27 +33,22 @@ Inherits base class and abstract environment class. Inherited by nut-bolt task c
 Configuration defined in FactoryEnvNutBolt.yaml. Asset info defined in factory_asset_info_nut_bolt.yaml.
 """
 
+import os
+
 import hydra
 import numpy as np
-import os
-import torch
-
-from omniisaacgymenvs.tasks.factory.factory_schema_class_env import FactoryABCEnv
-from omniisaacgymenvs.tasks.factory.factory_schema_config_env import FactorySchemaConfigEnv
-from omniisaacgymenvs.tasks.factory.factory_base import FactoryBase
 import omniisaacgymenvs.tasks.factory.factory_control as fc
-
-from omni.isaac.core.utils.stage import add_reference_to_stage
+import torch
 from omni.isaac.core.prims import RigidPrim, RigidPrimView, XFormPrim
 from omni.isaac.core.utils.nucleus import get_assets_root_path
-
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
+from omni.isaac.core.utils.stage import add_reference_to_stage
+from omni.physx.scripts import physicsUtils, utils
 from omniisaacgymenvs.robots.articulations.views.factory_franka_view import FactoryFrankaView
-
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
+from omniisaacgymenvs.tasks.factory.factory_base import FactoryBase
+from omniisaacgymenvs.tasks.factory.factory_schema_class_env import FactoryABCEnv
+from omniisaacgymenvs.tasks.factory.factory_schema_config_env import FactorySchemaConfigEnv
 from pxr import Gf, Usd, UsdGeom, UsdPhysics
-from omni.physx.scripts import utils, physicsUtils
-
-
 
 
 class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
@@ -61,30 +56,42 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         self._get_env_yaml_params()
 
         super().__init__(name, sim_config, env)
-    
 
     def _get_env_yaml_params(self):
         """Initialize instance variables from YAML files."""
 
         cs = hydra.core.config_store.ConfigStore.instance()
-        cs.store(name='factory_schema_config_env', node=FactorySchemaConfigEnv)
+        cs.store(name="factory_schema_config_env", node=FactorySchemaConfigEnv)
 
-        config_path = 'task/FactoryEnvNutBolt.yaml'  # relative to Hydra search path (cfg dir)
+        config_path = "task/FactoryEnvNutBolt.yaml"  # relative to Hydra search path (cfg dir)
         self.cfg_env = hydra.compose(config_name=config_path)
-        self.cfg_env = self.cfg_env['task']  # strip superfluous nesting
+        self.cfg_env = self.cfg_env["task"]  # strip superfluous nesting
 
-        asset_info_path = '../tasks/factory/yaml/factory_asset_info_nut_bolt.yaml'
+        asset_info_path = "../tasks/factory/yaml/factory_asset_info_nut_bolt.yaml"
         self.asset_info_nut_bolt = hydra.compose(config_name=asset_info_path)
-        self.asset_info_nut_bolt = self.asset_info_nut_bolt['']['']['']['tasks']['factory']['yaml']  # strip superfluous nesting
-    
+        self.asset_info_nut_bolt = self.asset_info_nut_bolt[""][""][""]["tasks"]["factory"][
+            "yaml"
+        ]  # strip superfluous nesting
+
+    def update_config(self, sim_config):
+        self._sim_config = sim_config
+        self._cfg = sim_config.config
+        self._task_cfg = sim_config.task_config
+
+        self._num_envs = self._task_cfg["env"]["numEnvs"]
+        self._num_observations = self._task_cfg["env"]["numObservations"]
+        self._num_actions = self._task_cfg["env"]["numActions"]
+        self._env_spacing = self.cfg_base["env"]["env_spacing"]
+
+        self._get_env_yaml_params()
 
     def set_up_scene(self, scene) -> None:
-        self.import_franka_assets()
+        self.import_franka_assets(add_to_stage=True)
         self.create_nut_bolt_material()
 
         RLTask.set_up_scene(self, scene, replicate_physics=False)
-        
-        self._import_env_assets()
+
+        self._import_env_assets(add_to_stage=True)
 
         self.frankas = FactoryFrankaView(prim_paths_expr="/World/envs/.*/franka", name="frankas_view")
         self.nuts = RigidPrimView(prim_paths_expr="/World/envs/.*/nut/factory_nut_.*", name="nuts_view")
@@ -98,7 +105,38 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         scene.add(self.frankas._rfingers)
         scene.add(self.frankas._fingertip_centered)
         return
-    
+
+    def initialize_views(self, scene):
+        super().initialize_views(scene)
+        self.import_franka_assets(add_to_stage=False)
+        self._import_env_assets(add_to_stage=False)
+
+        if scene.object_exists("frankas_view"):
+            scene.remove_object("frankas_view", registry_only=True)
+        if scene.object_exists("nuts_view"):
+            scene.remove_object("nuts_view", registry_only=True)
+        if scene.object_exists("bolts_view"):
+            scene.remove_object("bolts_view", registry_only=True)
+        if scene.object_exists("hands_view"):
+            scene.remove_object("hands_view", registry_only=True)
+        if scene.object_exists("lfingers_view"):
+            scene.remove_object("lfingers_view", registry_only=True)
+        if scene.object_exists("rfingers_view"):
+            scene.remove_object("rfingers_view", registry_only=True)
+        if scene.object_exists("fingertips_view"):
+            scene.remove_object("fingertips_view", registry_only=True)
+        
+        self.frankas = FactoryFrankaView(prim_paths_expr="/World/envs/.*/franka", name="frankas_view")
+        self.nuts = RigidPrimView(prim_paths_expr="/World/envs/.*/nut/factory_nut_.*", name="nuts_view")
+        self.bolts = RigidPrimView(prim_paths_expr="/World/envs/.*/bolt/factory_bolt_.*", name="bolts_view")
+
+        scene.add(self.nuts)
+        scene.add(self.bolts)
+        scene.add(self.frankas)
+        scene.add(self.frankas._hands)
+        scene.add(self.frankas._lfingers)
+        scene.add(self.frankas._rfingers)
+        scene.add(self.frankas._fingertip_centered)
 
     def create_nut_bolt_material(self):
         self.nutboltPhysicsMaterialPath = "/World/Physics_Materials/NutBoltMaterial"
@@ -112,8 +150,7 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
             restitution=0.0,
         )
 
-
-    def _import_env_assets(self):
+    def _import_env_assets(self, add_to_stage=True):
         """Set nut and bolt asset options. Import assets."""
 
         self.nut_heights = []
@@ -124,62 +161,70 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         self.thread_pitches = []
 
         assets_root_path = get_assets_root_path()
-        
+
         for i in range(0, self._num_envs):
 
             j = np.random.randint(0, len(self.cfg_env.env.desired_subassemblies))
             subassembly = self.cfg_env.env.desired_subassemblies[j]
             components = list(self.asset_info_nut_bolt[subassembly])
 
-            nut_translation = torch.tensor([0.0, self.cfg_env.env.nut_lateral_offset, self.cfg_base.env.table_height], device=self._device)
+            nut_translation = torch.tensor(
+                [0.0, self.cfg_env.env.nut_lateral_offset, self.cfg_base.env.table_height], device=self._device
+            )
             nut_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self._device)
 
-            nut_height = self.asset_info_nut_bolt[subassembly][components[0]]['height']
-            nut_width_max = self.asset_info_nut_bolt[subassembly][components[0]]['width_max']
+            nut_height = self.asset_info_nut_bolt[subassembly][components[0]]["height"]
+            nut_width_max = self.asset_info_nut_bolt[subassembly][components[0]]["width_max"]
             self.nut_heights.append(nut_height)
             self.nut_widths_max.append(nut_width_max)
 
-            nut_file = assets_root_path + self.asset_info_nut_bolt[subassembly][components[0]]['usd_path']
+            nut_file = assets_root_path + self.asset_info_nut_bolt[subassembly][components[0]]["usd_path"]
 
-            add_reference_to_stage(nut_file, f"/World/envs/env_{i}" + "/nut")
-            nut_prim = XFormPrim(
-                prim_path=f"/World/envs/env_{i}" + "/nut",
-                translation=nut_translation,
-                orientation=nut_orientation,
-            )
+            if add_to_stage:
+                add_reference_to_stage(nut_file, f"/World/envs/env_{i}" + "/nut")
+                nut_prim = XFormPrim(
+                    prim_path=f"/World/envs/env_{i}" + "/nut",
+                    translation=nut_translation,
+                    orientation=nut_orientation,
+                )
 
-            physicsUtils.add_physics_material_to_prim(
-                self._stage, 
-                self._stage.GetPrimAtPath(f"/World/envs/env_{i}" + f"/nut/factory_{components[0][0:-6]}/collisions/mesh_0"), 
-                self.nutboltPhysicsMaterialPath
-            )
+                physicsUtils.add_physics_material_to_prim(
+                    self._stage,
+                    self._stage.GetPrimAtPath(
+                        f"/World/envs/env_{i}" + f"/nut/factory_{components[0][0:-6]}/collisions/mesh_0"
+                    ),
+                    self.nutboltPhysicsMaterialPath,
+                )
 
             bolt_translation = torch.tensor([0.0, 0.0, self.cfg_base.env.table_height], device=self._device)
             bolt_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self._device)
 
-            bolt_width = self.asset_info_nut_bolt[subassembly][components[1]]['width']
+            bolt_width = self.asset_info_nut_bolt[subassembly][components[1]]["width"]
 
-            bolt_head_height = self.asset_info_nut_bolt[subassembly][components[1]]['head_height']
-            bolt_shank_length = self.asset_info_nut_bolt[subassembly][components[1]]['shank_length']
+            bolt_head_height = self.asset_info_nut_bolt[subassembly][components[1]]["head_height"]
+            bolt_shank_length = self.asset_info_nut_bolt[subassembly][components[1]]["shank_length"]
             self.bolt_widths.append(bolt_width)
             self.bolt_head_heights.append(bolt_head_height)
             self.bolt_shank_lengths.append(bolt_shank_length)
 
-            bolt_file = assets_root_path + self.asset_info_nut_bolt[subassembly][components[1]]['usd_path']
-            add_reference_to_stage(bolt_file, f"/World/envs/env_{i}" + "/bolt")
-            XFormPrim(
-                prim_path=f"/World/envs/env_{i}" + "/bolt",
-                translation=bolt_translation,
-                orientation=bolt_orientation,
-            )
+            if add_to_stage:
+                bolt_file = assets_root_path + self.asset_info_nut_bolt[subassembly][components[1]]["usd_path"]
+                add_reference_to_stage(bolt_file, f"/World/envs/env_{i}" + "/bolt")
+                XFormPrim(
+                    prim_path=f"/World/envs/env_{i}" + "/bolt",
+                    translation=bolt_translation,
+                    orientation=bolt_orientation,
+                )
 
-            physicsUtils.add_physics_material_to_prim(
-                self._stage, 
-                self._stage.GetPrimAtPath(f"/World/envs/env_{i}" + f"/bolt/factory_{components[1][0:-6]}/collisions/mesh_0"), 
-                self.nutboltPhysicsMaterialPath
-            )
+                physicsUtils.add_physics_material_to_prim(
+                    self._stage,
+                    self._stage.GetPrimAtPath(
+                        f"/World/envs/env_{i}" + f"/bolt/factory_{components[1][0:-6]}/collisions/mesh_0"
+                    ),
+                    self.nutboltPhysicsMaterialPath,
+                )
 
-            thread_pitch = self.asset_info_nut_bolt[subassembly]['thread_pitch']
+            thread_pitch = self.asset_info_nut_bolt[subassembly]["thread_pitch"]
             self.thread_pitches.append(thread_pitch)
 
         # For computing body COM pos
@@ -193,7 +238,6 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         # For defining success or failure
         self.bolt_widths = torch.tensor(self.bolt_widths, device=self._device).unsqueeze(-1)
         self.thread_pitches = torch.tensor(self.thread_pitches, device=self._device).unsqueeze(-1)
-    
 
     def refresh_env_tensors(self):
         """Refresh tensors."""
@@ -215,14 +259,9 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
             pos=self.nut_pos,
             quat=self.nut_quat,
             offset=self.bolt_head_heights + self.nut_heights * 0.5,
-            device=self.device
+            device=self.device,
         )
 
         self.nut_com_quat = self.nut_quat  # always equal
 
-        self.nut_com_linvel = self.nut_linvel + torch.cross(
-            self.nut_angvel,
-            (self.nut_com_pos - self.nut_pos),
-            dim=1
-        )
-
+        self.nut_com_linvel = self.nut_linvel + torch.cross(self.nut_angvel, (self.nut_com_pos - self.nut_pos), dim=1)

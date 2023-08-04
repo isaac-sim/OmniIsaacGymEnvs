@@ -27,29 +27,27 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import math
 from abc import abstractmethod
-
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
-
-from omni.isaac.core.utils.torch.rotations import compute_heading_and_up, compute_rot, quat_conjugate
-from omni.isaac.core.utils.torch.maths import torch_rand_float, tensor_clamp, unscale
-
-from omni.isaac.core.articulations import ArticulationView
-from omni.isaac.core.utils.prims import get_prim_at_path
 
 import numpy as np
 import torch
-import math
+from omni.isaac.core.articulations import ArticulationView
+from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.core.utils.torch.maths import tensor_clamp, torch_rand_float, unscale
+from omni.isaac.core.utils.torch.rotations import compute_heading_and_up, compute_rot, quat_conjugate
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
 
 
 class LocomotionTask(RLTask):
-    def __init__(
-        self,
-        name,
-        env,
-        offset=None
-    ) -> None:
+    def __init__(self, name, env, offset=None) -> None:
 
+        LocomotionTask.update_config(self)
+
+        RLTask.__init__(self, name, env)
+        return
+
+    def update_config(self):
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
         self._max_episode_length = self._task_cfg["env"]["episodeLength"]
@@ -65,9 +63,6 @@ class LocomotionTask(RLTask):
         self.death_cost = self._task_cfg["env"]["deathCost"]
         self.termination_height = self._task_cfg["env"]["terminationHeight"]
         self.alive_reward_scale = self._task_cfg["env"]["alive_reward_scale"]
-
-        RLTask.__init__(self, name, env)
-        return
 
     @abstractmethod
     def set_up_scene(self, scene) -> None:
@@ -88,16 +83,35 @@ class LocomotionTask(RLTask):
         # force sensors attached to the feet
         sensor_force_torques = self._robots._physics_view.get_link_incoming_joint_force()[:, self._sensor_indices]
 
-        self.obs_buf[:], self.potentials[:], self.prev_potentials[:], self.up_vec[:], self.heading_vec[:] = get_observations(
-            torso_position, torso_rotation, velocity, ang_velocity, dof_pos, dof_vel, self.targets, self.potentials, self.dt,
-            self.inv_start_rot, self.basis_vec0, self.basis_vec1, self.dof_limits_lower, self.dof_limits_upper, self.dof_vel_scale,
-            sensor_force_torques, self._num_envs, self.contact_force_scale, self.actions, self.angular_velocity_scale
+        (
+            self.obs_buf[:],
+            self.potentials[:],
+            self.prev_potentials[:],
+            self.up_vec[:],
+            self.heading_vec[:],
+        ) = get_observations(
+            torso_position,
+            torso_rotation,
+            velocity,
+            ang_velocity,
+            dof_pos,
+            dof_vel,
+            self.targets,
+            self.potentials,
+            self.dt,
+            self.inv_start_rot,
+            self.basis_vec0,
+            self.basis_vec1,
+            self.dof_limits_lower,
+            self.dof_limits_upper,
+            self.dof_vel_scale,
+            sensor_force_torques,
+            self._num_envs,
+            self.contact_force_scale,
+            self.actions,
+            self.angular_velocity_scale,
         )
-        observations = {
-            self._robots.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self._robots.name: {"obs_buf": self.obs_buf}}
         return observations
 
     def pre_physics_step(self, actions) -> None:
@@ -121,9 +135,7 @@ class LocomotionTask(RLTask):
 
         # randomize DOF positions and velocities
         dof_pos = torch_rand_float(-0.2, 0.2, (num_resets, self._robots.num_dof), device=self._device)
-        dof_pos[:] = tensor_clamp(
-            self.initial_dof_pos[env_ids] + dof_pos, self.dof_limits_lower, self.dof_limits_upper
-        )
+        dof_pos[:] = tensor_clamp(self.initial_dof_pos[env_ids] + dof_pos, self.dof_limits_lower, self.dof_limits_upper)
         dof_vel = torch_rand_float(-0.1, 0.1, (num_resets, self._robots.num_dof), device=self._device)
 
         root_pos, root_rot = self.initial_root_pos[env_ids], self.initial_root_rot[env_ids]
@@ -164,7 +176,9 @@ class LocomotionTask(RLTask):
         self.targets = torch.tensor([1000, 0, 0], dtype=torch.float32, device=self._device).repeat((self.num_envs, 1))
         self.target_dirs = torch.tensor([1, 0, 0], dtype=torch.float32, device=self._device).repeat((self.num_envs, 1))
         self.dt = 1.0 / 60.0
-        self.potentials = torch.tensor([-1000.0 / self.dt], dtype=torch.float32, device=self._device).repeat(self.num_envs)
+        self.potentials = torch.tensor([-1000.0 / self.dt], dtype=torch.float32, device=self._device).repeat(
+            self.num_envs
+        )
         self.prev_potentials = self.potentials.clone()
 
         self.actions = torch.zeros((self.num_envs, self.num_actions), device=self._device)
@@ -175,9 +189,20 @@ class LocomotionTask(RLTask):
 
     def calculate_metrics(self) -> None:
         self.rew_buf[:] = calculate_metrics(
-            self.obs_buf, self.actions, self.up_weight, self.heading_weight, self.potentials, self.prev_potentials,
-            self.actions_cost_scale, self.energy_cost_scale, self.termination_height,
-            self.death_cost, self._robots.num_dof, self.get_dof_at_limit_cost(), self.alive_reward_scale, self.motor_effort_ratio
+            self.obs_buf,
+            self.actions,
+            self.up_weight,
+            self.heading_weight,
+            self.potentials,
+            self.prev_potentials,
+            self.actions_cost_scale,
+            self.energy_cost_scale,
+            self.termination_height,
+            self.death_cost,
+            self._robots.num_dof,
+            self.get_dof_at_limit_cost(),
+            self.alive_reward_scale,
+            self.motor_effort_ratio,
         )
 
     def is_done(self) -> None:
@@ -190,9 +215,11 @@ class LocomotionTask(RLTask):
 ###=========================jit functions=========================###
 #####################################################################
 
+
 @torch.jit.script
 def normalize_angle(x):
     return torch.atan2(torch.sin(x), torch.cos(x))
+
 
 @torch.jit.script
 def get_observations(
@@ -215,7 +242,7 @@ def get_observations(
     num_envs,
     contact_force_scale,
     actions,
-    angular_velocity_scale
+    angular_velocity_scale,
 ):
     # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, float, Tensor, Tensor, Tensor, Tensor, Tensor, float, Tensor, int, float, Tensor, float) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]
 
@@ -258,13 +285,7 @@ def get_observations(
 
 
 @torch.jit.script
-def is_done(
-    obs_buf,
-    termination_height,
-    reset_buf,
-    progress_buf,
-    max_episode_length
-):
+def is_done(obs_buf, termination_height, reset_buf, progress_buf, max_episode_length):
     # type: (Tensor, float, Tensor, Tensor, float) -> Tensor
     reset = torch.where(obs_buf[:, 0] < termination_height, torch.ones_like(reset_buf), reset_buf)
     reset = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(reset_buf), reset)
@@ -286,22 +307,22 @@ def calculate_metrics(
     num_dof,
     dof_at_limit_cost,
     alive_reward_scale,
-    motor_effort_ratio
+    motor_effort_ratio,
 ):
     # type: (Tensor, Tensor, float, float, Tensor, Tensor, float, float, float, float, int, Tensor, float, Tensor) -> Tensor
 
     heading_weight_tensor = torch.ones_like(obs_buf[:, 11]) * heading_weight
-    heading_reward = torch.where(
-        obs_buf[:, 11] > 0.8, heading_weight_tensor, heading_weight * obs_buf[:, 11] / 0.8
-    )
+    heading_reward = torch.where(obs_buf[:, 11] > 0.8, heading_weight_tensor, heading_weight * obs_buf[:, 11] / 0.8)
 
     # aligning up axis of robot and environment
     up_reward = torch.zeros_like(heading_reward)
     up_reward = torch.where(obs_buf[:, 10] > 0.93, up_reward + up_weight, up_reward)
 
     # energy penalty for movement
-    actions_cost = torch.sum(actions ** 2, dim=-1)
-    electricity_cost = torch.sum(torch.abs(actions * obs_buf[:, 12+num_dof:12+num_dof*2])* motor_effort_ratio.unsqueeze(0), dim=-1)
+    actions_cost = torch.sum(actions**2, dim=-1)
+    electricity_cost = torch.sum(
+        torch.abs(actions * obs_buf[:, 12 + num_dof : 12 + num_dof * 2]) * motor_effort_ratio.unsqueeze(0), dim=-1
+    )
 
     # reward for duration of staying alive
     alive_reward = torch.ones_like(potentials) * alive_reward_scale

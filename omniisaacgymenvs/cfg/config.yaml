@@ -37,13 +37,15 @@ solver_type: 1 # 0: pgs, 1: tgs
 test: False
 # used to set checkpoint path
 checkpoint: ''
+# evaluate checkpoint
+evaluation: False
 
 # disables rendering
 headless: False
 # enables native livestream
 enable_livestream: False
 # timeout for MT script
-mt_timeout: 30
+mt_timeout: 90
 
 wandb_activate: False
 wandb_group: ''

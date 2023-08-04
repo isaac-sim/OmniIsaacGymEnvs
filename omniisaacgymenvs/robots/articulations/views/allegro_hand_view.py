@@ -29,10 +29,10 @@
 
 from typing import Optional
 
+import torch
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.prims import RigidPrimView
 
-import torch
 
 class AllegroHandView(ArticulationView):
     def __init__(
@@ -41,11 +41,7 @@ class AllegroHandView(ArticulationView):
         name: Optional[str] = "AllegroHandView",
     ) -> None:
 
-        super().__init__(
-            prim_paths_expr=prim_paths_expr,
-            name=name,
-            reset_xform_properties=False
-        )
+        super().__init__(prim_paths_expr=prim_paths_expr, name=name, reset_xform_properties=False)
         self._actuated_dof_indices = list()
 
     @property
