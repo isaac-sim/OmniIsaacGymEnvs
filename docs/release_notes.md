@@ -10,6 +10,7 @@ Additions
 - Add Warp-based RL examples: Cartpole, Ant, Humanoid
 - Add support for running OIGE as an extension in Isaac Sim (requires Isaac Sim 2023.1)
 - Add options to filter collisions between environments and specify global collision filter paths to `RLTask.set_to_scene()`
+- Add multinode training support
 
 Changes
 -------

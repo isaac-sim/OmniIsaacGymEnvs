@@ -82,10 +82,14 @@ def parse_hydra_configs(cfg: DictConfig):
     time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     headless = cfg.headless
-    rank = int(os.getenv("LOCAL_RANK", "0"))
+
+    # local rank (GPU id) in a current multi-gpu mode
+    local_rank = int(os.getenv("LOCAL_RANK", "0"))
+    # global rank (GPU id) in multi-gpu multi-node mode
+    global_rank = int(os.getenv("RANK", "0"))
     if cfg.multi_gpu:
-        cfg.device_id = rank
-        cfg.rl_device = f"cuda:{rank}"
+        cfg.device_id = local_rank
+        cfg.rl_device = f'cuda:{local_rank}'
     enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
     env = VecEnvRLGames(
         headless=headless,
@@ -105,13 +109,13 @@ def parse_hydra_configs(cfg: DictConfig):
 
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
-
+    cfg.seed = cfg.seed + global_rank if cfg.seed != -1 else cfg.seed
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
     cfg_dict["seed"] = cfg.seed
 
     task = initialize_task(cfg_dict, env)
 
-    if cfg.wandb_activate and rank == 0:
+    if cfg.wandb_activate and global_rank == 0:
         # Make sure to install WandB if you actually use this.
         import wandb
 
@@ -127,13 +131,13 @@ def parse_hydra_configs(cfg: DictConfig):
             resume="allow",
         )
 
-    torch.cuda.set_device(rank)
+    torch.cuda.set_device(local_rank)
     rlg_trainer = RLGTrainer(cfg, cfg_dict)
     rlg_trainer.launch_rlg_hydra(env)
     rlg_trainer.run()
     env.close()
 
-    if cfg.wandb_activate and rank == 0:
+    if cfg.wandb_activate and global_rank == 0:
         wandb.finish()
 
 

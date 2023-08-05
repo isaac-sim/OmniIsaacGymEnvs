@@ -252,6 +252,23 @@ To train with multiple GPUs, use the following command, where `--proc_per_node` 
 PYTHON_PATH -m torch.distributed.run --nnodes=1 --nproc_per_node=2 scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
 ```
 
+## Multi-node Training
+
+To train across multiple nodes/machines, it is required to launch an individual process on each node.
+For the master node, use the following command, where `--proc_per_node` represents the number of available GPUs, and `--nnodes` represents the number of nodes:
+```bash
+PYTHON_PATH -m torch.distributed.run --nproc_per_node=2 --nnodes=2 --node_rank=0 --rdzv_id=123 --rdzv_backend=c10d --rdzv_endpoint=localhost:5555 scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
+```
+
+Note that the port (`5555`) can be replaced with any other available port.
+
+For non-master nodes, use the following command, replacing `--node_rank` with the index of each machine:
+```bash
+PYTHON_PATH -m torch.distributed.run --nproc_per_node=2 --nnodes=2 --node_rank=1 --rdzv_id=123 --rdzv_backend=c10d --rdzv_endpoint=ip_of_master_machine:5555 scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
+```
+
+For more details on multi-node training with PyTorch, please visit [here](https://pytorch.org/tutorials/intermediate/ddp_series_multinode.html).
+
 ## Tasks
 
 Source code for tasks can be found in `omniisaacgymenvs/tasks`. 
