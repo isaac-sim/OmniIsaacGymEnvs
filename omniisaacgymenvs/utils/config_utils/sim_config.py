@@ -69,13 +69,6 @@ class SimConfig:
 
         carb.settings.get_settings().set_bool("/physics/physxDispatcher", True)
 
-        if not self._config["headless"]:
-            import omni.ui
-            for windows in ["Property", "Stage", "Render Settings"]:
-                window = omni.ui.Workspace.get_window(windows)
-                if window:
-                    window.visible = False
-
     def _parse_config(self):
         # general sim parameter
         self._sim_params = copy.deepcopy(default_sim_params)
