@@ -154,6 +154,24 @@ Then, training can be launched from the container with:
 /isaac-sim/python.sh scripts/rlgames_train.py task=Ant
 ```
 
+To avoid re-installing OIGE each time a container is launched, we also provide a dockerfile that can be used to build an image with OIGE installed. To build the image, run:
+
+```bash
+docker build -t isaac-sim-oige -f docker/dockerfile .
+```
+
+Then, start a container with the built image:
+
+```bash
+./docker/run_dockerfile.sh
+```
+
+Then, training can be launched from the container with:
+
+```bash
+/isaac-sim/python.sh scripts/rlgames_train.py task=Ant
+```
+
 ## Livestream
 
 OmniIsaacGymEnvs supports livestream through the [Omniverse Streaming Client](https://docs.omniverse.nvidia.com/app_streaming-client/app_streaming-client/overview.html). To enable this feature, add the commandline argument `enable_livestream=True`:
