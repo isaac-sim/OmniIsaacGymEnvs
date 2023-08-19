@@ -83,7 +83,7 @@ class LocomotionTask(RLTaskWarp):
         dof_vel = self._robots.get_joint_velocities(clone=False)
 
         # force sensors attached to the feet
-        sensor_force_torques = self._robots._physics_view.get_link_incoming_joint_force()
+        sensor_force_torques = self._robots.get_measured_joint_forces()
         
         wp.launch(get_observations, dim=self._num_envs,
             inputs=[self.obs_buf, torso_position, torso_rotation, self._env_pos, velocities, dof_pos, dof_vel, 
@@ -312,7 +312,7 @@ def get_observations(
     dof_limits_lower: wp.array(dtype=wp.float32),
     dof_limits_upper: wp.array(dtype=wp.float32),
     dof_vel_scale: float,
-    sensor_force_torques: wp.array(dtype=wp.float32, ndim=3),
+    sensor_force_torques: wp.indexedarray(dtype=wp.float32, ndim=3),
     contact_force_scale: float,
     actions: wp.array(dtype=wp.float32, ndim=2),
     angular_velocity_scale: float,

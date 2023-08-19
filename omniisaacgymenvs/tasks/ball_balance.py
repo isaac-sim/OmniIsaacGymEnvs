@@ -167,9 +167,7 @@ class BallBalanceTask(RLTask):
         dof_pos = self._balance_bots.get_joint_positions(clone=False)
         dof_vel = self._balance_bots.get_joint_velocities(clone=False)
 
-        sensor_force_torques = self._balance_bots._physics_view.get_link_incoming_joint_force()[
-            :, self._sensor_indices
-        ]  # (num_envs, num_sensors, 6)
+        sensor_force_torques = self._balance_bots.get_measured_joint_forces(joint_indices=self._sensor_indices) # (num_envs, num_sensors, 6)
 
         self.obs_buf[..., 0:3] = dof_pos[..., self.actuated_dof_indices]
         self.obs_buf[..., 3:6] = dof_vel[..., self.actuated_dof_indices]
