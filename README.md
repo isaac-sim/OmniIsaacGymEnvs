@@ -236,6 +236,7 @@ Common arguments for the training scripts are:
 * `experiment=EXPERIMENT` - Sets the name of the experiment.
 * `max_iterations=MAX_ITERATIONS` - Sets how many iterations to run for. Reasonable defaults are provided for the provided environments.
 * `warp=WARP` - If set to True, launch the task implemented with Warp backend (Note: not all tasks have a Warp implementation).
+* `kit_app=KIT_APP` - Specifies the absolute path to the kit app file to be used.
 
 Hydra also allows setting variables inside config files directly as command line arguments. As an example, to set the minibatch size for a rl_games training run, you can use `train.params.config.minibatch_size=64`. Similarly, variables in task configs can also be set. For example, `task.env.episodeLength=100`.
 

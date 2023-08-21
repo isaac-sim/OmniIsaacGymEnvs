@@ -12,6 +12,7 @@ Additions
 - Add options to filter collisions between environments and specify global collision filter paths to `RLTask.set_to_scene()`
 - Add multinode training support
 - Add dockerfile with OIGE
+- Add option to select kit app file from command line argument `kit_app` (requires Isaac Sim 2023.1.0)
 
 Changes
 -------

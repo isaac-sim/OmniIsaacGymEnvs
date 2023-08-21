@@ -74,3 +74,16 @@ def retrieve_checkpoint_path(path):
     else:
         carb.log_error(f"Invalid checkpoint path: {path}")
         return None
+
+
+def get_experience(headless, enable_livestream, enable_viewport, kit_app):
+    if kit_app == '':
+        if enable_viewport:
+            experience = os.path.abspath(os.path.join('../apps', 'omni.isaac.sim.python.gym.camera.kit'))
+        else:
+            experience = f'{os.environ["EXP_PATH"]}/omni.isaac.sim.python.gym.kit'
+            if headless and not enable_livestream:
+                experience = f'{os.environ["EXP_PATH"]}/omni.isaac.sim.python.gym.headless.kit'
+    else:
+        experience = kit_app
+    return experience

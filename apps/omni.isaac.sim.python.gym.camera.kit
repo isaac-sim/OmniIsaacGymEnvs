@@ -1,0 +1,37 @@
+[package]
+title = "Isaac Sim Python - Gym"
+description = "A simplifed app for running Gym examples with cameras"
+version = "2023.1.0"
+
+# That makes it browsable in UI with "experience" filter
+keywords = ["experience", "app", "usd"]
+
+[dependencies]
+"omni.isaac.sim.python.gym" = {}
+
+[settings]
+# set the default ros bridge to disable on startup
+isaac.startup.ros_bridge_extension = ""
+
+# Increase available descriptors to support more simultaneous cameras
+rtx.descriptorSets=30000
+rtx.reservedDescriptors=10000
+
+# Enable new denoiser to reduce motion blur artifacts
+rtx.newDenoiser.enabled=true
+
+# Disable present thread to improve performance
+exts."omni.renderer.core".present.enabled=false
+
+# Disabling these settings reduces renderer VRAM usage and improves rendering performance, but at some quality cost 
+rtx.raytracing.cached.enabled = false
+rtx.raytracing.lightcache.spatialCache.enabled = false
+rtx.ambientOcclusion.enabled = false
+rtx-transient.dlssg.enabled = false
+
+# Force synchronous rendering to improve training results
+omni.replicator.asyncRendering = false
+
+
+[settings.app.exts]
+folders = ["${app}/../exts", "${app}/../extscache", "${app}/../extsPhysics"]

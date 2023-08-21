@@ -32,6 +32,7 @@ import numpy as np
 import torch
 from omegaconf import DictConfig
 from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
+from omniisaacgymenvs.utils.config_utils.path_utils import get_experience
 from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
 from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
 from omniisaacgymenvs.utils.task_util import initialize_task
@@ -47,11 +48,15 @@ def parse_hydra_configs(cfg: DictConfig):
     render = not headless
     enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
 
+    # select kit app file
+    experience = get_experience(headless, cfg.enable_livestream, enable_viewport, cfg.kit_app)
+
     env = VecEnvRLGames(
         headless=headless,
         sim_device=cfg.device_id,
         enable_livestream=cfg.enable_livestream,
         enable_viewport=enable_viewport,
+        experience=experience
     )
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed

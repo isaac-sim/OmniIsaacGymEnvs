@@ -53,6 +53,9 @@ wandb_name: ${train.params.config.name}
 wandb_entity: ''
 wandb_project: 'omniisaacgymenvs'
 
+# path to a kit app file
+kit_app: ''
+
 # Warp
 warp: False
 
