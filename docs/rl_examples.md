@@ -37,6 +37,7 @@ applied onto the cartpoles via `set_joint_efforts`. Cartpoles are reset by using
 and `set_joint_velocities`. 
 
 Training can be launched with command line argument `task=Cartpole`.
+Training using the Warp backend can be launched with `task=Cartpole warp=True`.
 
 Running inference with pre-trained model can be launched with command line argument `task=Cartpole test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/cartpole.pth`
 
@@ -66,7 +67,9 @@ Actions are applied onto the ants via `set_joint_efforts`, which moves the ants 
 torques to the DOFs. Force sensors are also placed on each of the legs to observe contacts
 with the ground plane; the sensor values can be retrieved using `get_force_sensor_forces`. 
 
-Training with PPO can be launched with command line argument `task=Ant`. Training with SAC with command line arguments `task=AntSAC train=AntSAC`.
+Training with PPO can be launched with command line argument `task=Ant`. 
+Training with SAC with command line arguments `task=AntSAC train=AntSAC`.
+Training using the Warp backend can be launched with `task=Ant warp=True`.
 
 Running inference with pre-trained model can be launched with command line argument `task=Ant test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth`
 
@@ -86,7 +89,9 @@ Humanoid is another environment that uses
 very similar to the Ant example, where the goal for the humanoid is to run forward
 as fast as possible.
 
-Training can be launched with command line argument `task=Humanoid`. Training with SAC with command line arguments `task=HumanoidSAC train=HumanoidSAC`.
+Training can be launched with command line argument `task=Humanoid`. 
+Training with SAC with command line arguments `task=HumanoidSAC train=HumanoidSAC`.
+Training using the Warp backend can be launched with `task=Humanoid warp=True`.
 
 Running inference with pre-trained model can be launched with command line argument `task=Humanoid test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/humanoid.pth`
 

@@ -65,18 +65,11 @@ To train your first policy, run:
 PYTHON_PATH scripts/rlgames_train.py task=Cartpole
 ```
 
-You should see an Isaac Sim window pop up. Once Isaac Sim initialization completes, the Cartpole scene will be constructed and simulation will start running automatically. The process will terminate once training finishes.
-
-
-Here's another example - Ant locomotion - using the multi-threaded training script:
-
-```bash
-PYTHON_PATH scripts/rlgames_train_mt.py task=Ant
-```
+An Isaac Sim app window should be launched. Once Isaac Sim initialization completes, the Cartpole scene will be constructed and simulation will start running automatically. The process will terminate once training finishes.
 
 Note that by default, we show a Viewport window with rendering, which slows down training. You can choose to close the Viewport window during training for better performance. The Viewport window can be re-enabled by selecting `Window > Viewport` from the top menu bar.
 
-To achieve maximum performance, you can launch training in `headless` mode as follows:
+To achieve maximum performance, launch training in `headless` mode as follows:
 
 ```bash
 PYTHON_PATH scripts/rlgames_train.py task=Ant headless=True
@@ -169,7 +162,7 @@ Then, start a container with the built image:
 Then, training can be launched from the container with:
 
 ```bash
-/isaac-sim/python.sh scripts/rlgames_train.py task=Ant
+/isaac-sim/python.sh scripts/rlgames_train.py task=Ant headless=True
 ```
 
 ## Livestream
@@ -203,15 +196,6 @@ PYTHON_PATH scripts/rlgames_train.py task=Cartpole
 ```
 
 This script creates an instance of the PPO runner in `rl_games` and automatically launches training and simulation. Once training completes (the total number of iterations have been reached), the script will exit. If running inference with `test=True checkpoint=<path/to/checkpoint>`, the script will run indefinitely until terminated. Note that this script will have limitations on interaction with the UI.
-
-
-Lastly, we provide a multi-threaded training script that executes the RL policy on a separate thread than the main thread used for simulation and rendering:
-
-```bash
-PYTHON_PATH scripts/rlgames_train_mt.py task=Cartpole
-```
-
-This script uses the same RL Games PPO policy as the above, but runs the RL loop on a new thread. Communication between the RL thread and the main thread happens on threaded Queues. Simulation will start automatically, but the script will **not** exit when training terminates, except when running in headless mode. Simulation will stop when training completes or can be stopped by clicking on the Stop button in the UI. Training can be launched again by clicking on the Play button. Similarly, if running inference with `test=True checkpoint=<path/to/checkpoint>`, simulation will run until the Stop button is clicked, or the script will run indefinitely until the process is terminated.
 
 
 ### Configuration and command line arguments
