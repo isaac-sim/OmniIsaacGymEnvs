@@ -22,7 +22,8 @@ Changes
 - Remove unnecessary cloning of buffers in VecEnv classes
 - Only enable omni.replicator.isaac when domain randomization or cameras are enabled
 - The multi-threaded launch script `rlgames_train_mt.py` has been re-designed to support the extension workflow. This script can no longer be used to launch a training run from python. Please use `rlgames_train.py` instead.
-- Restructures for environments to support the new extension-based workflow.
+- Restructures for environments to support the new extension-based workflow
+- Add async workflow to factory pick environment to support extension-based workflow
 - The base RLTask has been moved to the Isaac Sim omni.isaa.gym module. Please make sure imports for RLTask are updated to the new module.
 
 Fixes

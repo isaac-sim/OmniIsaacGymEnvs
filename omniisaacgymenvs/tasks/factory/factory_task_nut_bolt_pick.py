@@ -32,7 +32,7 @@ Inherits nut-bolt environment class and abstract task class (not enforced). Can 
 python train.py task=FactoryTaskNutBoltPick
 """
 
-
+import asyncio
 import os
 
 import hydra
@@ -40,7 +40,8 @@ import omegaconf
 import omni.isaac.core.utils.torch as torch_utils
 import omniisaacgymenvs.tasks.factory.factory_control as fc
 import torch
-# from omni.isaac.core.simulation_context import SimulationContext
+import omni.kit
+from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.core.utils.torch.transformations import *
 from omniisaacgymenvs.tasks.factory.factory_env_nut_bolt import FactoryEnvNutBolt
 from omniisaacgymenvs.tasks.factory.factory_schema_class_task import FactoryABCTask
@@ -91,7 +92,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # randomize all envs
         indices = torch.arange(self._num_envs, dtype=torch.int64, device=self._device)
-        self.reset_idx(indices)
+        asyncio.ensure_future(self.reset_idx_async(indices))
 
     def _acquire_task_tensors(self):
         """Acquire tensors."""
@@ -135,6 +136,24 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
             do_scale=True,
         )
 
+    async def pre_physics_step_async(self, actions) -> None:
+        """Reset environments. Apply actions from policy. Simulation step called after this method."""
+
+        if not self._env._world.is_playing():
+            return
+
+        env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
+        if len(env_ids) > 0:
+            await self.reset_idx_async(env_ids)
+
+        self.actions = actions.clone().to(self.device)  # shape = (num_envs, num_actions); values = [-1, 1]
+
+        self._apply_actions_as_ctrl_targets(
+            actions=self.actions,
+            ctrl_target_gripper_dof_pos=self.asset_info_franka_table.franka_gripper_width_max,
+            do_scale=True,
+        )
+
     def reset_idx(self, env_ids):
         """Reset specified environments."""
 
@@ -142,6 +161,16 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self._reset_object(env_ids)
 
         self._randomize_gripper_pose(env_ids, sim_steps=self.cfg_task.env.num_gripper_move_sim_steps)
+
+        self._reset_buffers(env_ids)
+
+    async def reset_idx_async(self, env_ids):
+        """Reset specified environments."""
+
+        self._reset_franka(env_ids)
+        self._reset_object(env_ids)
+
+        await self._randomize_gripper_pose_async(env_ids, sim_steps=self.cfg_task.env.num_gripper_move_sim_steps)
 
         self._reset_buffers(env_ids)
 
@@ -285,6 +314,32 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
 
+    async def post_physics_step_async(self):
+        """Step buffers. Refresh tensors. Compute observations and reward. Reset environments."""
+
+        self.progress_buf[:] += 1
+
+        if self._env._world.is_playing():
+
+            # In this policy, episode length is constant
+            is_last_step = self.progress_buf[0] == self.max_episode_length - 1
+
+            if self.cfg_task.env.close_and_lift:
+                # At this point, robot has executed RL policy. Now close gripper and lift (open-loop)
+                if is_last_step:
+                    await self._close_gripper_async(sim_steps=self.cfg_task.env.num_gripper_close_sim_steps)
+                    await self._lift_gripper_async(sim_steps=self.cfg_task.env.num_gripper_lift_sim_steps)
+
+            self.refresh_base_tensors()
+            self.refresh_env_tensors()
+            self._refresh_task_tensors()
+            self.get_observations()
+            self.get_states()
+            self.calculate_metrics()
+            self.get_extras()
+
+        return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
+
     def _refresh_task_tensors(self):
         """Refresh tensors."""
 
@@ -388,7 +443,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # Step sim
         for _ in range(sim_steps):
-            self._env._world._physics_context._step(current_time=self._env._world.current_time)
+            SimulationContext.step(self._env._world, render=True)
 
     def _lift_gripper(self, franka_gripper_width=0.0, lift_distance=0.3, sim_steps=20):
         """Lift gripper by specified distance. Called outside RL loop (i.e., after last step of episode)."""
@@ -399,7 +454,36 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         # Step sim
         for _ in range(sim_steps):
             self._apply_actions_as_ctrl_targets(delta_hand_pose, franka_gripper_width, do_scale=False)
-            self._env._world._physics_context._step(current_time=self._env._world.current_time)
+            SimulationContext.step(self._env._world, render=True)
+
+    async def _close_gripper_async(self, sim_steps=20):
+        """Fully close gripper using controller. Called outside RL loop (i.e., after last step of episode)."""
+        await self._move_gripper_to_dof_pos_async(gripper_dof_pos=0.0, sim_steps=sim_steps)
+
+    async def _move_gripper_to_dof_pos_async(self, gripper_dof_pos, sim_steps=20):
+        """Move gripper fingers to specified DOF position using controller."""
+
+        delta_hand_pose = torch.zeros(
+            (self.num_envs, self.cfg_task.env.numActions), device=self.device
+        )  # No hand motion
+        self._apply_actions_as_ctrl_targets(delta_hand_pose, gripper_dof_pos, do_scale=False)
+
+        # Step sim
+        for _ in range(sim_steps):
+            self._env._world.physics_sim_view.flush()
+            await omni.kit.app.get_app().next_update_async()
+
+    async def _lift_gripper_async(self, franka_gripper_width=0.0, lift_distance=0.3, sim_steps=20):
+        """Lift gripper by specified distance. Called outside RL loop (i.e., after last step of episode)."""
+
+        delta_hand_pose = torch.zeros([self.num_envs, 6], device=self.device)
+        delta_hand_pose[:, 2] = lift_distance
+
+        # Step sim
+        for _ in range(sim_steps):
+            self._apply_actions_as_ctrl_targets(delta_hand_pose, franka_gripper_width, do_scale=False)
+            self._env._world.physics_sim_view.flush()
+            await omni.kit.app.get_app().next_update_async()
 
     def _check_lift_success(self, height_multiple):
         """Check if nut is above table by more than specified multiple times height of nut."""
@@ -416,7 +500,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         """Move gripper to random pose."""
 
         # step once to update physx with the newly set joint positions from reset_franka()
-        self._env._world._physics_context._step(current_time=self._env._world.current_time)
+        SimulationContext.step(self._env._world, render=True)
 
         # Set target pos above table
         self.ctrl_target_fingertip_midpoint_pos = torch.tensor(
@@ -479,7 +563,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            self._env._world._physics_context._step(current_time=self._env._world.current_time)
+            SimulationContext.step(self._env._world, render=True)
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
 
@@ -487,4 +571,83 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # step once to update physx with the newly set joint velocities
-        self._env._world._physics_context._step(current_time=self._env._world.current_time)
+        SimulationContext.step(self._env._world, render=True)
+
+    async def _randomize_gripper_pose_async(self, env_ids, sim_steps):
+        """Move gripper to random pose."""
+
+        # step once to update physx with the newly set joint positions from reset_franka()
+        await omni.kit.app.get_app().next_update_async()
+
+        # Set target pos above table
+        self.ctrl_target_fingertip_midpoint_pos = torch.tensor(
+            [0.0, 0.0, self.cfg_base.env.table_height], device=self.device
+        ) + torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_initial, device=self.device)
+        self.ctrl_target_fingertip_midpoint_pos = self.ctrl_target_fingertip_midpoint_pos.unsqueeze(0).repeat(
+            self.num_envs, 1
+        )
+
+        fingertip_midpoint_pos_noise = 2 * (
+            torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5
+        )  # [-1, 1]
+        fingertip_midpoint_pos_noise = fingertip_midpoint_pos_noise @ torch.diag(
+            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_pos_noise, device=self.device)
+        )
+        self.ctrl_target_fingertip_midpoint_pos += fingertip_midpoint_pos_noise
+
+        # Set target rot
+        ctrl_target_fingertip_midpoint_euler = (
+            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_initial, device=self.device)
+            .unsqueeze(0)
+            .repeat(self.num_envs, 1)
+        )
+
+        fingertip_midpoint_rot_noise = 2 * (
+            torch.rand((self.num_envs, 3), dtype=torch.float32, device=self.device) - 0.5
+        )  # [-1, 1]
+        fingertip_midpoint_rot_noise = fingertip_midpoint_rot_noise @ torch.diag(
+            torch.tensor(self.cfg_task.randomize.fingertip_midpoint_rot_noise, device=self.device)
+        )
+        ctrl_target_fingertip_midpoint_euler += fingertip_midpoint_rot_noise
+        self.ctrl_target_fingertip_midpoint_quat = torch_utils.quat_from_euler_xyz(
+            ctrl_target_fingertip_midpoint_euler[:, 0],
+            ctrl_target_fingertip_midpoint_euler[:, 1],
+            ctrl_target_fingertip_midpoint_euler[:, 2],
+        )
+
+        # Step sim and render
+        for _ in range(sim_steps):
+            self.refresh_base_tensors()
+            self.refresh_env_tensors()
+            self._refresh_task_tensors()
+
+            pos_error, axis_angle_error = fc.get_pose_error(
+                fingertip_midpoint_pos=self.fingertip_midpoint_pos,
+                fingertip_midpoint_quat=self.fingertip_midpoint_quat,
+                ctrl_target_fingertip_midpoint_pos=self.ctrl_target_fingertip_midpoint_pos,
+                ctrl_target_fingertip_midpoint_quat=self.ctrl_target_fingertip_midpoint_quat,
+                jacobian_type=self.cfg_ctrl["jacobian_type"],
+                rot_error_type="axis_angle",
+            )
+
+            delta_hand_pose = torch.cat((pos_error, axis_angle_error), dim=-1)
+            actions = torch.zeros((self.num_envs, self.cfg_task.env.numActions), device=self.device)
+            actions[:, :6] = delta_hand_pose
+
+            self._apply_actions_as_ctrl_targets(
+                actions=actions,
+                ctrl_target_gripper_dof_pos=self.asset_info_franka_table.franka_gripper_width_max,
+                do_scale=False,
+            )
+
+            self._env._world.physics_sim_view.flush()
+            await omni.kit.app.get_app().next_update_async()
+
+        self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
+
+        indices = env_ids.to(dtype=torch.int32)
+        self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
+
+        # step once to update physx with the newly set joint velocities
+        self._env._world.physics_sim_view.flush()
+        await omni.kit.app.get_app().next_update_async()
