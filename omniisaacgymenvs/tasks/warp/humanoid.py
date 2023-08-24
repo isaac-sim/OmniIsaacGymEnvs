@@ -28,11 +28,11 @@
 
 
 from omniisaacgymenvs.tasks.warp.shared.locomotion import LocomotionTask
-from omniisaacgymenvs.tasks.base.rl_task import RLTaskWarp
 from omniisaacgymenvs.robots.articulations.humanoid import Humanoid
 
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.gym.tasks.rl_task import RLTaskWarp
 
 import numpy as np
 import torch

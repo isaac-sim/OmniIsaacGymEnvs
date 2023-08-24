@@ -54,7 +54,7 @@ env:
 sim:
   dt: 0.016667 # 1/60 s
   add_ground_plane: True
-  add_distant_light: True
+  add_distant_light: False
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   use_fabric: True
   enable_scene_query_support: False

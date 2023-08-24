@@ -33,8 +33,8 @@ import numpy as np
 import torch
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.gym.tasks.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.cartpole import Cartpole
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
 
 
 class CartpoleTask(RLTask):

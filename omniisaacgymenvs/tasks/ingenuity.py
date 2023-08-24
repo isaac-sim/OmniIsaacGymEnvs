@@ -27,7 +27,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.ingenuity import Ingenuity
 from omniisaacgymenvs.robots.articulations.views.ingenuity_view import IngenuityView
 
@@ -35,6 +34,7 @@ from omni.isaac.core.utils.torch.rotations import *
 from omni.isaac.core.objects import DynamicSphere
 from omni.isaac.core.prims import RigidPrimView
 from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.gym.tasks.rl_task import RLTask
 
 import numpy as np
 import torch

@@ -44,8 +44,8 @@ import torch
 from omni.isaac.core.objects import FixedCuboid
 from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.stage import get_current_stage
+from omni.isaac.gym.tasks.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.factory_franka import FactoryFranka
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omniisaacgymenvs.tasks.factory.factory_schema_class_base import FactoryABCBase
 from omniisaacgymenvs.tasks.factory.factory_schema_config_base import FactorySchemaConfigBase
 from pxr import Gf, PhysxSchema, Sdf, Usd, UsdGeom, UsdPhysics

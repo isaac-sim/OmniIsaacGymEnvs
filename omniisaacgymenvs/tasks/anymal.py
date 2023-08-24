@@ -32,9 +32,9 @@ import numpy as np
 import torch
 from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.torch.rotations import *
+from omni.isaac.gym.tasks.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.anymal import Anymal
 from omniisaacgymenvs.robots.articulations.views.anymal_view import AnymalView
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omniisaacgymenvs.tasks.utils.usd_utils import set_drive
 
 

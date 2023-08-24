@@ -88,8 +88,3 @@ def set_drive(prim_path, drive_type, target_type, target_value, stiffness, dampi
     set_drive_damping(drive, damping)
     set_drive_max_force(drive, max_force)
 
-
-def create_distant_light(prim_path="/World/defaultDistantLight", intensity=5000):
-    stage = get_current_stage()
-    light = UsdLux.DistantLight.Define(stage, prim_path)
-    light.CreateIntensityAttr().Set(intensity)

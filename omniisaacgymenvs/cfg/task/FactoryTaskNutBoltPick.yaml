@@ -13,7 +13,7 @@ sim:
   gravity: [0.0, 0.0, -9.81]  # required, but overridden in base FactoryBase.yaml
   disable_gravity: False
   add_ground_plane: True
-  add_distant_light: True
+  add_distant_light: False
   use_fabric: True
   enable_scene_query_support: True
   disable_contact_processing: False

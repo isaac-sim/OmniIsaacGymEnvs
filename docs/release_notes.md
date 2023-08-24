@@ -6,27 +6,30 @@ Release Notes
 
 Additions
 ---------
-- Add support for Warp backend task implementation (requires Isaac Sim 2023.1.0)
+- Add support for Warp backend task implementation
 - Add Warp-based RL examples: Cartpole, Ant, Humanoid
-- Add support for running OIGE as an extension in Isaac Sim (requires Isaac Sim 2023.1.0)
+- Add support for running OIGE as an extension in Isaac Sim
 - Add options to filter collisions between environments and specify global collision filter paths to `RLTask.set_to_scene()`
 - Add multinode training support
 - Add dockerfile with OIGE
-- Add option to select kit app file from command line argument `kit_app` (requires Isaac Sim 2023.1.0)
+- Add option to select kit app file from command line argument `kit_app`
 
 Changes
 -------
-- `use_flatcache` flag has been renamed to `use_fabric` (requires Isaac Sim 2023.1.0)
+- `use_flatcache` flag has been renamed to `use_fabric`
 - Updated hydra-core version to 1.3.2, omegaconf version to 2.3.0
 - The `get_force_sensor_forces` API for articulations is now deprecated and replaced with `get_measured_joint_forces`
 - Remove unnecessary cloning of buffers in VecEnv classes
 - Only enable omni.replicator.isaac when domain randomization or cameras are enabled
 - The multi-threaded launch script `rlgames_train_mt.py` has been re-designed to support the extension workflow. This script can no longer be used to launch a training run from python. Please use `rlgames_train.py` instead.
 - Restructures for environments to support the new extension-based workflow.
+- The base RLTask has been moved to the Isaac Sim omni.isaa.gym module. Please make sure imports for RLTask are updated to the new module.
 
 Fixes
 -----
 - Fix errors related to setting velocities to kinematic markers in Ingenuity and Quadcopter environments
+- Fix contact-related issues with quadruped assets
+- Fix errors in physics APIs when returning empty tensors
 
 
 2022.2.1 - March 16, 2023
