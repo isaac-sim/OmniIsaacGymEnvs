@@ -80,6 +80,18 @@ PYTHON_PATH scripts/rlgames_train.py task=Ant headless=True
 Some of the examples could take a few minutes to load because the startup time scales based on the number of environments. The startup time will continually
 be optimized in future releases.
 
+### Extension Workflow
+
+The extension workflow provides a simple user interface for creating and launching RL tasks. To launch Isaac Sim for the extension workflow, run:
+
+```bash
+./<isaac_sim_root>/isaac-sim.gym.sh --ext-folder </parent/directory/to/OIGE>
+```
+
+Note: `isaac_sim_root` should be located in the same directory as `python.sh`.
+
+The UI window can be activated from `Isaac Examples > RL Examples` by navigating the top menu bar.
+For more details on the extension workflow, please refer to the [documentation](docs/extension_workflow.md).
 
 ### Loading trained models // Checkpoints
 

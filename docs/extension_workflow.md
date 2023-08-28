@@ -55,6 +55,20 @@ The `Load Checkpoint` text box should contain the path to the checkpoint. Local 
 Finally, `START` and `STOP` buttons are provided to start and stop a training/inference run. These buttons will control the launch and termination of the RL thread. New runs cannot be started until the previous run is stopped.
 
 
+### Running an Example
+
+To run an example through the user interface, the following workflow can be used:
+* Select a task from the `Select Task` dropdown, for this example, we will select `Cartpole`.
+* Click on the `LOAD` button, which will load the Cartpole scene.
+* Once the scene is loaded, click on `START`, which will start a training.
+* Once training completes, we can run inference with the following steps.
+* Lower the number of environments by setting the `Number of environments` slider to `25`.
+* Click on `LOAD` to re-load the scene with 25 environments.
+* Tick the `Test` checkbox, make sure the values populated in the `Load Checkpoint` text box is correct.
+* Click on `START` to start inferencing on the previously trained checkpoints.
+* Click on `STOP` to stop the simulation.
+
+
 ### API Requirements
 
 To enforce the concept of separation between environment creation and training, the extension workflow requires implementation of a few more APIs in the task class:

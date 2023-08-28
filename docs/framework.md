@@ -226,19 +226,19 @@ my_world.step()
 
 #### omni.isaac.core Getter APIs
 
-Getter APIs may return stale states when used with the GPU pipeline. This is because the physics simulation requires a simulation step
+Getter APIs for cloth simulation may return stale states when used with the GPU pipeline. This is because the physics simulation requires a simulation step
 to occur in order to refresh the GPU buffers with new states. Therefore, when a getter API is called after a setter API before a 
 simulation step, the states returned from the getter API may not reflect the values that were set using the setter API.
 
 For example:
 
 ```python
-my_view.set_world_poses(positions=[[0, 0, 1]], orientations=[[1, 0, 0, 0]], indices=[0])
+my_view.set_world_positions(positions=[[0, 0, 1]], indices=[0])
 # Values may be stale when called before step
-positions, orientations = my_view.get_world_poses()    # positions and orientations may not match [[0, 0, 1]] and [[1, 0, 0, 0]]
+positions = my_view.get_world_positions()    # positions may not match [[0, 0, 1]]
 my_world.step()
 # Values will be updated when called after step
-positions, orientations = my_view.get_world_poses()    # positions and orientations will reflect the new states
+positions = my_view.get_world_positions()    # positions will reflect the new states
 ```
 
 #### Performing Resets
