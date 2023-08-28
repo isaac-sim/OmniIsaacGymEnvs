@@ -94,8 +94,8 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         self._import_env_assets(add_to_stage=True)
 
         self.frankas = FactoryFrankaView(prim_paths_expr="/World/envs/.*/franka", name="frankas_view")
-        self.nuts = RigidPrimView(prim_paths_expr="/World/envs/.*/nut/factory_nut_.*", name="nuts_view")
-        self.bolts = RigidPrimView(prim_paths_expr="/World/envs/.*/bolt/factory_bolt_.*", name="bolts_view")
+        self.nuts = RigidPrimView(prim_paths_expr="/World/envs/.*/nut/factory_nut", name="nuts_view")
+        self.bolts = RigidPrimView(prim_paths_expr="/World/envs/.*/bolt/factory_bolt", name="bolts_view")
 
         scene.add(self.nuts)
         scene.add(self.bolts)
@@ -188,10 +188,11 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
                     orientation=nut_orientation,
                 )
 
+                self._stage.GetPrimAtPath(f"/World/envs/env_{i}/nut/factory_nut/collisions").SetInstanceable(False)
                 physicsUtils.add_physics_material_to_prim(
                     self._stage,
                     self._stage.GetPrimAtPath(
-                        f"/World/envs/env_{i}" + f"/nut/factory_{components[0][0:-6]}/collisions/mesh_0"
+                        f"/World/envs/env_{i}" + f"/nut/factory_nut/collisions/mesh_0"
                     ),
                     self.nutboltPhysicsMaterialPath,
                 )
@@ -216,10 +217,11 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
                     orientation=bolt_orientation,
                 )
 
+                self._stage.GetPrimAtPath(f"/World/envs/env_{i}/bolt/factory_bolt/collisions").SetInstanceable(False)
                 physicsUtils.add_physics_material_to_prim(
                     self._stage,
                     self._stage.GetPrimAtPath(
-                        f"/World/envs/env_{i}" + f"/bolt/factory_{components[1][0:-6]}/collisions/mesh_0"
+                        f"/World/envs/env_{i}" + f"/bolt/factory_bolt/collisions/mesh_0"
                     ),
                     self.nutboltPhysicsMaterialPath,
                 )
