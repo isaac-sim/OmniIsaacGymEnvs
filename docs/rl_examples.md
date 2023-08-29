@@ -64,8 +64,10 @@ in a tensorized fashion across all of the actors in the environment. `get_world_
  `get_linear_velocities`, and `get_angular_velocities`, can be used to determine whether the 
 ants have been moving towards the desired direction and whether they have fallen or flipped over.
 Actions are applied onto the ants via `set_joint_efforts`, which moves the ants by setting
-torques to the DOFs. Force sensors are also placed on each of the legs to observe contacts
-with the ground plane; the sensor values can be retrieved using `get_force_sensor_forces`. 
+torques to the DOFs. 
+
+Note that the previously used force sensors and `get_force_sensor_forces` API are now deprecated.
+Force sensors can now be retrieved directly using `get_measured_joint_forces` from `ArticulationView`. 
 
 Training with PPO can be launched with command line argument `task=Ant`. 
 Training with SAC with command line arguments `task=AntSAC train=AntSAC`.
