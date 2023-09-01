@@ -42,7 +42,7 @@ import torch
 from omni.isaac.core.prims import RigidPrim, RigidPrimView, XFormPrim
 from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
-from omni.isaac.gym.tasks.rl_task import RLTask
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omni.physx.scripts import physicsUtils, utils
 from omniisaacgymenvs.robots.articulations.views.factory_franka_view import FactoryFrankaView
 from omniisaacgymenvs.tasks.factory.factory_base import FactoryBase

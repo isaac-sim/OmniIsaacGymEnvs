@@ -34,7 +34,7 @@ from omni.isaac.core.utils.torch.rotations import compute_heading_and_up, comput
 from omni.isaac.core.utils.torch.maths import torch_rand_float, tensor_clamp, unscale
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.utils.prims import get_prim_at_path
-from omni.isaac.gym.tasks.rl_task import RLTaskWarp
+from omniisaacgymenvs.tasks.base.rl_task import RLTaskWarp
 
 import numpy as np
 import torch

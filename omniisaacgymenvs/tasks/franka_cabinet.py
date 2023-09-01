@@ -18,7 +18,7 @@ from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.stage import get_current_stage
 from omni.isaac.core.utils.torch.rotations import *
 from omni.isaac.core.utils.torch.transformations import *
-from omni.isaac.gym.tasks.rl_task import RLTask
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.cabinet import Cabinet
 from omniisaacgymenvs.robots.articulations.franka import Franka
 from omniisaacgymenvs.robots.articulations.views.cabinet_view import CabinetView
