@@ -319,12 +319,28 @@ Config files used for this task are:
 
 ### Factory: Fast Contact for Robotic Assembly
 
-We provide a Factory example task, [**FactoryTaskNutBoltPick**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_pick.py), which can be executed with `python train.py task=FactoryTaskNutBoltPick`. This task trains policy for the Pick task, a simplified version of the corresponding task in the Factory paper. The policy may take ~1 hour to achieve high success rates on a modern GPU.
+We provide a set of Factory example tasks, [**FactoryTaskNutBoltPick**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_pick.py), [**FactoryTaskNutBoltPlace**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_place.py), and [**FactoryTaskNutBoltScrew**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_screw.py), 
+
+`FactoryTaskNutBoltPick` can be executed with `python train.py task=FactoryTaskNutBoltPick`. This task trains policy for the Pick task, a simplified version of the corresponding task in the Factory paper. The policy may take ~1 hour to achieve high success rates on a modern GPU.
 
 - The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
 - The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
 
 Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_pick.pth`
+
+`FactoryTaskNutBoltPlace` can be executed with `python train.py task=FactoryTaskNutBoltPlace`. This task trains policy for the Place task.
+
+- The general configuration file for the above task is [FactoryTaskNutBoltPlace.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPlace.yaml).
+- The training configuration file for the above task is [FactoryTaskNutBoltPlacePPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPlacePPO.yaml).
+
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPlace test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_place.pth`
+
+`FactoryTaskNutBoltScrew` can be executed with `python train.py task=FactoryTaskNutBoltScrew`. This task trains policy for the Screw task.
+
+- The general configuration file for the above task is [FactoryTaskNutBoltScrew.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltScrew.yaml).
+- The training configuration file for the above task is [FactoryTaskNutBoltScrewPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltScrewPPO.yaml).
+
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltScrew test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_screw.pth`
 
 If you use the Factory simulation methods (e.g., SDF collisions, contact reduction) or Factory learning tools (e.g., assets, environments, or controllers) in your work, please cite the following paper:
 ```

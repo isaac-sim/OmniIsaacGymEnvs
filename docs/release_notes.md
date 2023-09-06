@@ -8,6 +8,7 @@ Additions
 ---------
 - Add support for Warp backend task implementation
 - Add Warp-based RL examples: Cartpole, Ant, Humanoid
+- Add new Factory environments for place and screw: FactoryTaskNutBoltPlace and FactoryTaskNutBoltScrew
 - Add support for running OIGE as an extension in Isaac Sim
 - Add options to filter collisions between environments and specify global collision filter paths to `RLTask.set_to_scene()`
 - Add multinode training support

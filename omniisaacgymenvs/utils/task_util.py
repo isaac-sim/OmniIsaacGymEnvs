@@ -36,6 +36,8 @@ def import_tasks():
     from omniisaacgymenvs.tasks.cartpole import CartpoleTask
     from omniisaacgymenvs.tasks.crazyflie import CrazyflieTask
     from omniisaacgymenvs.tasks.factory.factory_task_nut_bolt_pick import FactoryTaskNutBoltPick
+    from omniisaacgymenvs.tasks.factory.factory_task_nut_bolt_place import FactoryTaskNutBoltPlace
+    from omniisaacgymenvs.tasks.factory.factory_task_nut_bolt_screw import FactoryTaskNutBoltScrew
     from omniisaacgymenvs.tasks.franka_cabinet import FrankaCabinetTask
     from omniisaacgymenvs.tasks.humanoid import HumanoidLocomotionTask
     from omniisaacgymenvs.tasks.ingenuity import IngenuityTask
@@ -55,6 +57,8 @@ def import_tasks():
         "BallBalance": BallBalanceTask,
         "Cartpole": CartpoleTask,
         "FactoryTaskNutBoltPick": FactoryTaskNutBoltPick,
+        "FactoryTaskNutBoltPlace": FactoryTaskNutBoltPlace,
+        "FactoryTaskNutBoltScrew": FactoryTaskNutBoltScrew,
         "FrankaCabinet": FrankaCabinetTask,
         "Humanoid": HumanoidLocomotionTask,
         "Ingenuity": IngenuityTask,

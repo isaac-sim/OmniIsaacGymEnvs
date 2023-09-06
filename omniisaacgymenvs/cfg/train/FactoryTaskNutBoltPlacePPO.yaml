@@ -34,7 +34,7 @@ params:
   load_path: ${...checkpoint}
 
   config:
-    name: ${resolve_default:FactoryTaskNutBoltPick,${....experiment}}
+    name: ${resolve_default:FactoryTaskNutBoltPlace,${....experiment}}
     full_experiment_name: ${.name}
     device: ${....rl_device}
     device_name: ${....rl_device}
@@ -56,7 +56,7 @@ params:
     schedule_type: standard
     kl_threshold: 0.016
     score_to_win: 20000
-    max_epochs: ${resolve_default:200,${....max_iterations}}
+    max_epochs: ${resolve_default:400,${....max_iterations}}
     save_best_after: 50
     save_frequency: 100
     print_stats: True
