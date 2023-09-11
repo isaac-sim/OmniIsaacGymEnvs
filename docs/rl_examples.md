@@ -22,6 +22,7 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Crazyflie crazyflie.py](#crazyflie-crazyfliepy)
   - [Ball Balance ball_balance.py](#ball-balance-ball_balancepy)
   - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
+  - [Franka Deformable franka_deformable.py](#franka-deformablepy)
   - [Factory: Fast Contact for Robotic Assembly](#factory-fast-contact-for-robotic-assembly)
 
 
@@ -316,6 +317,20 @@ Config files used for this task are:
 -   **rl_games training config**: [FrankaCabinetPPO.yaml](../omniisaacgymenvs/cfg/train/FrankaCabinetPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184174894-03767aa0-936c-4bfe-bbe9-a6865f539bb4.gif" width="300" height="150"/>
+
+### Franka Deformable [franka_deformable.py](../omniisaacgymenvs/tasks/franka_deformable.py)
+
+This Franka example demonstrates interaction between Franka arm and a deformable tube. It demonstrates the manipulation of deformable objects, using nodal positions and velocities of the simulation mesh as observations.
+
+Training can be launched with command line argument `task=FrankaDeformable`.
+
+Running inference with pre-trained model can be launched with command line argument `task=FrankaDeformable test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/franka_deformable.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [FrankaDeformable.yaml](../omniisaacgymenvs/cfg/task/FrankaDeformable.yaml)
+-   **rl_games training config**: [FrankaCabinetFrankaDeformable.yaml](../omniisaacgymenvs/cfg/train/FrankaDeformablePPO.yaml)
+
 
 ### Factory: Fast Contact for Robotic Assembly
 

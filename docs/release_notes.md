@@ -14,6 +14,7 @@ Additions
 - Add multinode training support
 - Add dockerfile with OIGE
 - Add option to select kit app file from command line argument `kit_app`
+- Add new deformable environment showing Franka picking up a deformable tube: FrankaDeformable
 
 Changes
 -------
