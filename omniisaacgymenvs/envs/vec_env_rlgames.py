@@ -27,7 +27,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omni.isaac.gym.vec_env import VecEnvBase
+from .vec_env_base_stream import VecEnvBaseStream 
+#from omni.isaac.gym.vec_env import VecEnvBase
+
 
 import torch
 import numpy as np
@@ -36,7 +38,7 @@ from datetime import datetime
 
 
 # VecEnv Wrapper for RL training
-class VecEnvRLGames(VecEnvBase):
+class VecEnvRLGames(VecEnvBaseStream):
 
     def _process_data(self):
         self._obs = torch.clamp(self._obs, -self._task.clip_obs, self._task.clip_obs).to(self._task.rl_device).clone()
