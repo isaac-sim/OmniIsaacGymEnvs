@@ -51,6 +51,7 @@ default_physx_params = {
     "gpu_heap_capacity": 64 * 1024 * 1024,
     "gpu_temp_buffer_capacity": 16 * 1024 * 1024,
     "gpu_max_num_partitions": 8,
+    "gpu_collision_stack_size": 64 * 1024 * 1024,
     ### Per-actor settings ( can override in actor_options )
     "solver_position_iteration_count": 4,
     "solver_velocity_iteration_count": 1,

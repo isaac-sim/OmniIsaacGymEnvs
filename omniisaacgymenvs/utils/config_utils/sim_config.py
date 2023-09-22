@@ -64,10 +64,24 @@ class SimConfig:
                 enable_extension("omni.replicator.isaac")
 
         self._sim_params["warp"] = self._config["warp"]
+        self._sim_params["sim_device"] = self._config["sim_device"]
+
         if self._sim_params["disable_contact_processing"]:
             carb.settings.get_settings().set_bool("/physics/disableContactProcessing", True)
 
         carb.settings.get_settings().set_bool("/physics/physxDispatcher", True)
+
+        import omni.ui 
+        # Dock floating UIs this might not be needed anymore as extensions dock themselves
+        # Method for docking a particular window to a location
+        def dock_window(space, name, location, ratio=0.5):
+            window = omni.ui.Workspace.get_window(name)
+            if window and space:
+                window.dock_in(space, location, ratio=ratio)
+            return window
+        # Acquire the main docking station
+        main_dockspace = omni.ui.Workspace.get_window("DockSpace")
+        dock_window(main_dockspace, "Content", omni.ui.DockPosition.BOTTOM, 0.3)
 
     def _parse_config(self):
         # general sim parameter

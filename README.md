@@ -24,7 +24,7 @@ Follow the Isaac Sim [documentation](https://docs.omniverse.nvidia.com/app_isaac
 
 *Examples in this repository rely on features from the most recent Isaac Sim release. Please make sure to update any existing Isaac Sim build to the latest release version, 2023.1.0, to ensure examples work as expected.*
 
-Note that the 2022.2.1 OmniIsaacGymEnvs release will no longer work with the latest Isaac Sim 2023.1.0 release. Due to a change in USD APIs, line 138 in rl_task.py is no longer valid. To run the previous OIGE release with the latest Isaac Sim release, please comment out lines 137 and 138 in rl_task.py or set `add_distant_light` to `False` in the task config file.
+Note that the 2022.2.1 OmniIsaacGymEnvs release will no longer work with the latest Isaac Sim 2023.1.0 release. Due to a change in USD APIs, line 138 in rl_task.py is no longer valid. To run the previous OIGE release with the latest Isaac Sim release, please comment out lines 137 and 138 in rl_task.py or set `add_distant_light` to `False` in the task config file. No changes are required if running with the latest release of OmniIsaacGymEnvs.
 
 Once installed, this repository can be used as a python module, `omniisaacgymenvs`, with the python executable provided in Isaac Sim.
 
