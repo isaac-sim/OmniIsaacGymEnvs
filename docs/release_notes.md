@@ -33,6 +33,7 @@ Fixes
 - Fix errors related to setting velocities to kinematic markers in Ingenuity and Quadcopter environments
 - Fix contact-related issues with quadruped assets
 - Fix errors in physics APIs when returning empty tensors
+- Updated the deprecated config name `seq_len` used with RNN networks to `seq_length`
 
 
 2022.2.1 - March 16, 2023

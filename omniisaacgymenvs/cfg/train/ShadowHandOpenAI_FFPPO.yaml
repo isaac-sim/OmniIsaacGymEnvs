@@ -68,7 +68,7 @@ params:
     mini_epochs: 4
     critic_coef: 4
     clip_value: True
-    seq_len: 4
+    seq_length: 4
     bounds_loss_coef: 0.0001
 
     central_value_config:
