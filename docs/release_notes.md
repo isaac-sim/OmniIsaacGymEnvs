@@ -19,7 +19,8 @@ Additions
 Changes
 -------
 - `use_flatcache` flag has been renamed to `use_fabric`
-- Updated hydra-core version to 1.3.2, omegaconf version to 2.3.0
+- Update hydra-core version to 1.3.2, omegaconf version to 2.3.0
+- Update rlgames to version 1.6.1.
 - The `get_force_sensor_forces` API for articulations is now deprecated and replaced with `get_measured_joint_forces`
 - Remove unnecessary cloning of buffers in VecEnv classes
 - Only enable omni.replicator.isaac when domain randomization or cameras are enabled

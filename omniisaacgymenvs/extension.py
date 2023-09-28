@@ -412,10 +412,6 @@ class RLExtension(omni.ext.IExt):
         else:
             self._task.initialize_views(self._env._world.scene)
 
-        # disable fabric until we start training
-        # if self._env._world._physics_context._use_fabric:
-        #     self._env._world._physics_context.enable_fabric(False)
-
     def _on_load_world(self):
         # stop simulation before updating stage
         self._timeline.stop()
@@ -460,9 +456,6 @@ class RLExtension(omni.ext.IExt):
             rlg_trainer = RLGTrainer(self._cfg, cfg_dict)
             trainer = Trainer(rlg_trainer, self._env)
 
-            if self._env._world._physics_context._use_fabric:
-                self._env._world._physics_context.enable_fabric(True)
-
             await self._env._world.reset_async_no_set_up_scene()
             self._env._render_mode = self._render_dropdown.get_item_value_model().as_int
             await self._env.run(trainer)
@@ -472,8 +465,6 @@ class RLExtension(omni.ext.IExt):
             print(traceback.format_exc())
         finally:
             self._is_training = False
-            if self._env._world._physics_context._use_fabric:
-                self._env._world._physics_context.enable_fabric(False)
 
     def _on_train(self):
         # stop simulation if still running

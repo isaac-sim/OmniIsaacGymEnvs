@@ -43,7 +43,8 @@ INSTALL_REQUIRES = [
     "omegaconf==2.3.0",
     "hydra-core==1.3.2",
     "redis==3.5.3", # needed by Ray on Windows
-    "rl-games==1.6.0"
+    "urllib3==1.26.16",
+    "rl-games==1.6.1"
 ]
 
 # Installation operation

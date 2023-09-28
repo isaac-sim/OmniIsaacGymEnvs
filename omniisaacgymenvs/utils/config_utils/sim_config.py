@@ -83,6 +83,10 @@ class SimConfig:
         main_dockspace = omni.ui.Workspace.get_window("DockSpace")
         dock_window(main_dockspace, "Content", omni.ui.DockPosition.BOTTOM, 0.3)
 
+        window = omni.ui.Workspace.get_window("Content")
+        if window:
+            window.visible = False
+
     def _parse_config(self):
         # general sim parameter
         self._sim_params = copy.deepcopy(default_sim_params)
