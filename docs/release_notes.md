@@ -34,6 +34,7 @@ Fixes
 - Fix errors related to setting velocities to kinematic markers in Ingenuity and Quadcopter environments
 - Fix contact-related issues with quadruped assets
 - Fix errors in physics APIs when returning empty tensors
+- Fix orientation correctness issues when using some assets with omni.isaac.core. Additional orientations applied to accommodate for the error are no longer required (i.e. ShadowHand)
 - Updated the deprecated config name `seq_len` used with RNN networks to `seq_length`
 
 

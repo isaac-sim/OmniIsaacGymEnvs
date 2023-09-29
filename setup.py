@@ -42,8 +42,8 @@ INSTALL_REQUIRES = [
     "protobuf==3.20.2",
     "omegaconf==2.3.0",
     "hydra-core==1.3.2",
-    "redis==3.5.3", # needed by Ray on Windows
     "urllib3==1.26.16",
+    "psutil==5.9.3",
     "rl-games==1.6.1"
 ]
 

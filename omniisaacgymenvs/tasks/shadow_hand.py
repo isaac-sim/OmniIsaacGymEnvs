@@ -94,7 +94,7 @@ class ShadowHandTask(InHandManipulationTask):
 
     def get_starting_positions(self):
         self.hand_start_translation = torch.tensor([0.0, 0.0, 0.5], device=self.device)
-        self.hand_start_orientation = torch.tensor([0.0, 0.0, -0.70711, 0.70711], device=self.device)
+        self.hand_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
         self.pose_dy, self.pose_dz = -0.39, 0.10
 
     def get_hand(self):
