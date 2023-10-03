@@ -39,6 +39,7 @@ import os
 
 # Minimum dependencies required prior to installation
 INSTALL_REQUIRES = [
+    "numpy==1.23.5",
     "protobuf==3.20.2",
     "omegaconf==2.3.0",
     "hydra-core==1.3.2",
