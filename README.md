@@ -269,7 +269,7 @@ To train with multiple GPUs, use the following command, where `--proc_per_node` 
 PYTHON_PATH -m torch.distributed.run --nnodes=1 --nproc_per_node=2 scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
 ```
 
-## Multi-node Training
+## Multi-Node Training
 
 To train across multiple nodes/machines, it is required to launch an individual process on each node.
 For the master node, use the following command, where `--proc_per_node` represents the number of available GPUs, and `--nnodes` represents the number of nodes:
@@ -284,7 +284,7 @@ For non-master nodes, use the following command, replacing `--node_rank` with th
 PYTHON_PATH -m torch.distributed.run --nproc_per_node=2 --nnodes=2 --node_rank=1 --rdzv_id=123 --rdzv_backend=c10d --rdzv_endpoint=ip_of_master_machine:5555 scripts/rlgames_train.py headless=True task=Ant multi_gpu=True
 ```
 
-For more details on multi-node training with PyTorch, please visit [here](https://pytorch.org/tutorials/intermediate/ddp_series_multinode.html).
+For more details on multi-node training with PyTorch, please visit [here](https://pytorch.org/tutorials/intermediate/ddp_series_multinode.html). As mentioned in the PyTorch documentation, "multinode training is bottlenecked by inter-node communication latencies". When this latency is high, it is possible multi-node training will perform worse than running on a single node instance.
 
 ## Tasks
 

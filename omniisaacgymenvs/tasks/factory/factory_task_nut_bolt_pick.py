@@ -678,6 +678,9 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # Step sim and render
         for _ in range(sim_steps):
+            if not self._env._world.is_playing():
+                return
+
             self.refresh_base_tensors()
             self.refresh_env_tensors()
             self._refresh_task_tensors()

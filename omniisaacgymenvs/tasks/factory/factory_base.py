@@ -199,11 +199,14 @@ class FactoryBase(RLTask, FactoryABCBase):
     def refresh_base_tensors(self):
         """Refresh tensors."""
 
+        if not self._env._world.is_playing():
+            return
+
         self.dof_pos = self.frankas.get_joint_positions(clone=False)
         self.dof_vel = self.frankas.get_joint_velocities(clone=False)
 
         # Jacobian shape: [4, 11, 6, 9] (root has no Jacobian)
-        self.franka_jacobian = self.frankas._physics_view.get_jacobians()
+        self.franka_jacobian = self.frankas.get_jacobians()
         self.franka_mass_matrix = self.frankas.get_mass_matrices(clone=False)
 
         self.arm_dof_pos = self.dof_pos[:, 0:7]
