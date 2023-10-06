@@ -28,6 +28,7 @@ Changes
 - Restructures for environments to support the new extension-based workflow
 - Add async workflow to factory pick environment to support extension-based workflow
 - The base RLTask has been moved to the Isaac Sim omni.isaa.gym module. Please make sure imports for RLTask are updated to the new module.
+- Update docker scripts with cache directories
 
 Fixes
 -----
