@@ -454,13 +454,13 @@ class RLExtension(omni.ext.IExt):
             cfg_dict["evaluation"] = self._cfg.evaluation
 
             rlg_trainer = RLGTrainer(self._cfg, cfg_dict)
-            trainer = Trainer(rlg_trainer, self._env)
+            if not rlg_trainer._bad_checkpoint:
+                trainer = Trainer(rlg_trainer, self._env)
 
-            await self._env._world.reset_async_no_set_up_scene()
-            self._env._render_mode = self._render_dropdown.get_item_value_model().as_int
-            await self._env.run(trainer)
-            self._render_dropdown.get_item_value_model().set_value(0)
-            await omni.kit.app.get_app().next_update_async()
+                await self._env._world.reset_async_no_set_up_scene()
+                self._env._render_mode = self._render_dropdown.get_item_value_model().as_int
+                await self._env.run(trainer)
+                await omni.kit.app.get_app().next_update_async()
         except Exception as e:
             print(traceback.format_exc())
         finally:
@@ -469,6 +469,8 @@ class RLExtension(omni.ext.IExt):
     def _on_train(self):
         # stop simulation if still running
         self._timeline.stop()
+
+        self._on_render_mode_select(self._render_modes[self._render_dropdown.get_item_value_model().as_int])
 
         if not self._is_training:
             self._is_training = True
@@ -480,7 +482,6 @@ class RLExtension(omni.ext.IExt):
         return
 
     def _on_window(self, status):
-        # if status:
         return
 
     def on_shutdown(self):

@@ -53,8 +53,11 @@ class RLGTrainer:
         self.cfg_dict = cfg_dict
 
         # ensure checkpoints can be specified as relative paths
+        self._bad_checkpoint = False
         if self.cfg.checkpoint:
             self.cfg.checkpoint = retrieve_checkpoint_path(self.cfg.checkpoint)
+            if not self.cfg.checkpoint:
+                self._bad_checkpoint = True
 
     def launch_rlg_hydra(self, env):
         # `create_rlgpu_env` is environment construction function which is passed to RL Games and called internally.

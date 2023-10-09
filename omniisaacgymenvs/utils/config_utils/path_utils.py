@@ -72,7 +72,7 @@ def retrieve_checkpoint_path(path):
         copy_to_local = download_ov_file(path, target_path)
         return to_absolute_path(target_path)
     else:
-        carb.log_error(f"Invalid checkpoint path: {path}")
+        carb.log_error(f"Invalid checkpoint path: {path}. Does the file exist?")
         return None
 
 
