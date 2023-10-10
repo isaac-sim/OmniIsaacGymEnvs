@@ -112,7 +112,7 @@ class AnymalTerrainDemo(AnymalTerrainTask):
                         self.view_port.set_active_camera(self.perspective_path)
                     else:
                         self.view_port.set_active_camera(self.camera_path)
-        else:
+        elif event.type == carb.input.KeyboardEventType.KEY_RELEASE:
             self._current_command = [0.0, 0.0, 0.0, 0.0]
 
     def update_selected_object(self):
