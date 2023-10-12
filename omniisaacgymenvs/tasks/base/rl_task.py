@@ -229,7 +229,12 @@ class RLTask(BaseTask):
         """
         self.reset_buf = torch.ones_like(self.reset_buf)
 
-    def pre_physics_step(self, actions):
+    def pre_physics_step(self):
+        """ Optionally implemented by individual task classes to prepare for physichs step.
+        """
+        pass
+    
+    def apply_control(self,actions):
         """ Optionally implemented by individual task classes to process actions.
 
         Args:
