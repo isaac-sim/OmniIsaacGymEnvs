@@ -3,7 +3,7 @@
 We introduce the following reinforcement learning examples that are implemented using 
 Isaac Sim's RL framework. 
 
-Pre-trained checkpoints can be found on the Nucleus server. To set up localhost, please refer to the [Isaac Sim installation guide](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_basic.html).
+Pre-trained checkpoints can be found on the Nucleus server. To set up localhost, please refer to the [Isaac Sim installation guide](https://docs.omniverse.nvidia.com/isaacsim/latest/install_workstation.html).
 
 *Note: All commands should be executed from `omniisaacgymenvs/omniisaacgymenvs`.*
 
@@ -102,7 +102,7 @@ Config files used for this task are:
 
 The Shadow Hand task is an example of a challenging dexterity manipulation task with complex contact 
 dynamics. It resembles OpenAI's [Learning Dexterity](https://openai.com/blog/learning-dexterity/)
-project and [Robotics Shadow Hand](https://github.com/openai/gym/tree/master/gym/envs/robotics)
+project and [Robotics Shadow Hand](https://github.com/openai/gym/tree/v0.21.0/gym/envs/robotics)
 training environments. The goal of this task is to orient the object in the robot hand to match 
 a random target orientation, which is visually displayed by a goal object in the scene.
 
