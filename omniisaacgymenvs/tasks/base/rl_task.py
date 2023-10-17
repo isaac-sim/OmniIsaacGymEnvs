@@ -73,11 +73,22 @@ class RLTask(RLTaskInterface):
         self.test = self._cfg["test"]
         self._device = self._cfg["sim_device"]
 
+        # set up randomizer for DR
         self._dr_randomizer = Randomizer(self._cfg, self._task_cfg)
         if self._dr_randomizer.randomize:
             import omni.replicator.isaac as dr
 
             self.dr = dr
+
+        # set up replicator for camera data collection
+        if self._task_cfg["sim"].get("enable_cameras", False):
+            from omni.replicator.isaac.scripts.writers.pytorch_writer import PytorchWriter
+            from omni.replicator.isaac.scripts.writers.pytorch_listener import PytorchListener
+            import omni.replicator.core as rep
+
+            self.rep = rep
+            self.PytorchWriter = PytorchWriter
+            self.PytorchListener = PytorchListener
 
         print("Task Device:", self._device)
 
@@ -89,6 +100,7 @@ class RLTask(RLTaskInterface):
         self.rl_device = self._cfg.get("rl_device", "cuda:0")
 
         self.control_frequency_inv = self._task_cfg["env"].get("controlFrequencyInv", 1)
+        self.rendering_interval = self._task_cfg.get("renderingInterval", 1)
 
         print("RL device: ", self.rl_device)
 
@@ -129,7 +141,7 @@ class RLTask(RLTaskInterface):
         self.extras = {}
 
     def set_up_scene(
-        self, scene, replicate_physics=True, collision_filter_global_paths=[], filter_collisions=True
+        self, scene, replicate_physics=True, collision_filter_global_paths=[], filter_collisions=True, copy_from_source=False
     ) -> None:
         """Clones environments based on value provided in task config and applies collision filters to mask
             collisions across environments.
@@ -139,6 +151,7 @@ class RLTask(RLTaskInterface):
             replicate_physics (bool): Clone physics using PhysX API for better performance.
             collision_filter_global_paths (list): Prim paths of global objects that should not have collision masked.
             filter_collisions (bool): Mask off collision between environments.
+            copy_from_source (bool): Copy from source prim when cloning instead of inheriting.
         """
 
         super().set_up_scene(scene)
@@ -155,7 +168,7 @@ class RLTask(RLTaskInterface):
             scene.add_default_ground_plane(prim_path=self._ground_plane_path)
         prim_paths = self._cloner.generate_paths("/World/envs/env", self._num_envs)
         self._env_pos = self._cloner.clone(
-            source_prim_path="/World/envs/env_0", prim_paths=prim_paths, replicate_physics=replicate_physics
+            source_prim_path="/World/envs/env_0", prim_paths=prim_paths, replicate_physics=replicate_physics, copy_from_source=copy_from_source
         )
         self._env_pos = torch.tensor(np.array(self._env_pos), device=self._device, dtype=torch.float)
         if filter_collisions:

@@ -1,0 +1,96 @@
+params:
+  seed: ${...seed}
+
+  algo:
+    name: a2c_continuous
+
+  model:
+    name: continuous_a2c_logstd
+
+  network:
+    name: actor_critic
+    separate: False
+    space:
+      continuous:
+        mu_activation: None
+        sigma_activation: None
+
+        mu_init:
+          name: default
+        sigma_init:
+          name: const_initializer
+          val: 0
+        fixed_sigma: True
+    cnn:
+      type: conv2d
+      activation: relu
+      initializer:
+          name: default
+      regularizer:
+        name: None
+      convs:    
+        - filters: 32
+          kernel_size: 8
+          strides: 4
+          padding: 0
+        - filters: 64
+          kernel_size: 4
+          strides: 2
+          padding: 0
+        - filters: 64
+          kernel_size: 3
+          strides: 1
+          padding: 0
+      
+    mlp:
+      units: [512]
+      activation: elu
+      initializer:
+          name: default
+
+    # rnn:
+    #   name: lstm
+    #   units: 128
+    #   layers: 1
+    #   before_mlp: False
+    #   concat_input: True
+    #   layer_norm: True
+
+  load_checkpoint: ${if:${...checkpoint},True,False} # flag which sets whether to load the checkpoint
+  load_path: ${...checkpoint} # path to the checkpoint to load
+
+  config:
+    name: ${resolve_default:CartpoleCamera,${....experiment}}
+    full_experiment_name: ${.name}
+    device: ${....rl_device}
+    device_name: ${....rl_device}
+    env_name: rlgpu
+    multi_gpu: ${....multi_gpu}
+    ppo: True
+    mixed_precision: False
+    normalize_input: False
+    normalize_value: True
+    num_actors: ${....task.env.numEnvs}
+    reward_shaper:
+      scale_value: 1.0 #0.1
+    normalize_advantage: True
+    gamma: 0.99
+    tau: 0.95
+    learning_rate: 1e-4
+    lr_schedule: adaptive
+    kl_threshold: 0.008
+    score_to_win: 20000
+    max_epochs: ${resolve_default:500,${....max_iterations}}
+    save_best_after: 50
+    save_frequency: 10
+    grad_norm: 1.0
+    entropy_coef: 0.0
+    truncate_grads: True
+    e_clip: 0.2
+    horizon_length: 256
+    minibatch_size: 512 #1024
+    mini_epochs: 4
+    critic_coef: 2
+    clip_value: True
+    seq_length: 4
+    bounds_loss_coef: 0.0001

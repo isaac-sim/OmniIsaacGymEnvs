@@ -46,6 +46,19 @@ Config files used for this task are:
 
 -   **Task config**: [Cartpole.yaml](../omniisaacgymenvs/cfg/task/Cartpole.yaml)
 -   **rl_games training config**: [CartpolePPO.yaml](../omniisaacgymenvs/cfg/train/CartpolePPO.yaml)
+
+#### CartpoleCamera [cartpole_camera.py](../omniisaacgymenvs/tasks/cartpole_camera.py)
+
+A variation of the Cartpole task showcases the usage of RGB image data as observations. This example
+can be launched with command line argument `task=CartpoleCamera`. Note that to use camera data as
+observations, `enable_cameras` must be set to `True` in the task config file. In addition, the example must be run with the `omni.isaac.sim.python.gym.camera.kit` app file provided under `apps`, which applies necessary settings to enable camera training. By default, this app file will be used automatically when `enable_cameras` is set to `True`.
+
+Config files used for this task are:
+
+-   **Task config**: [CartpoleCamera.yaml](../omniisaacgymenvs/cfg/task/CartpoleCamera.yaml)
+-   **rl_games training config**: [CartpoleCameraPPO.yaml](../omniisaacgymenvs/cfg/train/CartpoleCameraPPO.yaml)
+
+For more details on training with camera data, please visit [here](training_with_camera.md).
   
 <img src="https://user-images.githubusercontent.com/34286328/171454189-6afafbff-bb61-4aac-b518-24646007cb9f.gif" width="300" height="150"/>
 

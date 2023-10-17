@@ -94,6 +94,7 @@ class RLExtension(omni.ext.IExt):
         self._task_map, _ = import_tasks()
         self._task_list = list(self._task_map.keys())
         self._task_list.sort()
+        self._task_list.remove("CartpoleCamera") # we cannot run camera-based training from extension workflow for now. it requires a specialized app file.
         self._task_name = self._task_list[0]
         self._parse_config(self._task_name)
         self._update_task_file_paths(self._task_name)
@@ -113,7 +114,8 @@ class RLExtension(omni.ext.IExt):
             self._cfg = compose(config_name="config", overrides=overrides_list)
         else:
             self._cfg = compose(config_name="config", overrides=overrides_list + [f"num_envs={num_envs}"])
-        self._sim_config = SimConfig(self._cfg)
+        self._cfg_dict = omegaconf_to_dict(self._cfg)
+        self._sim_config = SimConfig(self._cfg_dict)
 
     def start_extension(
         self,
@@ -300,7 +302,7 @@ class RLExtension(omni.ext.IExt):
             enable_viewport=enable_viewport,
             launch_simulation_app=False,
         )
-        self._task = initialize_task(self._cfg, self._env, init_sim=False)
+        self._task = initialize_task(self._cfg_dict, self._env, init_sim=False)
         self._task_initialized = True
 
     def _on_task_select(self, value):
@@ -435,7 +437,7 @@ class RLExtension(omni.ext.IExt):
                 await self._on_load_world_async(use_existing_stage)
             # update config
             self._parse_config(task=self._task_name, num_envs=self._num_envs_int.get_value_as_int(), overrides=overrides)
-            sim_config = SimConfig(self._cfg)
+            sim_config = SimConfig(self._cfg_dict)
             self._task.update_config(sim_config)
 
             cfg_dict = omegaconf_to_dict(self._cfg)

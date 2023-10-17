@@ -73,6 +73,7 @@ default_physics_material = {"static_friction": 1.0, "dynamic_friction": 1.0, "re
 default_sim_params = {
     "gravity": [0.0, 0.0, -9.81],
     "dt": 1.0 / 60.0,
+    "rendering_dt": -1.0, # we don't want to override this if it's set from cfg
     "substeps": 1,
     "use_gpu_pipeline": True,
     "add_ground_plane": True,

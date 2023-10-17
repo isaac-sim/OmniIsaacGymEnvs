@@ -34,6 +34,7 @@ def import_tasks():
     from omniisaacgymenvs.tasks.anymal_terrain import AnymalTerrainTask
     from omniisaacgymenvs.tasks.ball_balance import BallBalanceTask
     from omniisaacgymenvs.tasks.cartpole import CartpoleTask
+    from omniisaacgymenvs.tasks.cartpole_camera import CartpoleCameraTask
     from omniisaacgymenvs.tasks.crazyflie import CrazyflieTask
     from omniisaacgymenvs.tasks.factory.factory_task_nut_bolt_pick import FactoryTaskNutBoltPick
     from omniisaacgymenvs.tasks.factory.factory_task_nut_bolt_place import FactoryTaskNutBoltPlace
@@ -57,6 +58,7 @@ def import_tasks():
         "AnymalTerrain": AnymalTerrainTask,
         "BallBalance": BallBalanceTask,
         "Cartpole": CartpoleTask,
+        "CartpoleCamera": CartpoleCameraTask,
         "FactoryTaskNutBoltPick": FactoryTaskNutBoltPick,
         "FactoryTaskNutBoltPlace": FactoryTaskNutBoltPlace,
         "FactoryTaskNutBoltScrew": FactoryTaskNutBoltScrew,
@@ -95,12 +97,15 @@ def initialize_task(config, env, init_sim=True):
     )
 
     backend = "warp" if cfg["warp"] else "torch"
+
+    rendering_dt = sim_config.get_physics_params()["rendering_dt"]
+
     env.set_task(
         task=task,
         sim_params=sim_config.get_physics_params(),
         backend=backend,
         init_sim=init_sim,
-        rendering_dt=sim_config.get_physics_params()["dt"],
+        rendering_dt=rendering_dt,
     )
 
     return task

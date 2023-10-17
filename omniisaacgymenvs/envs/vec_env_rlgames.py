@@ -59,9 +59,16 @@ class VecEnvRLGames(VecEnvBase):
 
         self._task.pre_physics_step(actions)
 
-        for _ in range(self._task.control_frequency_inv):
+        if (self.sim_frame_count + self._task.control_frequency_inv) % self._task.rendering_interval == 0:
+            for _ in range(self._task.control_frequency_inv - 1):
+                self._world.step(render=False)
+                self.sim_frame_count += 1
             self._world.step(render=self._render)
             self.sim_frame_count += 1
+        else:
+            for _ in range(self._task.control_frequency_inv):
+                self._world.step(render=False)
+                self.sim_frame_count += 1
 
         self._obs, self._rew, self._resets, self._extras = self._task.post_physics_step()
 

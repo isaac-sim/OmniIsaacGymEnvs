@@ -66,10 +66,16 @@ class SimConfig:
         self._sim_params["warp"] = self._config["warp"]
         self._sim_params["sim_device"] = self._config["sim_device"]
 
+        self._adjust_dt()
+
         if self._sim_params["disable_contact_processing"]:
             carb.settings.get_settings().set_bool("/physics/disableContactProcessing", True)
 
         carb.settings.get_settings().set_bool("/physics/physxDispatcher", True)
+        # Force the background grid off all the time for RL tasks, to avoid the grid showing up in any RL camera task
+        carb.settings.get_settings().set("/app/viewport/grid/enabled", False)
+        # Disable framerate limiting which might cause rendering slowdowns
+        carb.settings.get_settings().set("/app/runLoops/main/rateLimitEnabled", False)
 
         import omni.ui 
         # Dock floating UIs this might not be needed anymore as extensions dock themselves
@@ -158,6 +164,20 @@ class SimConfig:
         else:
             if actor_params[attribute_name] != -1:
                 return actor_params[attribute_name]
+            
+    def _adjust_dt(self):
+        # re-evaluate rendering dt to simulate physics substeps
+        physics_dt = self.sim_params["dt"]
+        rendering_dt = self.sim_params["rendering_dt"]
+
+        # by default, rendering dt = physics dt
+        if rendering_dt <= 0:
+            rendering_dt = physics_dt
+
+        self.task_config["renderingInterval"] = max(round((1/physics_dt) / (1/rendering_dt)), 1)
+
+        # we always set rendering dt to be the same as physics dt, stepping is taken care of in VecEnvRLGames
+        self.sim_params["rendering_dt"] = physics_dt
 
     @property
     def sim_params(self):
