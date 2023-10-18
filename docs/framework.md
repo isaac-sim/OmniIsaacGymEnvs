@@ -5,7 +5,7 @@
 Our RL examples are built on top of Isaac Sim's RL framework provided in `omni.isaac.gym`. Tasks are implemented following `omni.isaac.core`'s Task structure. PPO training is performed using the [rl_games](https://github.com/Denys88/rl_games) library, but we provide the flexibility to use other RL libraries for training. 
 
 For a list of examples provided, refer to the
-[RL List of Examples](rl.md)
+[RL List of Examples](rl_examples.md)
 
 
 ### Class Definition
