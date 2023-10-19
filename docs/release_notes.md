@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+2023.1.0a - October 20, 2023
+----------------------------
+
+Fixes
+-----
+- Fix extension loading error in camera app file
+
+
 2023.1.0 - October 18, 2023
 ---------------------------
 
