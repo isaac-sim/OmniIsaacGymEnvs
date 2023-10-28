@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+2023.1.0-hotfix.1 - October 31, 2023
+------------------------------------
+
+Changes
+-------
+- Update docker scripts to Isaac Sim docker image 2023.1.0-hotfix.1
+- Use omniisaacgymenvs module root for app file parsing
+
+Fixes
+-----
+- Fix CartpoleCamera num_observations value
+
+
 2023.1.0a - October 20, 2023
 ----------------------------
 
