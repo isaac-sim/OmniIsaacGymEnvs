@@ -12,6 +12,7 @@ Changes
 Fixes
 -----
 - Fix CartpoleCamera num_observations value
+- Fix missing import in startup randomization for mass and density
 
 
 2023.1.0a - October 20, 2023
