@@ -75,12 +75,45 @@ class KinovaMobile(Robot):
 
         ]
 
+        #  actuator_groups={
+        #  "base": ActuatorGroupCfg(
+        #     dof_names=["base_y_base_x", "base_theta_base_y", "base_link_base_theta"],
+        #     model_cfg=ImplicitActuatorCfg(velocity_limit=500.0, torque_limit=1000.0),
+        #     control_cfg=ActuatorControlCfg(command_types=["v_abs"], stiffness={".*": 0.0}, damping={".*": 1e5}),
+        # ),
+
+        # "shoulder": ActuatorGroupCfg(
+        #     dof_names=["Actuator[1-4]"],
+        #     model_cfg=ImplicitActuatorCfg(velocity_limit=500.0, torque_limit=1000.0),
+        #     control_cfg=ActuatorControlCfg(
+        #         command_types=["p_abs"],
+        #         stiffness={".*": 800.0},
+        #         damping={".*": 40.0},
+        #         dof_pos_offset={
+        #             "Actuator1": 0.0,
+        #             "Actuator2": 0.0,
+        #             "Actuator3": 0.0,
+        #             "Actuator4": 0.0,
+        #         },
+        #     ),
+        # ),
+        # "forearm": ActuatorGroupCfg(
+        #     dof_names=["Actuator[5-7]"],
+        #     model_cfg=ImplicitActuatorCfg(velocity_limit=500.0, torque_limit=1000.0),
+        #     control_cfg=ActuatorControlCfg(
+        #         command_types=["p_abs"],
+        #         stiffness={".*": 800.0},
+        #         damping={".*": 40.0},
+        #         dof_pos_offset={"Actuator5": 0.0, "Actuator6": 0, "Actuator7": 0},
+        #     ),
+        # ),
+
         drive_type = ["linear"] * 2 + ["angular"] * 14  
         default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        stiffness = [10000] * 2 +  [400 * np.pi / 180] * 14
-        damping = [100] * 2 + [80 * np.pi / 180] * 14 
-        max_force = [20, 20] + [ 100 ] * 14 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
-        max_velocity = [0.2, 0.2] + [20, 79.64, 79.64, 79.64, 79.64, 69.91, 69.91, 69.91] + [20]*6
+        stiffness = [0.0] * 3 +  [800] * 13
+        damping = [1e5] * 3 + [40] * 13 
+        max_force = [1000.0, 1000.0] + [ 100 ] * 14 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
+        max_velocity = [100.0, 100.0,] + [40, 79.64, 79.64, 79.64, 79.64, 69.91, 69.91, 69.91] + [20]*6
 
         for i, dof in enumerate(dof_paths):
             set_drive(
