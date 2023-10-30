@@ -139,7 +139,7 @@ class KinovaMobileDrawerTask(RLTask):
 
     def get_cabinet(self):
         cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
-                          usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet.usd", 
+                          usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet_instanceable.usd", 
                           translation=[0,0,0.0], orientation=[0,0,0,1])
 
         # move cabinet to the ground
@@ -153,7 +153,7 @@ class KinovaMobileDrawerTask(RLTask):
         drawer.set_world_pose(position, orientation)
 
         # add physics material
-        stage = omni.usd.get_context().get_stage()
+        stage = get_current_stage()
         prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet")
         _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
         material = PhysicsMaterial(
@@ -167,7 +167,7 @@ class KinovaMobileDrawerTask(RLTask):
         physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
 
         # add collision approximation
-        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions")
+        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions_xform")
         collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
         if not collision_api:
             collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
@@ -243,13 +243,13 @@ class KinovaMobileDrawerTask(RLTask):
         # )
 
         # self.kinova_default_dof_pos = torch.tensor(
-        #     [1.157, -1.066, -0.155, -2.239, -1.841, 1.003, 0.469, 0.035, 0.035], device=self._device
+        #     [0 ] * 16, device=self._device
         # )
 
         self.actions = torch.zeros((self._num_envs, self._num_actions), device=self._device)
 
     def get_observations(self) -> dict:
-        # hand_pos, hand_rot = self._kinovas._hands.get_world_poses(clone=False)
+        hand_pos, hand_rot = self._kinovas._hands.get_world_poses(clone=False)
         # drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses(clone=False)
         # kinova_dof_pos = self._kinovas.get_joint_positions(clone=False)
         # kinova_dof_vel = self._kinovas.get_joint_velocities(clone=False)
@@ -293,7 +293,7 @@ class KinovaMobileDrawerTask(RLTask):
         #     ),
         #     dim=-1,
         # )
-        
+        # observations = {self._kinovas.name: {"obs_buf": self.obs_buf}}
         observations = {self._kinovas.name: {"obs_buf": torch.zeros((self._num_envs, self._num_observations))}}
         # print('obs: ', observations)
         return observations
@@ -314,8 +314,8 @@ class KinovaMobileDrawerTask(RLTask):
         # self._kinovas.set_joint_position_targets(self.kinova_dof_targets, indices=env_ids_int32)
 
     def reset_idx(self, env_ids):
-        # indices = env_ids.to(dtype=torch.int32)
-        # num_indices = len(indices)
+        indices = env_ids.to(dtype=torch.int32)
+        num_indices = len(indices)
 
         # # reset kinova
         # pos = tensor_clamp(
@@ -331,12 +331,12 @@ class KinovaMobileDrawerTask(RLTask):
         # self.kinova_dof_pos[env_ids, :] = pos
 
         # # reset cabinet
-        # self._cabinets.set_joint_positions(
-        #     torch.zeros_like(self._cabinets.get_joint_positions(clone=False)[env_ids]), indices=indices
-        # )
-        # self._cabinets.set_joint_velocities(
-        #     torch.zeros_like(self._cabinets.get_joint_velocities(clone=False)[env_ids]), indices=indices
-        # )
+        self._cabinets.set_joint_positions(
+            torch.zeros_like(self._cabinets.get_joint_positions(clone=False)[env_ids]), indices=indices
+        )
+        self._cabinets.set_joint_velocities(
+            torch.zeros_like(self._cabinets.get_joint_velocities(clone=False)[env_ids]), indices=indices
+        )
 
         # # reset props
         # if self.num_props > 0:
@@ -346,7 +346,7 @@ class KinovaMobileDrawerTask(RLTask):
         #         self.prop_indices[env_ids].flatten().to(torch.int32),
         #     )
 
-        # self._kinovas.set_joint_position_targets(self.kinova_dof_targets[env_ids], indices=indices)
+        self._kinovas.set_joint_position_targets(self.kinova_dof_targets[env_ids], indices=indices)
         # self._kinovas.set_joint_positions(dof_pos, indices=indices)
         # self._kinovas.set_joint_velocities(dof_vel, indices=indices)
 
@@ -356,16 +356,16 @@ class KinovaMobileDrawerTask(RLTask):
 
     def post_reset(self):
 
-        # self.num_kinova_dofs = self._kinovas.num_dof
-        # self.kinova_dof_pos = torch.zeros((self.num_envs, self.num_kinova_dofs), device=self._device)
-        # dof_limits = self._kinovas.get_dof_limits()
-        # self.kinova_dof_lower_limits = dof_limits[0, :, 0].to(device=self._device)
-        # self.kinova_dof_upper_limits = dof_limits[0, :, 1].to(device=self._device)
-        # self.kinova_dof_speed_scales = torch.ones_like(self.kinova_dof_lower_limits)
-        # self.kinova_dof_speed_scales[self._kinovas.gripper_indices] = 0.1
-        # self.kinova_dof_targets = torch.zeros(
-        #     (self._num_envs, self.num_kinova_dofs), dtype=torch.float, device=self._device
-        # )
+        self.num_kinova_dofs = self._kinovas.num_dof
+        self.kinova_dof_pos = torch.zeros((self.num_envs, self.num_kinova_dofs), device=self._device)
+        dof_limits = self._kinovas.get_dof_limits()
+        self.kinova_dof_lower_limits = dof_limits[0, :, 0].to(device=self._device)
+        self.kinova_dof_upper_limits = dof_limits[0, :, 1].to(device=self._device)
+        self.kinova_dof_speed_scales = torch.ones_like(self.kinova_dof_lower_limits)
+        self.kinova_dof_speed_scales[self._kinovas.gripper_indices] = 0.1
+        self.kinova_dof_targets = torch.zeros(
+            (self._num_envs, self.num_kinova_dofs), dtype=torch.float, device=self._device
+        )
 
         # if self.num_props > 0:
         #     self.default_prop_pos, self.default_prop_rot = self._props.get_world_poses()

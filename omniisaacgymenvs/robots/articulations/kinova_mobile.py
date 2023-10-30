@@ -37,7 +37,7 @@ class KinovaMobile(Robot):
         self._position = torch.tensor([1.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([0.0, 0.0, 0.0, 1.0]) if orientation is None else orientation
 
-        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_with_base_flatten.usd"
+        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_with_base_flatten_instanceable.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
 
@@ -80,7 +80,7 @@ class KinovaMobile(Robot):
         stiffness = [10000] * 2 +  [400 * np.pi / 180] * 14
         damping = [100] * 2 + [80 * np.pi / 180] * 14 
         max_force = [20, 20] + [ 100 ] * 14 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
-        max_velocity = [0.2, 0.2] + [math.degrees(x) for x in [2] * 14]
+        max_velocity = [0.2, 0.2] + [20, 79.64, 79.64, 79.64, 79.64, 69.91, 69.91, 69.91] + [20]*6
 
         for i, dof in enumerate(dof_paths):
             set_drive(
@@ -92,7 +92,6 @@ class KinovaMobile(Robot):
                 damping=damping[i],
                 max_force=max_force[i],
             )
-
             PhysxSchema.PhysxJointAPI(get_prim_at_path(f"{self.prim_path}/{dof}")).CreateMaxJointVelocityAttr().Set(
                 max_velocity[i]
             )
