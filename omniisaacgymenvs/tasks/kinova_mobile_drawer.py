@@ -241,11 +241,12 @@ class KinovaMobileDrawerTask(RLTask):
         # hand_pos, hand_rot = self.get_ee_pose()
         
         self.bboxes = torch.zeros(( self._num_envs, 8, 3), device=device)
-        link_path =  f"/World/envs/env_0/cabinet/link_4/collisions_xform"
+        link_path =  f"/World/envs/env_0/cabinet/link_4"
         min_box, max_box = omni.usd.get_context().compute_path_world_bounding_box(link_path)
         min_pt = torch.tensor(np.array(min_box)).to(self._device) - self._env_pos[0]
         max_pt = torch.tensor(np.array(max_box)).to(self._device) - self._env_pos[0]
-        self.centers = torch.zeros((self._num_envs, 3)).to(self._device)
+        # self.centers = torch.zeros((self._num_envs, 3)).to(self._device)
+        self.centers = ((min_pt +  max_pt)/2.0).repeat((self._num_envs, 1)).to(torch.float)
         
 
         corners = torch.zeros((8, 3))
@@ -269,7 +270,6 @@ class KinovaMobileDrawerTask(RLTask):
         corners = corners.to(self._device)
         for idx in range(self._num_envs):
             self.bboxes[idx] = corners + self._env_pos[idx]
-            self.centers[idx] = (min_pt +  max_pt)/2.0 + self._env_pos[idx]
 
         # stage = get_current_stage()
         # hand_pose = get_env_local_pose(
@@ -326,8 +326,8 @@ class KinovaMobileDrawerTask(RLTask):
     
     def get_ee_pose(self):
         hand_position_w, hand_quat_w = self._kinovas._hands.get_world_poses(clone=False)
-        # print(hand_position_w.shape)
-        # print(hand_quat_w.shape)
+        hand_position_w = hand_position_w - self._env_pos
+
         ee_pos_offset = torch.tensor([0.03, 0, 0.14]).repeat((self._num_envs, 1)).to(hand_position_w.device)
         ee_rot_offset = torch.tensor([1.0, 0.0, 0.0, 0.0]).repeat((self._num_envs, 1)).to(hand_quat_w.device)
         # print(ee_pos_offset.shape)
@@ -402,8 +402,7 @@ class KinovaMobileDrawerTask(RLTask):
             ),
             dim=-1,
         )
-   
-        observations = {self._kinovas.name: {"obs_buf": self.obs_buf}}
+        observations = {self._kinovas.name: {"obs_buf": self.obs_buf.to(torch.float32)}}
         # observations = {self._kinovas.name: {"obs_buf": torch.zeros((self._num_envs, self._num_observations))}}
         # print('obs: ', observations)
         return observations
@@ -489,9 +488,22 @@ class KinovaMobileDrawerTask(RLTask):
 
     def calculate_metrics(self) -> None:
         hand_pos, hand_rot = self.get_ee_pose()
-        tool_pos_diff = (hand_pos - self._env_pos) - self.centers
+        # print(hand_pos)
+        # print(self.centers)
+        # print('========')
+        # exit()
+        tool_pos_diff = hand_pos - self.centers
+        # print('hand_pos: ', hand_pos)
+        # print('self envs: ',  self._env_pos  )
+        # print('self centers: ',  self.centers  )
+        # print('tool_pos_diff: ', tool_pos_diff)
+
         tool_pos_diff = torch.norm(tool_pos_diff, dim=-1)
-        self.rew_buf[:] = -tool_pos_diff/100.0
+        
+        self.rew_buf[:] = -tool_pos_diff.to(torch.float32)
+
+        # print()
+        # print('reward: ', self.rew_buf )
         # self.rew_buf[:] = self.compute_kinova_reward(
         #     self.reset_buf,
         #     self.progress_buf,
