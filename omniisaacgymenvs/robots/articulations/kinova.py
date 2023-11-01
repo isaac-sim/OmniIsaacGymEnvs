@@ -37,7 +37,7 @@ class KinovaMobile(Robot):
         self._position = torch.tensor([1.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([1.0, 0.0, 0.0, 0.0]) if orientation is None else orientation
 
-        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_with_base_flatten_instanceable.usd"
+        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_flatten_instanceable.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
 

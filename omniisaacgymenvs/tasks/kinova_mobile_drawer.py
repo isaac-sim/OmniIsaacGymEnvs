@@ -41,6 +41,17 @@ from omni.isaac.core.utils.torch.rotations import (
     quat_rotate,
     quat_rotate_inverse,
 )
+from pytorch3d.transforms import quaternion_to_matrix
+
+def quat_axis(q, axis=0):
+    '''
+    :func apply rotation represented by quanternion `q`
+    on basis vector(along axis)
+    :return vector after rotation
+    '''
+    basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
+    basis_vec[:, axis] = 1
+    return quat_rotate(q, basis_vec)
 
 @torch.jit.script
 def combine_frame_transforms(
@@ -175,15 +186,19 @@ class KinovaMobileDrawerTask(RLTask):
         self.init_data()
 
     def get_kinova(self):
-        kinova = KinovaMobile(prim_path=self.default_zero_env_path + "/kinova", name="kinova", translation=[2.0, 0, 0.01])
+        kinova = KinovaMobile(prim_path=self.default_zero_env_path + "/kinova", name="kinova", translation=[-1.5, 0, 0.01])
         self._sim_config.apply_articulation_settings(
             "kinova", get_prim_at_path(kinova.prim_path), self._sim_config.parse_actor_config("kinova")
         )
 
     def get_cabinet(self):
+        # cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
+        #                   usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet_instanceable.usd", 
+        #                   translation=[0,0,0.0], orientation=[0,0,0,1])
+        
         cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
                           usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet_instanceable.usd", 
-                          translation=[0,0,0.0], orientation=[0,0,0,1])
+                          translation=[0,0,0.0], orientation=[1,0,0,0])
 
         # move cabinet to the ground
         prim_path = self.default_zero_env_path + "/cabinet"
@@ -268,8 +283,25 @@ class KinovaMobileDrawerTask(RLTask):
         corners[7] = torch.tensor([max_pt[0], max_pt[1], min_pt[2]])
         
         corners = corners.to(self._device)
+        self.handle_short = torch.zeros((self._num_envs, 3))
+        self.handle_out = torch.zeros((self._num_envs, 3))
+        self.handle_long = torch.zeros((self._num_envs, 3))
+
         for idx in range(self._num_envs):
             self.bboxes[idx] = corners + self._env_pos[idx]
+            handle_short = corners[0] - corners[4]
+            handle_out = corners[1] - corners[0]
+            handle_long = corners[3] - corners[0]
+
+            handle_short, handle_long = handle_long, handle_short
+            self.handle_short[idx] = handle_short
+            self.handle_out[idx] = handle_out
+            self.handle_long[idx] = handle_long
+        
+        self.handle_short = self.handle_short.cuda()
+        self.handle_out = self.handle_out.cuda()
+        self.handle_long = self.handle_long.cuda()
+
 
         # stage = get_current_stage()
         # hand_pose = get_env_local_pose(
@@ -499,9 +531,36 @@ class KinovaMobileDrawerTask(RLTask):
         # print('tool_pos_diff: ', tool_pos_diff)
 
         tool_pos_diff = torch.norm(tool_pos_diff, dim=-1)
-        
-        self.rew_buf[:] = -tool_pos_diff.to(torch.float32)
 
+        handle_out_length = torch.norm(self.handle_out, dim = -1).cuda()
+        handle_long_length = torch.norm(self.handle_long, dim = -1).cuda()
+        handle_short_length = torch.norm(self.handle_short, dim = -1).cuda()
+
+        handle_out = self.handle_out / handle_out_length.unsqueeze(-1).cuda()
+        handle_long = self.handle_long / handle_long_length.unsqueeze(-1).cuda()
+        handle_short = self.handle_short / handle_short_length.unsqueeze(-1).cuda()
+
+
+
+        hand_grip_dir = quat_axis(hand_rot, 2).cuda()
+        hand_grip_dir_length = torch.norm(hand_grip_dir)
+        hand_grip_dir  = hand_grip_dir/ hand_grip_dir_length
+        
+        hand_sep_dir = quat_axis(hand_rot, 1).cuda()
+        hand_sep_dir_length = torch.norm(hand_sep_dir)
+        hand_sep_dir = hand_sep_dir / hand_sep_dir_length
+
+        hand_down_dir = quat_axis(hand_rot, 0).cuda()
+        hand_down_dir_length = torch.norm(hand_down_dir)
+        hand_down_dir = hand_down_dir / hand_down_dir_length
+
+        dot1 = (-hand_grip_dir * handle_out).sum(dim=-1)
+        dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
+        dot3 = torch.max((hand_down_dir * handle_long).sum(dim=-1), (-hand_down_dir * handle_long).sum(dim=-1))
+
+        rot_reward = dot1 + dot2 + dot3 - 3        
+        self.rew_buf[:] = -tool_pos_diff + rot_reward
+        self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
         # print()
         # print('reward: ', self.rew_buf )
         # self.rew_buf[:] = self.compute_kinova_reward(
