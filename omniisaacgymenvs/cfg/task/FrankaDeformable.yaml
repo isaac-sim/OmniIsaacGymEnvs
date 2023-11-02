@@ -32,7 +32,7 @@ env:
   fingerCloseRewardScale: 10.0
 
 sim:
-  dt: 0.0083 # 1/120 s
+  dt: 0.016 # 1/60s
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
   add_ground_plane: True

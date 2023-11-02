@@ -8,6 +8,7 @@ Changes
 -------
 - Update docker scripts to Isaac Sim docker image 2023.1.0-hotfix.1
 - Use omniisaacgymenvs module root for app file parsing
+- Update FrankaDeformable physics dt for better training stability
 
 Fixes
 -----
