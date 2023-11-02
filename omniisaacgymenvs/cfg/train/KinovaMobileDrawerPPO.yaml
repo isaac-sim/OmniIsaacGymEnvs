@@ -54,7 +54,7 @@ params:
     lr_schedule: adaptive
     kl_threshold: 0.008
     score_to_win: 100000000
-    max_epochs: ${resolve_default:1500,${....max_iterations}}
+    max_epochs: ${resolve_default:15000,${....max_iterations}}
     save_best_after: 200
     save_frequency: 100
     print_stats: True
@@ -63,7 +63,7 @@ params:
     truncate_grads: True
     e_clip: 0.2
     horizon_length: 16
-    minibatch_size: 2048
+    minibatch_size: 4096
     mini_epochs: 8
     critic_coef: 4
     clip_value: True

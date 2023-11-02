@@ -111,8 +111,8 @@ class KinovaMobile(Robot):
         drive_type = ["linear"] * 2 + ["angular"] * 14  
         default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         stiffness = [800] * 3 +  [800] * 13
-        damping = [1e5] * 3 + [40] * 13 
-        max_force = [100.0, 100.0, 100] + [ 1000 ] * 13 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
+        damping = [15000] * 3 + [40] * 13 
+        max_force = [1000.0, 1000.0, 1000] + [ 1000 ] * 13 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
         max_velocity = [100.0, 100.0, 100] + [500]*7 + [40]*6
 
         for i, dof in enumerate(dof_paths):

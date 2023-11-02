@@ -43,15 +43,21 @@ from omni.isaac.core.utils.torch.rotations import (
 )
 from pytorch3d.transforms import quaternion_to_matrix
 
-def quat_axis(q, axis=0):
-    '''
-    :func apply rotation represented by quanternion `q`
-    on basis vector(along axis)
-    :return vector after rotation
-    '''
-    basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
-    basis_vec[:, axis] = 1
-    return quat_rotate(q, basis_vec)
+# def quat_axis(q, axis=0):
+#     '''
+#     :func apply rotation represented by quanternion `q`
+#     on basis vector(along axis)
+#     :return vector after rotation
+#     '''
+#     basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
+#     basis_vec[:, axis] = 1
+#     return quat_rotate(q, basis_vec)
+def quat_axis(q, axis_idx):
+    """Extract a specific axis from a quaternion."""
+    rotm = quaternion_to_matrix(q)
+    axis = rotm[:, axis_idx]
+
+    return axis
 
 @torch.jit.script
 def combine_frame_transforms(
@@ -254,6 +260,16 @@ class KinovaMobileDrawerTask(RLTask):
             return torch.tensor([px, py, pz, qw, qx, qy, qz], device=device, dtype=torch.float)
         device = self._device
         # hand_pos, hand_rot = self.get_ee_pose()
+
+        file_to_read = '/home/nikepupu/Desktop/GAPartNet_1025/partnet_all_annotated_new/annotation/40147/link_anno_gapartnet.json'
+        import json
+        with open(file_to_read) as json_file:
+            data = json.load(json_file)
+        
+        for d in data:
+            if d['link_name'] == 'link_4':
+                corners = torch.tensor(d['bbox'])
+
         
         self.bboxes = torch.zeros(( self._num_envs, 8, 3), device=device)
         link_path =  f"/World/envs/env_0/cabinet/link_4"
@@ -264,23 +280,24 @@ class KinovaMobileDrawerTask(RLTask):
         self.centers = ((min_pt +  max_pt)/2.0).repeat((self._num_envs, 1)).to(torch.float)
         
 
-        corners = torch.zeros((8, 3))
-        # Top right back
-        corners[0] = torch.tensor([max_pt[0], min_pt[1], max_pt[2]])
-        # Top right front
-        corners[1] = torch.tensor([min_pt[0], min_pt[1], max_pt[2]])
-        # Top left front
-        corners[2] = torch.tensor([min_pt[0], max_pt[1], max_pt[2]])
-        # Top left back (Maximum)
-        corners[3] = max_pt
-        # Bottom right back
-        corners[4] = torch.tensor([max_pt[0], min_pt[1], min_pt[2]])
-        # Bottom right front (Minimum)
-        corners[5] = min_pt
-        # Bottom left front
-        corners[6] = torch.tensor([min_pt[0], max_pt[1], min_pt[2]])
-        # Bottom left back
-        corners[7] = torch.tensor([max_pt[0], max_pt[1], min_pt[2]])
+        # corners = torch.zeros((8, 3))
+        # # Top right back
+        # corners[0] = torch.tensor([max_pt[0], min_pt[1], max_pt[2]])
+        # # Top right front
+        # corners[1] = torch.tensor([min_pt[0], min_pt[1], max_pt[2]])
+        # # Top left front
+        # corners[2] = torch.tensor([min_pt[0], max_pt[1], max_pt[2]])
+        # # Top left back (Maximum)
+        # corners[3] = max_pt
+        # # Bottom right back
+        # corners[4] = torch.tensor([max_pt[0], min_pt[1], min_pt[2]])
+        # # Bottom right front (Minimum)
+        # corners[5] = min_pt
+        # # Bottom left front
+        # corners[6] = torch.tensor([min_pt[0], max_pt[1], min_pt[2]])
+        # # Bottom left back
+        # corners[7] = torch.tensor([max_pt[0], max_pt[1], min_pt[2]])
+
         
         corners = corners.to(self._device)
         self.handle_short = torch.zeros((self._num_envs, 3))
@@ -288,12 +305,22 @@ class KinovaMobileDrawerTask(RLTask):
         self.handle_long = torch.zeros((self._num_envs, 3))
 
         for idx in range(self._num_envs):
-            self.bboxes[idx] = corners + self._env_pos[idx]
-            handle_short = corners[0] - corners[4]
-            handle_out = corners[1] - corners[0]
-            handle_long = corners[3] - corners[0]
+            # self.bboxes[idx] = corners + self._env_pos[idx]
+            # handle_short = corners[0] - corners[4]
+            # handle_out = corners[1] - corners[0]
+            # handle_long = corners[3] - corners[0]
+
+            
+            # self.handle_short[idx] = handle_short
+            # self.handle_out[idx] = handle_out
+            # self.handle_long[idx] = handle_long
+
+            handle_out = corners[0] - corners[4]
+            handle_long = corners[1] - corners[0]
+            handle_short = corners[3] - corners[0]
 
             handle_short, handle_long = handle_long, handle_short
+
             self.handle_short[idx] = handle_short
             self.handle_out[idx] = handle_out
             self.handle_long[idx] = handle_long
@@ -357,7 +384,7 @@ class KinovaMobileDrawerTask(RLTask):
         self.actions = torch.zeros((self._num_envs, self._num_actions), device=self._device)
     
     def get_ee_pose(self):
-        hand_position_w, hand_quat_w = self._kinovas._hands.get_world_poses(clone=False)
+        hand_position_w, hand_quat_w = self._kinovas._hands.get_world_poses(clone=True)
         hand_position_w = hand_position_w - self._env_pos
 
         ee_pos_offset = torch.tensor([0.03, 0, 0.14]).repeat((self._num_envs, 1)).to(hand_position_w.device)
@@ -448,10 +475,16 @@ class KinovaMobileDrawerTask(RLTask):
             self.reset_idx(reset_env_ids)
 
         self.actions = actions.clone().to(self._device)
-        targets = self.kinova_dof_targets + self.kinova_dof_speed_scales * self.dt * self.actions * self.action_scale
-        self.kinova_dof_targets[:] = tensor_clamp(targets, self.kinova_dof_lower_limits, self.kinova_dof_upper_limits)
-        env_ids_int32 = torch.arange(self._kinovas.count, dtype=torch.int32, device=self._device)
+        # targets = self.kinova_dof_targets + self.kinova_dof_speed_scales * self.dt * self.actions * self.action_scale
+        # map -1 to 1 to 0 to 1
+        self.actions = (self.actions + 1.0) / 2.0
+        # self.actions[:, 3:] = 0.0
+        targets = self.actions *(self.kinova_dof_upper_limits - self.kinova_dof_lower_limits) + self.kinova_dof_lower_limits
 
+        self.kinova_dof_targets[:] = tensor_clamp(targets, self.kinova_dof_lower_limits, self.kinova_dof_upper_limits)
+        # self.kinova_dof_targets[:,:3] = 0.0
+
+        env_ids_int32 = torch.arange(self._kinovas.count, dtype=torch.int32, device=self._device)
         self._kinovas.set_joint_position_targets(self.kinova_dof_targets, indices=env_ids_int32)
 
     def reset_idx(self, env_ids):
@@ -543,23 +576,26 @@ class KinovaMobileDrawerTask(RLTask):
 
 
         hand_grip_dir = quat_axis(hand_rot, 2).cuda()
-        hand_grip_dir_length = torch.norm(hand_grip_dir)
-        hand_grip_dir  = hand_grip_dir/ hand_grip_dir_length
+        # hand_grip_dir_length = torch.norm(hand_grip_dir)
+        # hand_grip_dir  = hand_grip_dir/ hand_grip_dir_length
         
         hand_sep_dir = quat_axis(hand_rot, 1).cuda()
-        hand_sep_dir_length = torch.norm(hand_sep_dir)
-        hand_sep_dir = hand_sep_dir / hand_sep_dir_length
+        # hand_sep_dir_length = torch.norm(hand_sep_dir)
+        # hand_sep_dir = hand_sep_dir / hand_sep_dir_length
 
         hand_down_dir = quat_axis(hand_rot, 0).cuda()
-        hand_down_dir_length = torch.norm(hand_down_dir)
-        hand_down_dir = hand_down_dir / hand_down_dir_length
+        # hand_down_dir_length = torch.norm(hand_down_dir)
+        # hand_down_dir = hand_down_dir / hand_down_dir_length
 
-        dot1 = (-hand_grip_dir * handle_out).sum(dim=-1)
-        dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
+        dot1 = torch.max((-hand_grip_dir * handle_out).sum(dim=-1), (hand_grip_dir * handle_out).sum(dim=-1))
+        # dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
+        dot2 = (hand_sep_dir * handle_short).sum(dim=-1)
         dot3 = torch.max((hand_down_dir * handle_long).sum(dim=-1), (-hand_down_dir * handle_long).sum(dim=-1))
 
         rot_reward = dot1 + dot2 + dot3 - 3        
-        self.rew_buf[:] = -tool_pos_diff + rot_reward
+        self.rew_buf[:] = -tool_pos_diff + rot_reward * 0.5 + self.cabinet_dof_pos[:, 1] * 10
+
+        # self.rew_buf[:] = rot_reward
         self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
         # print()
         # print('reward: ', self.rew_buf )
