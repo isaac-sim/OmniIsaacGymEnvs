@@ -179,6 +179,10 @@ Then, training can be launched from the container with:
 /isaac-sim/python.sh scripts/rlgames_train.py task=Ant headless=True
 ```
 
+### Isaac Sim Automator
+
+Cloud instances for AWS, Azure, or GCP can be setup using [IsaacSim Automator](https://github.com/NVIDIA-Omniverse/IsaacSim-Automator/tree/main#omniverse-isaac-gym).
+
 ## Livestream
 
 OmniIsaacGymEnvs supports livestream through the [Omniverse Streaming Client](https://docs.omniverse.nvidia.com/app_streaming-client/app_streaming-client/overview.html). To enable this feature, add the commandline argument `enable_livestream=True`:

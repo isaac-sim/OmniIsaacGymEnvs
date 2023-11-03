@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+2023.1.0b - November 02, 2023
+-----------------------------
+
+Changes
+-------
+- Update docker scripts to Isaac Sim docker image 2023.1.0-hotfix.1
+- Use omniisaacgymenvs module root for app file parsing
+- Update FrankaDeformable physics dt for better training stability
+
+Fixes
+-----
+- Fix CartpoleCamera num_observations value
+- Fix missing import in startup randomization for mass and density
+
+
 2023.1.0a - October 20, 2023
 ----------------------------
 
