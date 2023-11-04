@@ -13,15 +13,21 @@ class KinovaMobileView(ArticulationView):
         """[summary]"""
 
         super().__init__(prim_paths_expr=prim_paths_expr, name=name, reset_xform_properties=False)
+        # "_f85_instanceable/robotiq_arg2f_base_link/finger_joint",
+        #     "_f85_instanceable/robotiq_arg2f_base_link/left_inner_knuckle_joint",
+        #     "_f85_instanceable/robotiq_arg2f_base_link/right_inner_knuckle_joint",
+        #     "_f85_instanceable/left_outer_finger/left_inner_finger_joint",
+        #     "_f85_instanceable/robotiq_arg2f_base_link/right_outer_knuckle_joint",
+        #     "_f85_instanceable/right_outer_finger/right_inner_finger_joint"
         # /mec_arm/right_inner_finger
         self._hands = RigidPrimView(
-            prim_paths_expr="/World/envs/.*/kinova/robotiq_85_base_link", name="hands_view", reset_xform_properties=False
+            prim_paths_expr="/World/envs/.*/kinova/robotiq_arg2f_base_link", name="hands_view", reset_xform_properties=False
         )
         self._lfingers = RigidPrimView(
-            prim_paths_expr="/World/envs/.*/kinova/left_inner_finger", name="lfingers_view", reset_xform_properties=False
+            prim_paths_expr="/World/envs/.*/kinova/left_inner_finger_pad", name="lfingers_view", reset_xform_properties=False
         )
         self._rfingers = RigidPrimView(
-            prim_paths_expr="/World/envs/.*/kinova/right_inner_finger",
+            prim_paths_expr="/World/envs/.*/kinova/right_inner_finger_pad",
             name="rfingers_view",
             reset_xform_properties=False,
         )
@@ -35,6 +41,7 @@ class KinovaMobileView(ArticulationView):
                                  self.get_dof_index("left_inner_finger_joint"),
                                  self.get_dof_index("right_outer_knuckle_joint"),
                                  self.get_dof_index("right_inner_finger_joint")]
+        # self.gripper_indices = [10, 11, 12,13,14, 15]
 
     @property
     def gripper_indices(self):

@@ -24,7 +24,7 @@ class KinovaMobile(Robot):
     def __init__(
         self,
         prim_path: str,
-        name: Optional[str] = "franka",
+        name: Optional[str] = "kinova",
         usd_path: Optional[str] = None,
         translation: Optional[torch.tensor] = None,
         orientation: Optional[torch.tensor] = None,
@@ -37,7 +37,7 @@ class KinovaMobile(Robot):
         self._position = torch.tensor([1.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([1.0, 0.0, 0.0, 0.0]) if orientation is None else orientation
 
-        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_with_base_flatten_instanceable.usd"
+        self._usd_path = "/home/nikepupu/Desktop/test.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
 
@@ -64,14 +64,12 @@ class KinovaMobile(Robot):
             "spherical_wrist_2_link/Actuator7",
 
             #hand
-            "robotiq_85_base_link/finger_joint",
-            "robotiq_85_base_link/left_inner_knuckle_joint",
-            "robotiq_85_base_link/right_inner_knuckle_joint",
-            # "robotiq_85_base_link/left_inner_finger_joint",
-            "left_inner_knuckle/left_inner_finger_joint",
-            "robotiq_85_base_link/right_outer_knuckle_joint",
-            # "robotiq_85_base_link/right_inner_finger_joint"
-            "right_inner_knuckle/right_inner_finger_joint"
+            "robotiq_arg2f_base_link/finger_joint",
+            "robotiq_arg2f_base_link/left_inner_knuckle_joint",
+            "robotiq_arg2f_base_link/right_inner_knuckle_joint",
+            "left_outer_finger/left_inner_finger_joint",
+            "robotiq_arg2f_base_link/right_outer_knuckle_joint",
+            "right_outer_finger/right_inner_finger_joint"
 
         ]
 
@@ -111,9 +109,9 @@ class KinovaMobile(Robot):
         drive_type = ["linear"] * 2 + ["angular"] * 14  
         default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         stiffness = [800] * 3 +  [800] * 13
-        damping = [15000] * 3 + [40] * 13 
+        damping = [15000] * 3 + [600] * 7 + [100] * 6 
         max_force = [1000.0, 1000.0, 1000] + [ 1000 ] * 13 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
-        max_velocity = [100.0, 100.0, 100] + [500]*7 + [40]*6
+        max_velocity = [100.0, 100.0, 100] + [200]*7 + [10]*6
 
         for i, dof in enumerate(dof_paths):
             set_drive(

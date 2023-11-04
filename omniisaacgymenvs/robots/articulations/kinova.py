@@ -37,7 +37,7 @@ class KinovaMobile(Robot):
         self._position = torch.tensor([1.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([1.0, 0.0, 0.0, 0.0]) if orientation is None else orientation
 
-        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_flatten_instanceable.usd"
+        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_flatten_instanceable_copy.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
 
@@ -64,14 +64,12 @@ class KinovaMobile(Robot):
             "spherical_wrist_2_link/Actuator7",
 
             #hand
-            "robotiq_85_base_link/finger_joint",
-            "robotiq_85_base_link/left_inner_knuckle_joint",
-            "robotiq_85_base_link/right_inner_knuckle_joint",
-            # "robotiq_85_base_link/left_inner_finger_joint",
-            "left_inner_knuckle/left_inner_finger_joint",
-            "robotiq_85_base_link/right_outer_knuckle_joint",
-            # "robotiq_85_base_link/right_inner_finger_joint"
-            "right_inner_knuckle/right_inner_finger_joint"
+            "_f85_instanceable/robotiq_arg2f_base_link/finger_joint",
+            "_f85_instanceable/robotiq_arg2f_base_link/left_inner_knuckle_joint",
+            "_f85_instanceable/robotiq_85_base_link/right_inner_knuckle_joint",
+            "_f85_instanceable/left_outer_finger/left_inner_finger_joint",
+            "_f85_instanceable/robotiq_85_base_link/right_outer_knuckle_joint",
+            "_f85_instanceable/right_outer_finger/right_inner_finger_joint"
 
         ]
 
