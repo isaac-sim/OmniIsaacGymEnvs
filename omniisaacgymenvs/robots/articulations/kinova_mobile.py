@@ -111,7 +111,7 @@ class KinovaMobile(Robot):
         stiffness = [800] * 3 +  [800] * 13
         damping = [15000] * 3 + [600] * 7 + [100] * 6 
         max_force = [1000.0, 1000.0, 1000] + [ 1000 ] * 13 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
-        max_velocity = [100.0, 100.0, 100] + [100]*7 + [20]*6
+        max_velocity = [200.0, 200.0, 200.0] + [100]*7 + [20]*6
 
         for i, dof in enumerate(dof_paths):
             set_drive(

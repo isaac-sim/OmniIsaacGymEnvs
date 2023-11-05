@@ -43,7 +43,7 @@ from omni.isaac.core.utils.torch.rotations import (
     quat_rotate_inverse,
 )
 from pytorch3d.transforms import quaternion_to_matrix
-
+from omni.physx.scripts import deformableUtils, physicsUtils
 # def quat_axis(q, axis=0):
 #     '''
 #     :func apply rotation represented by quanternion `q`
@@ -194,6 +194,23 @@ class KinovaMobileDrawerTask(RLTask):
 
     def get_kinova(self):
         kinova = KinovaMobile(prim_path=self.default_zero_env_path + "/kinova", name="kinova", translation=[-1.5, 0, 0.01])
+
+        # stage = get_current_stage()
+        # prim = stage.GetPrimAtPath(self.default_zero_env_path + "/kinova")
+        # _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
+        # prim = stage.GetPrimAtPath(self.default_zero_env_path + "/kinova")
+        # physicsUtils.add_physics_material_to_prim(
+        #             stage,
+        #             prim,
+        #             _physicsMaterialPath,
+        #         )
+        
+        # prim = stage.GetPrimAtPath(self.default_zero_env_path + "/kinova/left_inner_finger_pad")
+        # physicsUtils.add_physics_material_to_prim(
+        #             stage,
+        #             prim,
+        #             _physicsMaterialPath,
+        #         )
         self._sim_config.apply_articulation_settings(
             "kinova", get_prim_at_path(kinova.prim_path), self._sim_config.parse_actor_config("kinova")
         )
@@ -219,7 +236,7 @@ class KinovaMobileDrawerTask(RLTask):
 
         # add physics material
         stage = get_current_stage()
-        prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet")
+        prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet/link_4/collisions_xform/collisions")
         _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
         material = PhysicsMaterial(
                 prim_path=_physicsMaterialPath,
@@ -228,16 +245,24 @@ class KinovaMobileDrawerTask(RLTask):
                 restitution=0.0,
             )
         # -- enable patch-friction: yields better results!
-        physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
-        physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
+        # physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
+        # physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
+
+        physicsUtils.add_physics_material_to_prim(
+                    stage,
+                    prim,
+                    _physicsMaterialPath,
+                )
 
         # add collision approximation
-        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions_xform")
+        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions_xform/collisions")
         collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
         if not collision_api:
             collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
         
         collision_api.CreateApproximationAttr().Set("convexDecomposition")
+
+        
                           
         self._sim_config.apply_articulation_settings(
             "cabinet", get_prim_at_path(cabinet.prim_path), self._sim_config.parse_actor_config("cabinet")
@@ -397,7 +422,7 @@ class KinovaMobileDrawerTask(RLTask):
         hand_position_w, hand_quat_w = self._kinovas._hands.get_world_poses(clone=True)
         hand_position_w = hand_position_w - self._env_pos
 
-        ee_pos_offset = torch.tensor([0.0, 0.0, 0.12]).repeat((self._num_envs, 1)).to(hand_position_w.device)
+        ee_pos_offset = torch.tensor([0.0, 0.0, 0.13]).repeat((self._num_envs, 1)).to(hand_position_w.device)
         ee_rot_offset = torch.tensor([1.0, 0.0, 0.0, 0.0]).repeat((self._num_envs, 1)).to(hand_quat_w.device)
         # print(ee_pos_offset.shape)
         # print(ee_rot_offset.shape)
@@ -492,6 +517,10 @@ class KinovaMobileDrawerTask(RLTask):
         # targets = self.kinova_dof_targets + self.kinova_dof_speed_scales * self.dt * self.actions * self.action_scale
         # map -1 to 1 to 0 to 1
         # self.actions = actions.clone().to(self._device)
+        
+        
+        
+
         self.actions = (self.actions + 1.0)/2.0
 
         mask = (actions[:, -1] > 0).unsqueeze(-1).float()
@@ -640,21 +669,34 @@ class KinovaMobileDrawerTask(RLTask):
         rot_reward = dot1 + dot2 + dot3 - 3     
         reaching_reward = - tcp_to_obj_dist +  0.1 * (is_reached_short + is_reached_long + is_reached_out) 
 
-        is_reached = is_reached_short &  is_reached_out & is_reached_long #(tcp_to_obj_dist < 0.02)
+        is_reached =  is_reached_out & is_reached_long & is_reached_short & (tcp_to_obj_dist < 0.03) 
 
         # close_reward = is_reached * (gripper_length < 0.02) * 0.1 + 0.1 * (gripper_length > 0.08) * (~is_reached)
-        close_reward =  (0.1 - gripper_length/2.0 ) * is_reached + 0.25 * ( gripper_length/2.0 -0.1) * (~is_reached)
+        close_reward =  (0.1 - gripper_length/2.0 ) * is_reached + 0.5 * ( gripper_length/2.0 -0.1) * (~is_reached)
         # print('close reward: ', close_reward)
 
-        grasp_success = is_reached & (gripper_length < 0.05) & (rot_reward > -0.2)
+        grasp_success = is_reached & (rot_reward > -0.2) & (gripper_length < handle_short_length + 0.015)
+        # if torch.any(grasp_success):
+        #     print('grasp success')
+        #     num_true = grasp_success.sum()
+        #     if num_true >= 3:
+        #         print(torch.nonzero(grasp_success).squeeze())
+        #         print()
+        #         timeline = omni.timeline.get_timeline_interface()
+        #         timeline.pause()
+        #         from omni.isaac.core import World
+        #         world = World()
+        #         while True:
+        #             world.step(render=True)
+
 
         normalized_dof_pos = (self.cabinet_dof_pos[:, 1] - self.cabinet_dof_lower_limits) / (self.cabinet_dof_upper_limits - self.cabinet_dof_lower_limits)
         condition_mask = (normalized_dof_pos > 0.95) & grasp_success
         
 
-        self.rew_buf[:] = reaching_reward + rot_reward * 0.5 + 5 * close_reward +  5 * normalized_dof_pos * grasp_success
+        self.rew_buf[:] = reaching_reward + rot_reward * 0.5 + 5 * close_reward + grasp_success *5 * ( 0.2 + normalized_dof_pos)  
 
-        self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
+        # self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
 
         self.rew_buf[condition_mask] += 2.0
         # self.rew_buf[:] = rot_reward
