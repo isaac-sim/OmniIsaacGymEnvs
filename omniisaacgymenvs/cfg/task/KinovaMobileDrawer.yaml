@@ -7,7 +7,7 @@ physics_engine: ${..physics_engine}
 env:
   numEnvs: ${resolve_default:512,${...num_envs}}
   envSpacing: 10.0
-  episodeLength: 240
+  episodeLength: 360
   enableDebugVis: False
 
   clipObservations: 5.0
@@ -53,7 +53,7 @@ sim:
     worker_thread_count: ${....num_threads}
     solver_type: ${....solver_type}
     use_gpu: ${eq:${....sim_device},"gpu"} # set to False to run on CPU
-    solver_position_iteration_count: 12
+    solver_position_iteration_count: 32
     solver_velocity_iteration_count: 1
     contact_offset: 0.005
     rest_offset: 0.0
@@ -83,7 +83,7 @@ sim:
     enable_gyroscopic_forces: True
     # also in stage params
     # per-actor
-    solver_position_iteration_count: 12
+    solver_position_iteration_count: 32
     solver_velocity_iteration_count: 1
     sleep_threshold: 0.005
     stabilization_threshold: 0.001
@@ -97,28 +97,10 @@ sim:
     enable_gyroscopic_forces: True
     # also in stage params
     # per-actor
-    solver_position_iteration_count: 12
+    solver_position_iteration_count: 32
     solver_velocity_iteration_count: 1
     sleep_threshold: 0.0
     stabilization_threshold: 0.001
     # per-body
     density: -1
     max_depenetration_velocity: 1000.0
-  prop:
-    # -1 to use default values
-    override_usd_defaults: False
-    make_kinematic: False
-    enable_self_collisions: False
-    enable_gyroscopic_forces: True
-    # also in stage params
-    # per-actor
-    solver_position_iteration_count: 12
-    solver_velocity_iteration_count: 1
-    sleep_threshold: 0.005
-    stabilization_threshold: 0.001
-    # per-body
-    density: 100
-    max_depenetration_velocity: 1000.0
-    # per-shape
-    contact_offset: 0.005
-    rest_offset: 0.0
