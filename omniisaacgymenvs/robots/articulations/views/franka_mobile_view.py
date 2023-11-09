@@ -4,11 +4,11 @@ from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.prims import RigidPrimView
 
 
-class KinovaMobileView(ArticulationView):
+class FrankaMobileView(ArticulationView):
     def __init__(
         self,
         prim_paths_expr: str,
-        name: Optional[str] = "KinovaMobileView",
+        name: Optional[str] = "FrankaMobileView",
     ) -> None:
         """[summary]"""
 
@@ -33,13 +33,13 @@ class KinovaMobileView(ArticulationView):
         # )
 
         self._hands = RigidPrimView(
-            prim_paths_expr="/World/envs/.*/kinova/robotiq_85_base_link", name="hands_view", reset_xform_properties=False
+            prim_paths_expr="/World/envs/.*/franka/panda_link7", name="hands_view", reset_xform_properties=False
         )
         self._lfingers = RigidPrimView(
-            prim_paths_expr="/World/envs/.*/kinova/left_inner_finger", name="lfingers_view", reset_xform_properties=False
+            prim_paths_expr="/World/envs/.*/franka/panda_leftfinger", name="lfingers_view", reset_xform_properties=False
         )
         self._rfingers = RigidPrimView(
-            prim_paths_expr="/World/envs/.*/kinova/right_inner_finger",
+            prim_paths_expr="/World/envs/.*/franka/panda_rightfinger",
             name="rfingers_view",
             reset_xform_properties=False,
         )
@@ -47,12 +47,7 @@ class KinovaMobileView(ArticulationView):
     def initialize(self, physics_sim_view):
         super().initialize(physics_sim_view)
 
-        self._gripper_indices = [self.get_dof_index("finger_joint"), 
-                                 self.get_dof_index("left_inner_knuckle_joint"),
-                                 self.get_dof_index("right_inner_knuckle_joint"),
-                                 self.get_dof_index("left_inner_finger_joint"),
-                                 self.get_dof_index("right_outer_knuckle_joint"),
-                                 self.get_dof_index("right_inner_finger_joint")]
+        self._gripper_indices = [self.get_dof_index("panda_finger_joint1"), self.get_dof_index("panda_finger_joint2")]
         # self.gripper_indices = [10, 11, 12,13,14, 15]
 
     @property

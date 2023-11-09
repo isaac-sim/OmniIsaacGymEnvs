@@ -19,12 +19,11 @@ from omni.isaac.core.utils.stage import add_reference_to_stage
 from omniisaacgymenvs.tasks.utils.usd_utils import set_drive
 from pxr import PhysxSchema
 
-
-class KinovaMobile(Robot):
+class FrankaMobile(Robot):
     def __init__(
         self,
         prim_path: str,
-        name: Optional[str] = "kinova",
+        name: Optional[str] = "franka",
         usd_path: Optional[str] = None,
         translation: Optional[torch.tensor] = None,
         orientation: Optional[torch.tensor] = None,
@@ -36,8 +35,8 @@ class KinovaMobile(Robot):
 
         self._position = torch.tensor([1.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([1.0, 0.0, 0.0, 0.0]) if orientation is None else orientation
-
-        self._usd_path = "/home/nikepupu/Desktop/mec_kinova_with_base_flatten_instanceable.usd"
+    
+        self._usd_path = f"omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Robots/Clearpath/RidgebackFranka/ridgeback_franka.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
 
@@ -50,27 +49,21 @@ class KinovaMobile(Robot):
         )
 
         dof_paths=[
+
             # base
-            "virtual_base_x/base_y_base_x",
-            "virtual_base_y/base_theta_base_y",
-            "virtual_base_theta/base_link_base_theta",
+            "world/dummy_base_prismatic_x_joint",
+            "dummy_base_x/dummy_base_prismatic_y_joint",
+            "dummy_base_y/dummy_base_revolute_z_joint",
             #arm
-            "base_link/Actuator1",
-            "shoulder_link/Actuator2",
-            "half_arm_1_link/Actuator3",
-            "half_arm_2_link/Actuator4",
-            "forearm_link/Actuator5",
-            "spherical_wrist_1_link/Actuator6",
-            "spherical_wrist_2_link/Actuator7",
-
-            #hand
-            "robotiq_85_base_link/finger_joint",
-            "robotiq_85_base_link/left_inner_knuckle_joint",
-            "robotiq_85_base_link/right_inner_knuckle_joint",
-            "left_inner_knuckle/left_inner_finger_joint",
-            "robotiq_85_base_link/right_outer_knuckle_joint",
-            "right_inner_knuckle/right_inner_finger_joint"
-
+            "panda_link0/panda_joint1",
+            "panda_link1/panda_joint2",
+            "panda_link2/panda_joint3",
+            "panda_link3/panda_joint4",
+            "panda_link4/panda_joint5",
+            "panda_link5/panda_joint6",
+            "panda_link6/panda_joint7",
+            "panda_hand/panda_finger_joint1",
+            "panda_hand/panda_finger_joint2",
         ]
 
         #  actuator_groups={
@@ -106,12 +99,19 @@ class KinovaMobile(Robot):
         #     ),
         # ),
 
-        drive_type = ["linear"] * 2 + ["angular"] * 14  
-        default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        stiffness = [800] * 3 +  [800] * 13
-        damping = [15000] * 3 + [600] * 7 + [100] * 6 
-        max_force = [1000.0, 1000.0, 1000] + [ 1000 ] * 13 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
-        max_velocity = [200.0, 200.0, 200.0] + [200]*7 + [20]*6
+        # drive_type = ["linear"] * 2 + ["angular"] * 10  
+        # default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02, 0.02]]
+        # stiffness = [800] * 3 +  [800] * 9
+        # damping = [1500] * 3 + [600] * 7 + [100] * 2
+        # max_force = [500.0, 500.0, 500] + [ 1000 ] * 9 #[100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
+        # max_velocity = [20.0, 20.0, 20.0] + [200]*7 + [20]*2
+
+        drive_type = ['linear'] * 2  + ['angular'] +   ["angular"] * 7 + ["linear"] * 2
+        default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, -2.2, 0.0, 2.4, 0.8]] + [0.02, 0.02]
+        stiffness = [800]*3 + [400 * np.pi / 180] * 7 + [10000] * 2
+        damping =  [200]*3 + [80 * np.pi / 180] * 7 + [100] * 2
+        max_force = [100, 100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
+        max_velocity = [100 ] * 3 +  [math.degrees(x) for x in [2.175, 2.175, 2.175, 2.175, 2.61, 2.61, 2.61]] + [0.2, 0.2]
 
         for i, dof in enumerate(dof_paths):
             print(f"{self.prim_path}/{dof}")

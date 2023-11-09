@@ -21,7 +21,7 @@ params:
           val: 0
         fixed_sigma: True
     mlp:
-      units: [512, 256, 128]
+      units:  [256, 128, 64]
       activation: elu
       d2rl: False
 
@@ -34,7 +34,7 @@ params:
   load_path: ${...checkpoint} # path to the checkpoint to load
 
   config:
-    name: ${resolve_default:KinovaMobileDrawer,${....experiment}}
+    name: ${resolve_default:FrankaMobileDrawer,${....experiment}}
     full_experiment_name: ${.name}
     env_name: rlgpu
     device: ${....rl_device}
@@ -63,7 +63,7 @@ params:
     truncate_grads: True
     e_clip: 0.2
     horizon_length: 16
-    minibatch_size: 4096
+    minibatch_size: 2048
     mini_epochs: 8
     critic_coef: 4
     clip_value: True
