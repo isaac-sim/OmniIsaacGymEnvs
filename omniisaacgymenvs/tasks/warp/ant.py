@@ -90,7 +90,7 @@ class AntLocomotionTask(LocomotionTask):
 
     def get_dof_at_limit_cost(self):
         wp.launch(get_dof_at_limit_cost, dim=(self._num_envs, self._ants._num_dof),
-            inputs=[self.dof_at_limit_cost, self.obs_buf, self.motor_effort_ratio])
+            inputs=[self.dof_at_limit_cost, self.obs_buf, self.motor_effort_ratio], device=self._device)
         return self.dof_at_limit_cost
 
 @wp.kernel

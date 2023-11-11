@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+Fixes
+-----
+- Fix missing device in warp kernel launch for Ant and Humanoid
+
+
 2023.1.0b - November 02, 2023
 -----------------------------
 
