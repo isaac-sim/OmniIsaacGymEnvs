@@ -36,7 +36,7 @@ class FrankaMobile(Robot):
         self._position = torch.tensor([1.0, 0.0, 0.0]) if translation is None else translation
         self._orientation = torch.tensor([1.0, 0.0, 0.0, 0.0]) if orientation is None else orientation
     
-        self._usd_path = f"omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.0/Isaac/Robots/Clearpath/RidgebackFranka/ridgeback_franka.usd"
+        self._usd_path = f"/home/nikepupu/Downloads/franka/ridgeback_franka.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
 
@@ -107,11 +107,11 @@ class FrankaMobile(Robot):
         # max_velocity = [20.0, 20.0, 20.0] + [200]*7 + [20]*2
 
         drive_type = ['linear'] * 2  + ['angular'] +   ["angular"] * 7 + ["linear"] * 2
-        default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, -2.2, 0.0, 2.4, 0.8]] + [0.02, 0.02]
+        default_dof_pos = [math.degrees(x) for x in [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, -2.2, 0.0, 2.4, 0.8]] + [0.04, 0.04]
         stiffness = [800]*3 + [400 * np.pi / 180] * 7 + [10000] * 2
         damping =  [200]*3 + [80 * np.pi / 180] * 7 + [100] * 2
         max_force = [100, 100, 100, 87, 87, 87, 87, 12, 12, 12, 200, 200]
-        max_velocity = [100 ] * 3 +  [math.degrees(x) for x in [2.175, 2.175, 2.175, 2.175, 2.61, 2.61, 2.61]] + [0.2, 0.2]
+        max_velocity = [300 ] * 3 +  [math.degrees(x) for x in [2.175, 2.175, 2.175, 2.175, 2.61, 2.61, 2.61]] + [0.2, 0.2]
 
         for i, dof in enumerate(dof_paths):
             print(f"{self.prim_path}/{dof}")

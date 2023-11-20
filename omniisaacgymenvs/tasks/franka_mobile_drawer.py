@@ -20,7 +20,7 @@ from omni.isaac.core.utils.stage import get_current_stage
 from omni.isaac.core.utils.torch.rotations import *
 from omni.isaac.core.utils.torch.transformations import *
 from omni.isaac.core.prims import RigidPrimView, XFormPrim
-# from omni.isaac.core.materials import PhysicsMaterial
+from omni.isaac.core.materials import PhysicsMaterial
 # from omni.isaac.core import World
 # from omni.debugdraw import get_debug_draw_interface
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
@@ -44,7 +44,7 @@ from omni.isaac.core.utils.torch.rotations import (
     quat_rotate,
     quat_rotate_inverse,
 )
-from pytorch3d.transforms import quaternion_to_matrix
+# from pytorch3d.transforms import quaternion_to_matrix
 from omni.physx.scripts import deformableUtils, physicsUtils
 # def quat_axis(q, axis=0):
 #     '''
@@ -55,6 +55,35 @@ from omni.physx.scripts import deformableUtils, physicsUtils
 #     basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
 #     basis_vec[:, axis] = 1
 #     return quat_rotate(q, basis_vec)
+
+def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
+    """
+    Convert rotations given as quaternions to rotation matrices.
+    Args:
+        quaternions: quaternions with real part first,
+            as tensor of shape (..., 4).
+    Returns:
+        Rotation matrices as tensor of shape (..., 3, 3).
+    """
+    r, i, j, k = torch.unbind(quaternions, -1)
+    two_s = 2.0 / (quaternions * quaternions).sum(-1)
+
+    mat = torch.stack(
+        (
+            1 - two_s * (j * j + k * k),
+            two_s * (i * j - k * r),
+            two_s * (i * k + j * r),
+            two_s * (i * j + k * r),
+            1 - two_s * (i * i + k * k),
+            two_s * (j * k - i * r),
+            two_s * (i * k - j * r),
+            two_s * (j * k + i * r),
+            1 - two_s * (i * i + j * j),
+        ),
+        -1,
+    )
+    return mat.reshape(quaternions.shape[:-1] + (3, 3))
+
 def quat_axis(q, axis_idx):
     """Extract a specific axis from a quaternion."""
     rotm = quaternion_to_matrix(q)
@@ -238,32 +267,32 @@ class FrankaMobileDrawerTask(RLTask):
         drawer.set_world_pose(position, orientation)
 
         # add physics material
-        # stage = get_current_stage()
-        # prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet/link_4/collisions")
-        # _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
-        # material = PhysicsMaterial(
-        #         prim_path=_physicsMaterialPath,
-        #         static_friction=1.0,
-        #         dynamic_friction=1.0,
-        #         restitution=0.0,
-        #     )
+        stage = get_current_stage()
+        prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet/link_4/collisions")
+        _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
+        material = PhysicsMaterial(
+                prim_path=_physicsMaterialPath,
+                static_friction=1.0,
+                dynamic_friction=1.0,
+                restitution=0.0,
+            )
         # -- enable patch-friction: yields better results!
-        # physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
-        # physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
+        physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
+        physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
 
-        # physicsUtils.add_physics_material_to_prim(
-        #             stage,
-        #             prim,
-        #             _physicsMaterialPath,
-        #         )
+        physicsUtils.add_physics_material_to_prim(
+                    stage,
+                    prim,
+                    _physicsMaterialPath,
+                )
 
         # add collision approximation
-        # prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions_xform/collisions")
-        # collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
-        # if not collision_api:
-        #     collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions")
+        collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
+        if not collision_api:
+            collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
         
-        # collision_api.CreateApproximationAttr().Set("convexDecomposition")
+        collision_api.CreateApproximationAttr().Set("convexDecomposition")
 
         
                           
@@ -438,7 +467,7 @@ class FrankaMobileDrawerTask(RLTask):
         hand_position_w, hand_quat_w = self._frankas._hands.get_world_poses(clone=True)
         hand_position_w = hand_position_w - self._env_pos
 
-        ee_pos_offset = torch.tensor([0.0, 0.0, 0.13]).repeat((self._num_envs, 1)).to(hand_position_w.device)
+        ee_pos_offset = torch.tensor([0.0, 0.0, 0.105]).repeat((self._num_envs, 1)).to(hand_position_w.device)
         ee_rot_offset = torch.tensor([1.0, 0.0, 0.0, 0.0]).repeat((self._num_envs, 1)).to(hand_quat_w.device)
         # print(ee_pos_offset.shape)
         # print(ee_rot_offset.shape)
@@ -685,15 +714,15 @@ class FrankaMobileDrawerTask(RLTask):
         short_rtip = ((self.franka_rfinger_pos - self.centers) *handle_short).sum(dim=-1)
         is_reached_short = (short_ltip * short_rtip) < 0
 
-        is_reached_long = (tcp_to_obj_delta * handle_long).sum(dim=-1).abs() < handle_long_length / 2.0
-        is_reached_out = (tcp_to_obj_delta * handle_out).sum(dim=-1).abs() < handle_out_length / 2.0
+        is_reached_long = (tcp_to_obj_delta * handle_long).sum(dim=-1).abs() < (handle_long_length / 2.0 - 0.005)
+        is_reached_out = (tcp_to_obj_delta * handle_out).sum(dim=-1).abs() < (handle_out_length / 2.0 - 0.005)
 
 
-        hand_grip_dir = quat_axis(hand_rot, 0).cuda()
+        hand_grip_dir = quat_axis(hand_rot, 1).cuda()
         # hand_grip_dir_length = torch.norm(hand_grip_dir)
         # hand_grip_dir  = hand_grip_dir/ hand_grip_dir_length
         
-        hand_sep_dir = quat_axis(hand_rot, 1).cuda()
+        hand_sep_dir = quat_axis(hand_rot, 0).cuda()
         # hand_sep_dir_length = torch.norm(hand_sep_dir)
         # hand_sep_dir = hand_sep_dir / hand_sep_dir_length
 
@@ -701,10 +730,10 @@ class FrankaMobileDrawerTask(RLTask):
         # hand_down_dir_length = torch.norm(hand_down_dir)
         # hand_down_dir = hand_down_dir / hand_down_dir_length
 
-        dot1 = (hand_grip_dir * handle_out).sum(dim=-1)
-        # dot1 = torch.max((hand_grip_dir * handle_out).sum(dim=-1), (-hand_grip_dir * handle_out).sum(dim=-1))
+        # dot1 = (-hand_grip_dir * handle_out).sum(dim=-1)
+        dot1 = torch.max((hand_grip_dir * handle_out).sum(dim=-1), (-hand_grip_dir * handle_out).sum(dim=-1))
         dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
-        # dot2 = (-hand_sep_dir * handle_short).sum(dim=-1)
+        dot2 = (-hand_sep_dir * handle_short).sum(dim=-1)
         dot3 = torch.max((hand_down_dir * handle_long).sum(dim=-1), (-hand_down_dir * handle_long).sum(dim=-1))
         # dot3 = (hand_down_dir * handle_long).sum(dim=-1)
 
@@ -714,10 +743,11 @@ class FrankaMobileDrawerTask(RLTask):
         is_reached =  is_reached_out & is_reached_long & is_reached_short #& (tcp_to_obj_dist < 0.03) 
 
         # close_reward = is_reached * (gripper_length < 0.02) * 0.1 + 0.1 * (gripper_length > 0.08) * (~is_reached)
-        close_reward =  (0.1 - gripper_length/2.0 ) * is_reached + 1.0 * ( gripper_length/2.0 -0.1) * (~is_reached)
+        close_reward =  (0.1 - gripper_length ) * is_reached + 0.1 * ( gripper_length -0.1) * (~is_reached)
         # print('close reward: ', close_reward)
 
-        grasp_success = is_reached & (rot_reward > -0.2) & (gripper_length < handle_short_length + 0.03)
+        grasp_success = is_reached & (gripper_length < handle_short_length + 0.015) & (rot_reward > -0.2)
+
         # if torch.any(grasp_success):
         #     print('grasp success')
         #     num_true = grasp_success.sum()
@@ -738,9 +768,9 @@ class FrankaMobileDrawerTask(RLTask):
 
         self.rew_buf[:] = reaching_reward +  rot_reward * 0.5 + 5 * close_reward + grasp_success *5 * ( 0.2 + normalized_dof_pos)  
 
-        # self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
+        self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
 
-        self.rew_buf[condition_mask] += 2.0
+        # self.rew_buf[condition_mask] += 2.0
         # self.rew_buf[:] = rot_reward
         # self.rew_buf[:] = rot_reward
         self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
