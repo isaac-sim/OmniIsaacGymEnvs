@@ -287,13 +287,27 @@ class FrankaMobileDrawerTask(RLTask):
                 )
 
         # add collision approximation
-        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_4/collisions")
+        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet")
         collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
         if not collision_api:
             collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
         
         collision_api.CreateApproximationAttr().Set("convexDecomposition")
 
+        # prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_2/collisions")
+        # collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
+        # if not collision_api:
+        #     collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+        
+        # collision_api.CreateApproximationAttr().Set("convexDecomposition")
+
+        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet")
+        mass_api = UsdPhysics.MassAPI.Get(stage, prim.GetPath())
+        if not mass_api:
+            mass_api = UsdPhysics.MassAPI.Apply(prim)
+            mass_api.CreateMassAttr().Set(1.0)
+        else:
+            mass_api.GetMassAttr().Set(1.0)
         
                           
         # self._sim_config.apply_articulation_settings(
@@ -653,7 +667,7 @@ class FrankaMobileDrawerTask(RLTask):
 
     def calculate_metrics(self) -> None:
         # import pdb; pdb.set_trace()
-        # self.cabinet_dof_pos = self._cabinets.get_joint_positions(clone=False)
+        self.cabinet_dof_pos = self._cabinets.get_joint_positions(clone=False)
         self.centers = (self.centers_orig +  self.forwardDir * self.cabinet_dof_pos[:, 1].unsqueeze(-1)).to(torch.float32).to(self._device)
       
         # world = World()
@@ -714,8 +728,8 @@ class FrankaMobileDrawerTask(RLTask):
         short_rtip = ((self.franka_rfinger_pos - self.centers) *handle_short).sum(dim=-1)
         is_reached_short = (short_ltip * short_rtip) < 0
 
-        is_reached_long = (tcp_to_obj_delta * handle_long).sum(dim=-1).abs() < (handle_long_length / 2.0 - 0.005)
-        is_reached_out = (tcp_to_obj_delta * handle_out).sum(dim=-1).abs() < (handle_out_length / 2.0 - 0.005)
+        is_reached_long = (tcp_to_obj_delta * handle_long).sum(dim=-1).abs() < (handle_long_length / 2.0)
+        is_reached_out = (tcp_to_obj_delta * handle_out).sum(dim=-1).abs() < (handle_out_length / 2.0 )
 
 
         hand_grip_dir = quat_axis(hand_rot, 1).cuda()
@@ -732,7 +746,7 @@ class FrankaMobileDrawerTask(RLTask):
 
         # dot1 = (-hand_grip_dir * handle_out).sum(dim=-1)
         dot1 = torch.max((hand_grip_dir * handle_out).sum(dim=-1), (-hand_grip_dir * handle_out).sum(dim=-1))
-        dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
+        # dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
         dot2 = (-hand_sep_dir * handle_short).sum(dim=-1)
         dot3 = torch.max((hand_down_dir * handle_long).sum(dim=-1), (-hand_down_dir * handle_long).sum(dim=-1))
         # dot3 = (hand_down_dir * handle_long).sum(dim=-1)
@@ -763,14 +777,14 @@ class FrankaMobileDrawerTask(RLTask):
 
 
         normalized_dof_pos = (self.cabinet_dof_pos[:, 1] - self.cabinet_dof_lower_limits) / (self.cabinet_dof_upper_limits - self.cabinet_dof_lower_limits)
-        condition_mask = (normalized_dof_pos > 0.95) & grasp_success
+        condition_mask = (normalized_dof_pos <= 0.55) & (normalized_dof_pos >= 0.45) & grasp_success
         
 
-        self.rew_buf[:] = reaching_reward +  rot_reward * 0.5 + 5 * close_reward + grasp_success *5 * ( 0.2 + normalized_dof_pos)  
+        self.rew_buf[:] = reaching_reward +  rot_reward * 0.5 + 5 * close_reward + grasp_success * 10 * ( 0.1 + normalized_dof_pos)  
 
-        self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
+        # self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
 
-        # self.rew_buf[condition_mask] += 2.0
+        self.rew_buf[condition_mask] += 10.0
         # self.rew_buf[:] = rot_reward
         # self.rew_buf[:] = rot_reward
         self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
