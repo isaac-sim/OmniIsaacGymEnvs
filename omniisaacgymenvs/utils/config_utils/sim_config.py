@@ -353,7 +353,7 @@ class SimConfig:
         solver_velocity_iteration_count = arti_api.GetSolverVelocityIterationCountAttr()
         if value is None:
             value = self._get_actor_config_value(
-                name, "solver_velocity_iteration_count", solver_position_iteration_count
+                name, "solver_velocity_iteration_count", solver_velocity_iteration_count
             )
         if value != -1:
             solver_velocity_iteration_count.Set(value)

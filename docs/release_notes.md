@@ -1,9 +1,15 @@
 Release Notes
 =============
 
+Changes
+-------
+- Use rl_device for sampling random policy (https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/pull/51)
+- Add FPS printouts for random policy
+
 Fixes
 -----
 - Fix missing device in warp kernel launch for Ant and Humanoid
+- Fix typo for velocity iteration (https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/pull/111)
 
 
 2023.1.0b - November 02, 2023
