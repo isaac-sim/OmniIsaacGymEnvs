@@ -1,6 +1,9 @@
 Release Notes
 =============
 
+2023.1.1
+--------
+
 Changes
 -------
 - Use rl_device for sampling random policy (https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/pull/51)
