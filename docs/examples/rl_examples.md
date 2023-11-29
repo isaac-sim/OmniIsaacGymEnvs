@@ -26,7 +26,7 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Factory: Fast Contact for Robotic Assembly](#factory-fast-contact-for-robotic-assembly)
 
 
-### Cartpole [cartpole.py](../omniisaacgymenvs/tasks/cartpole.py)
+### Cartpole [cartpole.py](../../omniisaacgymenvs/tasks/cartpole.py)
 
 Cartpole is a simple example that demonstrates getting and setting usage of DOF states using 
 `ArticulationView` from `omni.isaac.core`. The goal of this task is to move a cart horizontally
@@ -44,10 +44,10 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [Cartpole.yaml](../omniisaacgymenvs/cfg/task/Cartpole.yaml)
--   **rl_games training config**: [CartpolePPO.yaml](../omniisaacgymenvs/cfg/train/CartpolePPO.yaml)
+-   **Task config**: [Cartpole.yaml](../../omniisaacgymenvs/cfg/task/Cartpole.yaml)
+-   **rl_games training config**: [CartpolePPO.yaml](../../omniisaacgymenvs/cfg/train/CartpolePPO.yaml)
 
-#### CartpoleCamera [cartpole_camera.py](../omniisaacgymenvs/tasks/cartpole_camera.py)
+#### CartpoleCamera [cartpole_camera.py](../../omniisaacgymenvs/tasks/cartpole_camera.py)
 
 A variation of the Cartpole task showcases the usage of RGB image data as observations. This example
 can be launched with command line argument `task=CartpoleCamera`. Note that to use camera data as
@@ -55,18 +55,18 @@ observations, `enable_cameras` must be set to `True` in the task config file. In
 
 Config files used for this task are:
 
--   **Task config**: [CartpoleCamera.yaml](../omniisaacgymenvs/cfg/task/CartpoleCamera.yaml)
--   **rl_games training config**: [CartpoleCameraPPO.yaml](../omniisaacgymenvs/cfg/train/CartpoleCameraPPO.yaml)
+-   **Task config**: [CartpoleCamera.yaml](../../omniisaacgymenvs/cfg/task/CartpoleCamera.yaml)
+-   **rl_games training config**: [CartpoleCameraPPO.yaml](../../omniisaacgymenvs/cfg/train/CartpoleCameraPPO.yaml)
 
 For more details on training with camera data, please visit [here](training_with_camera.md).
   
 <img src="https://user-images.githubusercontent.com/34286328/171454189-6afafbff-bb61-4aac-b518-24646007cb9f.gif" width="300" height="150"/>
 
-### Ant [ant.py](../omniisaacgymenvs/tasks/ant.py)
+### Ant [ant.py](../../omniisaacgymenvs/tasks/ant.py)
 
 Ant is an example of a simple locomotion task. The goal of this task is to train 
 quadruped robots (ants) to run forward as fast as possible. This example inherets 
-from [LocomotionTask](../omniisaacgymenvs/tasks/shared/locomotion.py), 
+from [LocomotionTask](../../omniisaacgymenvs/tasks/shared/locomotion.py), 
 which is a shared class between this example and the humanoid example; this simplifies
 implementations for both environemnts since they compute rewards, observations, 
 and resets in a similar manner. This framework allows us to easily switch between
@@ -91,17 +91,17 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **PPO task config**: [Ant.yaml](../omniisaacgymenvs/cfg/task/Ant.yaml)
--   **rl_games PPO training config**: [AntPPO.yaml](../omniisaacgymenvs/cfg/train/AntPPO.yaml)
+-   **PPO task config**: [Ant.yaml](../../omniisaacgymenvs/cfg/task/Ant.yaml)
+-   **rl_games PPO training config**: [AntPPO.yaml](../../omniisaacgymenvs/cfg/train/AntPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/171454182-0be1b830-bceb-4cfd-93fb-e1eb8871ec68.gif" width="300" height="150"/>
 
 
 
-### Humanoid [humanoid.py](../omniisaacgymenvs/tasks/humanoid.py)
+### Humanoid [humanoid.py](../../omniisaacgymenvs/tasks/humanoid.py)
 
 Humanoid is another environment that uses 
-[LocomotionTask](../omniisaacgymenvs/tasks/shared/locomotion.py). It is conceptually
+[LocomotionTask](../../omniisaacgymenvs/tasks/shared/locomotion.py). It is conceptually
 very similar to the Ant example, where the goal for the humanoid is to run forward
 as fast as possible.
 
@@ -113,13 +113,13 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **PPO task config**: [Humanoid.yaml](../omniisaacgymenvs/cfg/task/Humanoid.yaml)
--   **rl_games PPO training config**: [HumanoidPPO.yaml](../omniisaacgymenvs/cfg/train/HumanoidPPO.yaml)
+-   **PPO task config**: [Humanoid.yaml](../../omniisaacgymenvs/cfg/task/Humanoid.yaml)
+-   **rl_games PPO training config**: [HumanoidPPO.yaml](../../omniisaacgymenvs/cfg/train/HumanoidPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/171454193-e027885d-1510-4ef4-b838-06b37f70c1c7.gif" width="300" height="150"/>
 
 
-### Shadow Hand Object Manipulation [shadow_hand.py](../omniisaacgymenvs/tasks/shadow_hand.py)
+### Shadow Hand Object Manipulation [shadow_hand.py](../../omniisaacgymenvs/tasks/shadow_hand.py)
 
 The Shadow Hand task is an example of a challenging dexterity manipulation task with complex contact 
 dynamics. It resembles OpenAI's [Learning Dexterity](https://openai.com/blog/learning-dexterity/)
@@ -127,10 +127,10 @@ project and [Robotics Shadow Hand](https://github.com/openai/gym/tree/v0.21.0/gy
 training environments. The goal of this task is to orient the object in the robot hand to match 
 a random target orientation, which is visually displayed by a goal object in the scene.
 
-This example inherets from [InHandManipulationTask](../omniisaacgymenvs/tasks/shared/in_hand_manipulation.py), 
+This example inherets from [InHandManipulationTask](../../omniisaacgymenvs/tasks/shared/in_hand_manipulation.py), 
 which is a shared class between this example and the Allegro Hand example. The idea of 
-this shared [InHandManipulationTask](../omniisaacgymenvs/tasks/shared/in_hand_manipulation.py) class
-is similar to that of the [LocomotionTask](../omniisaacgymenvs/tasks/shared/locomotion.py); 
+this shared [InHandManipulationTask](../../omniisaacgymenvs/tasks/shared/in_hand_manipulation.py) class
+is similar to that of the [LocomotionTask](../../omniisaacgymenvs/tasks/shared/locomotion.py); 
 since the Shadow Hand example and the Allegro Hand example only differ by the robot hand used
 in the task, using this shared class simplifies implementation across the two.
 
@@ -148,8 +148,8 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [ShadowHand.yaml](../omniisaacgymenvs/cfg/task/ShadowHand.yaml)
--   **rl_games training config**: [ShadowHandPPO.yaml](../omniisaacgymenvs/cfg/train/ShadowHandPPO.yaml)
+-   **Task config**: [ShadowHand.yaml](../../omniisaacgymenvs/cfg/task/ShadowHand.yaml)
+-   **rl_games training config**: [ShadowHandPPO.yaml](../../omniisaacgymenvs/cfg/train/ShadowHandPPO.yaml)
   
 #### OpenAI Variant
 
@@ -162,8 +162,8 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this are:
 
--   **Task config**: [ShadowHandOpenAI_FF.yaml](../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_FF.yaml)
--   **rl_games training config**: [ShadowHandOpenAI_FFPPO.yaml](../omniisaacgymenvs/cfg/train/ShadowHandOpenAI_FFPPO.yaml).
+-   **Task config**: [ShadowHandOpenAI_FF.yaml](../../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_FF.yaml)
+-   **rl_games training config**: [ShadowHandOpenAI_FFPPO.yaml](../../omniisaacgymenvs/cfg/train/ShadowHandOpenAI_FFPPO.yaml).
 
 #### LSTM Training Variant
 This variant uses LSTM policy and value networks instead of feed forward networks, and also asymmetric
@@ -174,13 +174,13 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this are:
 
--   **Task config**: [ShadowHandOpenAI_LSTM.yaml](../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_LSTM.yaml)
--   **rl_games training config**: [ShadowHandOpenAI_LSTMPPO.yaml](../omniisaacgymenvs/cfg/train/ShadowHandOpenAI_LSTMPPO.yaml).
+-   **Task config**: [ShadowHandOpenAI_LSTM.yaml](../../omniisaacgymenvs/cfg/task/ShadowHandOpenAI_LSTM.yaml)
+-   **rl_games training config**: [ShadowHandOpenAI_LSTMPPO.yaml](../../omniisaacgymenvs/cfg/train/ShadowHandOpenAI_LSTMPPO.yaml).
 
 <img src="https://user-images.githubusercontent.com/34286328/171454160-8cb6739d-162a-4c84-922d-cda04382633f.gif" width="300" height="150"/>
 
 
-### Allegro Hand Object Manipulation [allegro_hand.py](../omniisaacgymenvs/tasks/allegro_hand.py)
+### Allegro Hand Object Manipulation [allegro_hand.py](../../omniisaacgymenvs/tasks/allegro_hand.py)
 
 This example performs the same object orientation task as the Shadow Hand example, 
 but using the Allegro hand instead of the Shadow hand.
@@ -191,13 +191,13 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [AllegroHand.yaml](../omniisaacgymenvs/cfg/task/Allegro.yaml)
--   **rl_games training config**: [AllegroHandPPO.yaml](../omniisaacgymenvs/cfg/train/AllegroHandPPO.yaml)
+-   **Task config**: [AllegroHand.yaml](../../omniisaacgymenvs/cfg/task/Allegro.yaml)
+-   **rl_games training config**: [AllegroHandPPO.yaml](../../omniisaacgymenvs/cfg/train/AllegroHandPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/171454176-ce08f6d0-3087-4ecc-9273-7d30d8f73f6d.gif" width="300" height="150"/>
 
 
-### ANYmal [anymal.py](../omniisaacgymenvs/tasks/anymal.py)
+### ANYmal [anymal.py](../../omniisaacgymenvs/tasks/anymal.py)
 
 This example trains a model of the ANYmal quadruped robot from ANYbotics
 to follow randomly chosen x, y, and yaw target velocities.
@@ -208,13 +208,13 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [Anymal.yaml](../omniisaacgymenvs/cfg/task/Anymal.yaml)
--   **rl_games training config**: [AnymalPPO.yaml](../omniisaacgymenvs/cfg/train/AnymalPPO.yaml)
+-   **Task config**: [Anymal.yaml](../../omniisaacgymenvs/cfg/task/Anymal.yaml)
+-   **rl_games training config**: [AnymalPPO.yaml](../../omniisaacgymenvs/cfg/train/AnymalPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184168200-152567a8-3354-4947-9ae0-9443a56fee4c.gif" width="300" height="150"/>
 
 
-### Anymal Rough Terrain [anymal_terrain.py](../omniisaacgymenvs/tasks/anymal_terrain.py)
+### Anymal Rough Terrain [anymal_terrain.py](../../omniisaacgymenvs/tasks/anymal_terrain.py)
 
 A more complex version of the above Anymal environment that supports
 traversing various forms of rough terrain.
@@ -223,8 +223,8 @@ Training can be launched with command line argument `task=AnymalTerrain`.
 
 Running inference with pre-trained model can be launched with command line argument `task=AnymalTerrain test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth`
 
--   **Task config**: [AnymalTerrain.yaml](../omniisaacgymenvs/cfg/task/AnymalTerrain.yaml)
--   **rl_games training config**: [AnymalTerrainPPO.yaml](../omniisaacgymenvs/cfg/train/AnymalTerrainPPO.yaml)
+-   **Task config**: [AnymalTerrain.yaml](../../omniisaacgymenvs/cfg/task/AnymalTerrain.yaml)
+-   **rl_games training config**: [AnymalTerrainPPO.yaml](../../omniisaacgymenvs/cfg/train/AnymalTerrainPPO.yaml)
 
 **Note** during test time use the last weights generated, rather than the usual best weights. 
 Due to curriculum training, the reward goes down as the task gets more challenging, so the best weights
@@ -244,7 +244,7 @@ uses a different RL library and PPO implementation. The original implementation 
 <img src="https://user-images.githubusercontent.com/34286328/184170040-3f76f761-e748-452e-b8c8-3cc1c7c8cb98.gif" width="300" height="150"/>
 
 
-### NASA Ingenuity Helicopter [ingenuity.py](../omniisaacgymenvs/tasks/ingenuity.py)
+### NASA Ingenuity Helicopter [ingenuity.py](../../omniisaacgymenvs/tasks/ingenuity.py)
 
 This example trains a simplified model of NASA's Ingenuity helicopter to navigate to a moving target.
 It showcases the use of velocity tensors and applying force vectors to rigid bodies.
@@ -258,12 +258,12 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [Ingenuity.yaml](../omniisaacgymenvs/cfg/task/Ingenuity.yaml)
--   **rl_games training config**: [IngenuityPPO.yaml](../omniisaacgymenvs/cfg/train/IngenuityPPO.yaml)
+-   **Task config**: [Ingenuity.yaml](../../omniisaacgymenvs/cfg/task/Ingenuity.yaml)
+-   **rl_games training config**: [IngenuityPPO.yaml](../../omniisaacgymenvs/cfg/train/IngenuityPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184176312-df7d2727-f043-46e3-b537-48a583d321b9.gif" width="300" height="150"/>
 
-### Quadcopter [quadcopter.py](../omniisaacgymenvs/tasks/quadcopter.py)
+### Quadcopter [quadcopter.py](../../omniisaacgymenvs/tasks/quadcopter.py)
 
 This example trains a very simple quadcopter model to reach and hover near a fixed position.  
 Lift is achieved by applying thrust forces to the "rotor" bodies, which are modeled as flat cylinders.  
@@ -275,12 +275,12 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [Quadcopter.yaml](../omniisaacgymenvs/cfg/task/Quadcopter.yaml)
--   **rl_games training config**: [QuadcopterPPO.yaml](../omniisaacgymenvs/cfg/train/QuadcopterPPO.yaml)
+-   **Task config**: [Quadcopter.yaml](../../omniisaacgymenvs/cfg/task/Quadcopter.yaml)
+-   **rl_games training config**: [QuadcopterPPO.yaml](../../omniisaacgymenvs/cfg/train/QuadcopterPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184178817-9c4b6b3c-c8a2-41fb-94be-cfc8ece51d5d.gif" width="300" height="150"/>
 
-### Crazyflie [crazyflie.py](../omniisaacgymenvs/tasks/crazyflie.py)
+### Crazyflie [crazyflie.py](../../omniisaacgymenvs/tasks/crazyflie.py)
 
 This example trains the Crazyflie drone model to hover near a fixed position. It is achieved by applying thrust forces to the four rotors.
 
@@ -290,12 +290,12 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [Crazyflie.yaml](../omniisaacgymenvs/cfg/task/Crazyflie.yaml)
--   **rl_games training config**: [CrazyfliePPO.yaml](../omniisaacgymenvs/cfg/train/CrazyfliePPO.yaml)
+-   **Task config**: [Crazyflie.yaml](../../omniisaacgymenvs/cfg/task/Crazyflie.yaml)
+-   **rl_games training config**: [CrazyfliePPO.yaml](../../omniisaacgymenvs/cfg/train/CrazyfliePPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/6352136/185715165-b430a0c7-948b-4dce-b3bb-7832be714c37.gif" width="300" height="150"/>
 
-### Ball Balance [ball_balance.py](../omniisaacgymenvs/tasks/ball_balance.py)
+### Ball Balance [ball_balance.py](../../omniisaacgymenvs/tasks/ball_balance.py)
 
 This example trains balancing tables to balance a ball on the table top.
 This is a great example to showcase the use of force and torque sensors, as well as DOF states for the table and root states for the ball. 
@@ -308,12 +308,12 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [BallBalance.yaml](../omniisaacgymenvs/cfg/task/BallBalance.yaml)
--   **rl_games training config**: [BallBalancePPO.yaml](../omniisaacgymenvs/cfg/train/BallBalancePPO.yaml)
+-   **Task config**: [BallBalance.yaml](../../omniisaacgymenvs/cfg/task/BallBalance.yaml)
+-   **rl_games training config**: [BallBalancePPO.yaml](../../omniisaacgymenvs/cfg/train/BallBalancePPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184172037-cdad9ee8-f705-466f-bbde-3caa6c7dea37.gif" width="300" height="150"/>
 
-### Franka Cabinet [franka_cabinet.py](../omniisaacgymenvs/tasks/franka_cabinet.py)
+### Franka Cabinet [franka_cabinet.py](../../omniisaacgymenvs/tasks/franka_cabinet.py)
 
 This Franka example demonstrates interaction between Franka arm and cabinet, as well as setting states of objects inside the drawer.
 It also showcases control of the Franka arm using position targets.
@@ -326,12 +326,12 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [FrankaCabinet.yaml](../omniisaacgymenvs/cfg/task/FrankaCabinet.yaml)
--   **rl_games training config**: [FrankaCabinetPPO.yaml](../omniisaacgymenvs/cfg/train/FrankaCabinetPPO.yaml)
+-   **Task config**: [FrankaCabinet.yaml](../../omniisaacgymenvs/cfg/task/FrankaCabinet.yaml)
+-   **rl_games training config**: [FrankaCabinetPPO.yaml](../../omniisaacgymenvs/cfg/train/FrankaCabinetPPO.yaml)
 
 <img src="https://user-images.githubusercontent.com/34286328/184174894-03767aa0-936c-4bfe-bbe9-a6865f539bb4.gif" width="300" height="150"/>
 
-### Franka Deformable [franka_deformable.py](../omniisaacgymenvs/tasks/franka_deformable.py)
+### Franka Deformable [franka_deformable.py](../../omniisaacgymenvs/tasks/franka_deformable.py)
 
 This Franka example demonstrates interaction between Franka arm and a deformable tube. It demonstrates the manipulation of deformable objects, using nodal positions and velocities of the simulation mesh as observations.
 
@@ -341,32 +341,32 @@ Running inference with pre-trained model can be launched with command line argum
 
 Config files used for this task are:
 
--   **Task config**: [FrankaDeformable.yaml](../omniisaacgymenvs/cfg/task/FrankaDeformable.yaml)
--   **rl_games training config**: [FrankaCabinetFrankaDeformable.yaml](../omniisaacgymenvs/cfg/train/FrankaDeformablePPO.yaml)
+-   **Task config**: [FrankaDeformable.yaml](../../omniisaacgymenvs/cfg/task/FrankaDeformable.yaml)
+-   **rl_games training config**: [FrankaCabinetFrankaDeformable.yaml](../../omniisaacgymenvs/cfg/train/FrankaDeformablePPO.yaml)
 
 
 ### Factory: Fast Contact for Robotic Assembly
 
-We provide a set of Factory example tasks, [**FactoryTaskNutBoltPick**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_pick.py), [**FactoryTaskNutBoltPlace**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_place.py), and [**FactoryTaskNutBoltScrew**](../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_screw.py), 
+We provide a set of Factory example tasks, [**FactoryTaskNutBoltPick**](../../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_pick.py), [**FactoryTaskNutBoltPlace**](../../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_place.py), and [**FactoryTaskNutBoltScrew**](../../omniisaacgymenvs/tasks/factory/factory_task_nut_bolt_screw.py), 
 
 `FactoryTaskNutBoltPick` can be executed with `python train.py task=FactoryTaskNutBoltPick`. This task trains policy for the Pick task, a simplified version of the corresponding task in the Factory paper. The policy may take ~1 hour to achieve high success rates on a modern GPU.
 
-- The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
-- The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
+- The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
+- The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
 
 Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_pick.pth`
 
 `FactoryTaskNutBoltPlace` can be executed with `python train.py task=FactoryTaskNutBoltPlace`. This task trains policy for the Place task.
 
-- The general configuration file for the above task is [FactoryTaskNutBoltPlace.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPlace.yaml).
-- The training configuration file for the above task is [FactoryTaskNutBoltPlacePPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPlacePPO.yaml).
+- The general configuration file for the above task is [FactoryTaskNutBoltPlace.yaml](../../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPlace.yaml).
+- The training configuration file for the above task is [FactoryTaskNutBoltPlacePPO.yaml](../../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPlacePPO.yaml).
 
 Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPlace test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_place.pth`
 
 `FactoryTaskNutBoltScrew` can be executed with `python train.py task=FactoryTaskNutBoltScrew`. This task trains policy for the Screw task.
 
-- The general configuration file for the above task is [FactoryTaskNutBoltScrew.yaml](../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltScrew.yaml).
-- The training configuration file for the above task is [FactoryTaskNutBoltScrewPPO.yaml](../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltScrewPPO.yaml).
+- The general configuration file for the above task is [FactoryTaskNutBoltScrew.yaml](../../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltScrew.yaml).
+- The training configuration file for the above task is [FactoryTaskNutBoltScrewPPO.yaml](../../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltScrewPPO.yaml).
 
 Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltScrew test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_screw.pth`
 

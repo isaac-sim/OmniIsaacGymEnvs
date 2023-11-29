@@ -92,6 +92,9 @@ class SimConfig:
         window = omni.ui.Workspace.get_window("Content")
         if window:
             window.visible = False
+        window = omni.ui.Workspace.get_window("Simulation Settings")
+        if window:
+            window.visible = False
 
     def _parse_config(self):
         # general sim parameter

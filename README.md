@@ -18,6 +18,10 @@ Please see [release notes](docs/release_notes.md) for the latest updates.
 
 <img src="https://user-images.githubusercontent.com/34286328/184170040-3f76f761-e748-452e-b8c8-3cc1c7c8cb98.gif" width="614" height="307"/>
 
+## System Requirements
+
+It is recommended to have at least 32GB RAM and a GPU with at least 12GB VRAM. For detailed system requirements, please visit the [Isaac Sim System Requirements](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/requirements.html#system-requirements) page. Please refer to the [Troubleshooting](docs/troubleshoot.md#memory-consumption) page for a detailed breakdown of memory consumption.
+
 ## Installation
 
 Follow the Isaac Sim [documentation](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_workstation.html) to install the latest Isaac Sim release. 
@@ -91,7 +95,7 @@ The extension workflow provides a simple user interface for creating and launchi
 Note: `isaac_sim_root` should be located in the same directory as `python.sh`.
 
 The UI window can be activated from `Isaac Examples > RL Examples` by navigating the top menu bar.
-For more details on the extension workflow, please refer to the [documentation](docs/extension_workflow.md).
+For more details on the extension workflow, please refer to the [documentation](docs/framework/extension_workflow.md).
 
 ### Loading trained models // Checkpoints
 
@@ -294,9 +298,9 @@ Source code for tasks can be found in `omniisaacgymenvs/tasks`.
 
 Each task follows the frameworks provided in `omni.isaac.core` and `omni.isaac.gym` in Isaac Sim.
 
-Refer to [docs/framework.md](docs/framework.md) for how to create your own tasks.
+Refer to [docs/framework/framework.md](docs/framework/framework.md) for how to create your own tasks.
 
-Full details on each of the tasks available can be found in the [RL examples documentation](docs/rl_examples.md).
+Full details on each of the tasks available can be found in the [RL examples documentation](docs/examples/rl_examples.md).
 
 
 ## Demo

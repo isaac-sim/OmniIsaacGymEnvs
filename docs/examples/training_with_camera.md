@@ -5,15 +5,15 @@ Some reinforcement learning tasks can benefit from having image data in the pipe
 Although Isaac Sim does not currently have the capability to scale towards thousands of environments, we are continually working on improvements to reach the goal. As a starting point, we are providing a simple example showcasing a proof-of-concept for reinforcement learning with vision in the loop.
 
 
-### CartpoleCamera [cartpole_camera.py](../omniisaacgymenvs/tasks/cartpole_camera.py)
+### CartpoleCamera [cartpole_camera.py](../../omniisaacgymenvs/tasks/cartpole_camera.py)
 
 As an example showcasing the possiblity of reinforcmenet learning with vision in the loop, we provide a variation of the Cartpole task, which uses RGB image data as observations. This example
 can be launched with command line argument `task=CartpoleCamera`. 
 
 Config files used for this task are:
 
--   **Task config**: [CartpoleCamera.yaml](../omniisaacgymenvs/cfg/task/CartpoleCamera.yaml)
--   **rl_games training config**: [CartpoleCameraPPO.yaml](../omniisaacgymenvs/cfg/train/CartpoleCameraPPO.yaml)
+-   **Task config**: [CartpoleCamera.yaml](../../omniisaacgymenvs/cfg/task/CartpoleCamera.yaml)
+-   **rl_games training config**: [CartpoleCameraPPO.yaml](../../omniisaacgymenvs/cfg/train/CartpoleCameraPPO.yaml)
   
 
 ### Working with Cameras
