@@ -42,7 +42,7 @@ class Humanoid(Robot):
         self,
         prim_path: str,
         name: Optional[str] = "Humanoid",
-        usd_path: Optional[str] = None,
+        usd_path: Optional[str] = None,             # "/home/alex/Desktop/humanoid.usd",
         translation: Optional[np.ndarray] = None,
         orientation: Optional[np.ndarray] = None,
     ) -> None:
@@ -55,6 +55,7 @@ class Humanoid(Robot):
             if assets_root_path is None:
                 carb.log_error("Could not find Isaac Sim assets folder")
             self._usd_path = assets_root_path + "/Isaac/Robots/Humanoid/humanoid_instanceable.usd"
+            print("usd path: ", self._usd_path)
 
         add_reference_to_stage(self._usd_path, prim_path)
 

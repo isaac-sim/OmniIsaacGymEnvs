@@ -63,6 +63,10 @@ class LocomotionTask(RLTask):
         self.death_cost = self._task_cfg["env"]["deathCost"]
         self.termination_height = self._task_cfg["env"]["terminationHeight"]
         self.alive_reward_scale = self._task_cfg["env"]["alive_reward_scale"]
+        self.progress_reward = self._task_cfg["env"]["progress_reward"]         # added
+        self.speed_weight = self._task_cfg["env"]["speedWeight"]         # added
+        self.termination_heading = self._task_cfg["env"]["terminationHeading"]         # added
+        self.termination_up = self._task_cfg["env"]["terminationUp"]         # added
 
     @abstractmethod
     def set_up_scene(self, scene) -> None:
@@ -188,22 +192,39 @@ class LocomotionTask(RLTask):
         self.reset_idx(indices)
 
     def calculate_metrics(self) -> None:
-        self.rew_buf[:] = calculate_metrics(
-            self.obs_buf,
-            self.actions,
-            self.up_weight,
-            self.heading_weight,
-            self.potentials,
-            self.prev_potentials,
-            self.actions_cost_scale,
-            self.energy_cost_scale,
-            self.termination_height,
-            self.death_cost,
-            self._robots.num_dof,
-            self.get_dof_at_limit_cost(),
-            self.alive_reward_scale,
-            self.motor_effort_ratio,
-        )
+        self.rew_buf[:], self.log_arr = calculate_metrics(
+                                                self.obs_buf,
+                                                self.actions,
+                                                self.up_weight,
+                                                self.heading_weight,
+                                                self.potentials,
+                                                self.prev_potentials,
+                                                self.actions_cost_scale,
+                                                self.energy_cost_scale,
+                                                self.termination_height,
+                                                self.death_cost,
+                                                self._robots.num_dof,
+                                                self.get_dof_at_limit_cost(),
+                                                self.alive_reward_scale,
+                                                self.motor_effort_ratio,
+                                                self.progress_reward,           # added
+                                                self.speed_weight,
+                                                self.termination_heading,
+                                                self.termination_up,
+                                            )
+
+        self.log_arr = [np.mean(self.log_arr[0].cpu().numpy()),
+                        np.mean(self.log_arr[1].cpu().numpy()),
+                        np.mean(self.log_arr[2].cpu().numpy()),
+                        np.mean(self.log_arr[3].cpu().numpy()),
+                        np.mean(self.log_arr[4].cpu().numpy()),
+                        np.mean(self.log_arr[5].cpu().numpy()),
+                        np.mean(self.log_arr[6].cpu().numpy()),
+                        np.mean(self.log_arr[7].cpu().numpy()),
+                        np.mean(self.log_arr[8].cpu().numpy()),
+                        ]
+
+        
 
     def is_done(self) -> None:
         self.reset_buf[:] = is_done(
@@ -288,6 +309,8 @@ def get_observations(
 def is_done(obs_buf, termination_height, reset_buf, progress_buf, max_episode_length):
     # type: (Tensor, float, Tensor, Tensor, float) -> Tensor
     reset = torch.where(obs_buf[:, 0] < termination_height, torch.ones_like(reset_buf), reset_buf)
+    reset = torch.where(obs_buf[:, 11] < 0.5, torch.ones_like(reset_buf), reset)                    # added to walk straight
+    reset = torch.where(obs_buf[:, 10] < 0.7, torch.ones_like(reset_buf), reset)                    # added to walk straight
     reset = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(reset_buf), reset)
     return reset
 
@@ -308,8 +331,12 @@ def calculate_metrics(
     dof_at_limit_cost,
     alive_reward_scale,
     motor_effort_ratio,
+    progress_reward,            # added
+    speed_weight,               # added
+    termination_heading,        # added
+    termination_up,             # added
 ):
-    # type: (Tensor, Tensor, float, float, Tensor, Tensor, float, float, float, float, int, Tensor, float, Tensor) -> Tensor
+    # type: (Tensor, Tensor, float, float, Tensor, Tensor, float, float, float, float, int, Tensor, float, Tensor, float, float, float, float) -> Tuple[Tensor, List[Tensor]]
 
     heading_weight_tensor = torch.ones_like(obs_buf[:, 11]) * heading_weight
     heading_reward = torch.where(obs_buf[:, 11] > 0.8, heading_weight_tensor, heading_weight * obs_buf[:, 11] / 0.8)
@@ -326,10 +353,12 @@ def calculate_metrics(
 
     # reward for duration of staying alive
     alive_reward = torch.ones_like(potentials) * alive_reward_scale
-    progress_reward = potentials - prev_potentials
+    progress_reward = (potentials - prev_potentials) * progress_reward              # TODO: ADDED PROGRESS MULTIPLIER
+    speed_reward = obs_buf[:, 1] * speed_weight
 
     total_reward = (
-        progress_reward
+        progress_reward 
+        + speed_reward
         + alive_reward
         + up_reward
         + heading_reward
@@ -337,9 +366,34 @@ def calculate_metrics(
         - energy_cost_scale * electricity_cost
         - dof_at_limit_cost
     )
+    pre_penalty = total_reward.clone().detach()
+
 
     # adjust reward for fallen agents
+    # CHANGED
     total_reward = torch.where(
         obs_buf[:, 0] < termination_height, torch.ones_like(total_reward) * death_cost, total_reward
     )
-    return total_reward
+    total_reward = torch.where(
+        obs_buf[:, 11] < termination_heading, torch.ones_like(total_reward) * death_cost, total_reward
+    )
+    total_reward = torch.where(
+        obs_buf[:, 10] < termination_up, torch.ones_like(total_reward) * death_cost, total_reward
+    )
+
+    alive_dead = total_reward - pre_penalty
+    
+
+    # CHANGED FOR LOGGING
+    log_arr = [total_reward,
+               progress_reward,
+               alive_dead,        # change to be diff between before and after applying penalty
+               up_reward,
+               heading_reward,
+               actions_cost_scale * actions_cost,
+               energy_cost_scale * electricity_cost,
+               dof_at_limit_cost,
+               speed_reward,
+               ]
+
+    return total_reward, log_arr

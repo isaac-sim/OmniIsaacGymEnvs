@@ -36,18 +36,17 @@ from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.torch.maths import tensor_clamp, torch_rand_float, unscale
 from omni.isaac.core.utils.torch.rotations import compute_heading_and_up, compute_rot, quat_conjugate
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
-from omniisaacgymenvs.robots.articulations.humanoid import Humanoid
+from omniisaacgymenvs.robots.articulations.biped import Biped
 from omniisaacgymenvs.tasks.shared.locomotion import LocomotionTask
 from pxr import PhysxSchema
 
 
-class HumanoidLocomotionTask(LocomotionTask):
+class BipedLocomotionTask(LocomotionTask):
     def __init__(self, name, sim_config, env, offset=None) -> None:
-
         self.update_config(sim_config)
-        self._num_observations = 87
-        self._num_actions = 21                                  # num drive under joints
-        self._humanoid_positions = torch.tensor([0, 0, 1.34])
+        self._num_observations = 60                             # ? position, orientation, linear and angular velocity
+        self._num_actions = 12                                  
+        self._humanoid_positions = torch.tensor([0, 0, 1.1])   # start height
 
         LocomotionTask.__init__(self, name=name, env=env)
         return
@@ -61,57 +60,47 @@ class HumanoidLocomotionTask(LocomotionTask):
     def set_up_scene(self, scene) -> None:
         self.get_humanoid()
         RLTask.set_up_scene(self, scene)
-        self._humanoids = ArticulationView(
-            prim_paths_expr="/World/envs/.*/Humanoid/torso", name="humanoid_view", reset_xform_properties=False
+        self._humanoids = ArticulationView(                 
+            prim_paths_expr="/World/envs/.*/biped_schematics/base_link", name="biped_view", reset_xform_properties=False
         )
         scene.add(self._humanoids)
         return
 
     def initialize_views(self, scene):
         RLTask.initialize_views(self, scene)
-        if scene.object_exists("humanoid_view"):
-            scene.remove_object("humanoid_view", registry_only=True)
+        if scene.object_exists("biped_view"):
+            scene.remove_object("biped_view", registry_only=True)
         self._humanoids = ArticulationView(
-            prim_paths_expr="/World/envs/.*/Humanoid/torso", name="humanoid_view", reset_xform_properties=False
+            prim_paths_expr="/World/envs/.*/biped_schematics/base_link", name="biped_view", reset_xform_properties=False
         )
         scene.add(self._humanoids)
 
     def get_humanoid(self):
-        humanoid = Humanoid(
-            prim_path=self.default_zero_env_path + "/Humanoid", name="Humanoid", translation=self._humanoid_positions
+        humanoid = Biped(                 # change
+            prim_path=self.default_zero_env_path + "/biped_schematics", name="Biped", translation=self._humanoid_positions
         )
-        print("humaoid prim path: ", humanoid.prim_path)
         self._sim_config.apply_articulation_settings(
-            "Humanoid", get_prim_at_path(humanoid.prim_path), self._sim_config.parse_actor_config("Humanoid")
+            "Biped", get_prim_at_path(humanoid.prim_path), self._sim_config.parse_actor_config("Biped")
         )
 
     def get_robot(self):
         return self._humanoids
 
-    def post_reset(self):
+    def post_reset(self):   # TODO: change
         self.joint_gears = torch.tensor(
             [
-                67.5000,  # lower_waist
-                67.5000,  # lower_waist
-                67.5000,  # right_upper_arm
-                67.5000,  # right_upper_arm
-                67.5000,  # left_upper_arm
-                67.5000,  # left_upper_arm
-                67.5000,  # pelvis
-                45.0000,  # right_lower_arm
-                45.0000,  # left_lower_arm
-                45.0000,  # right_thigh: x
-                135.0000,  # right_thigh: y
-                45.0000,  # right_thigh: z
-                45.0000,  # left_thigh: x
-                135.0000,  # left_thigh: y
-                45.0000,  # left_thigh: z
-                90.0000,  # right_knee
-                90.0000,  # left_knee
-                22.5,  # right_foot
-                22.5,  # right_foot
-                22.5,  # left_foot
-                22.5,  # left_foot
+                67.5000,  # hip_x_left
+                67.5000,  # hip_x_right
+                67.5000,  # hip_z_left
+                67.5000,  # hip_z_right
+                67.5000,  # hip_y_left
+                67.5000,  # hip_y_right
+                90.0000,  # knee_left
+                90.0000,  # knee_right
+                22.5000,  # ankle_y_left
+                22.5000,  # ankle_y_right
+                22.5000,  # ankle_x_left
+                22.5000,  # ankle_x_right
             ],
             device=self._device,
         )
@@ -121,7 +110,7 @@ class HumanoidLocomotionTask(LocomotionTask):
         self.dof_limits_lower = dof_limits[0, :, 0].to(self._device)
         self.dof_limits_upper = dof_limits[0, :, 1].to(self._device)
 
-        force_links = ["left_foot", "right_foot"]
+        force_links = ["foot_1", "foot_2"]      # TODO: changed
         self._sensor_indices = torch.tensor(
             [self._humanoids._body_indices[j] for j in force_links], device=self._device, dtype=torch.long
         )
@@ -135,8 +124,9 @@ class HumanoidLocomotionTask(LocomotionTask):
 @torch.jit.script
 def get_dof_at_limit_cost(obs_buf, motor_effort_ratio, joints_at_limit_cost_scale):
     # type: (Tensor, Tensor, float) -> Tensor
-    scaled_cost = joints_at_limit_cost_scale * (torch.abs(obs_buf[:, 12:33]) - 0.98) / 0.02
+    scaled_cost = joints_at_limit_cost_scale * (torch.abs(obs_buf[:, 12:24]) - 0.98) / 0.02     # TODO: change idx in obs_buf
+    
     dof_at_limit_cost = torch.sum(
-        (torch.abs(obs_buf[:, 12:33]) > 0.98) * scaled_cost * motor_effort_ratio.unsqueeze(0), dim=-1
+        (torch.abs(obs_buf[:, 12:24]) > 0.98) * scaled_cost * motor_effort_ratio.unsqueeze(0), dim=-1
     )
     return dof_at_limit_cost
