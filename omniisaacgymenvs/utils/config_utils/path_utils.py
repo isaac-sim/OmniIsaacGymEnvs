@@ -76,14 +76,14 @@ def retrieve_checkpoint_path(path):
         return None
 
 
-def get_experience(headless, enable_livestream, enable_viewport, kit_app):
+def get_experience(headless, enable_livestream, enable_viewport, enable_recording, kit_app):
     if kit_app == '':
         if enable_viewport:
             import omniisaacgymenvs
             experience = os.path.abspath(os.path.join(os.path.dirname(omniisaacgymenvs.__file__), '../apps/omni.isaac.sim.python.gym.camera.kit'))
         else:
             experience = f'{os.environ["EXP_PATH"]}/omni.isaac.sim.python.gym.kit'
-            if headless and not enable_livestream:
+            if headless and not enable_livestream and not enable_recording:
                 experience = f'{os.environ["EXP_PATH"]}/omni.isaac.sim.python.gym.headless.kit'
     else:
         experience = kit_app

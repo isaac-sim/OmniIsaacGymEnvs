@@ -29,10 +29,11 @@
 
 import datetime
 import os
-
+import gym
 import hydra
 import torch
 from omegaconf import DictConfig
+import omniisaacgymenvs
 from omniisaacgymenvs.envs.vec_env_rlgames import VecEnvRLGames
 from omniisaacgymenvs.utils.config_utils.path_utils import retrieve_checkpoint_path, get_experience
 from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
@@ -59,14 +60,15 @@ class RLGTrainer:
 
         self.rlg_config_dict = omegaconf_to_dict(self.cfg.train)
 
-    def run(self):
+    def run(self, module_path, experiment_dir):
+        self.rlg_config_dict["params"]["config"]["train_dir"] = os.path.join(module_path, "runs")
+
         # create runner and set the settings
         runner = Runner(RLGPUAlgoObserver())
         runner.load(self.rlg_config_dict)
         runner.reset()
 
         # dump config dict
-        experiment_dir = os.path.join("runs", self.cfg.train.params.config.name)
         os.makedirs(experiment_dir, exist_ok=True)
         with open(os.path.join(experiment_dir, "config.yaml"), "w") as f:
             f.write(OmegaConf.to_yaml(self.cfg))
@@ -93,15 +95,37 @@ def parse_hydra_configs(cfg: DictConfig):
     enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
 
     # select kit app file
-    experience = get_experience(headless, cfg.enable_livestream, enable_viewport, cfg.kit_app)
+    experience = get_experience(headless, cfg.enable_livestream, enable_viewport, cfg.enable_recording, cfg.kit_app)
 
     env = VecEnvRLGames(
         headless=headless,
         sim_device=cfg.device_id,
         enable_livestream=cfg.enable_livestream,
-        enable_viewport=enable_viewport,
+        enable_viewport=enable_viewport or cfg.enable_recording,
         experience=experience
     )
+
+    # parse experiment directory
+    module_path = os.path.abspath(os.path.join(os.path.dirname(omniisaacgymenvs.__file__)))
+    experiment_dir = os.path.join(module_path, "runs", cfg.train.params.config.name)
+
+    # use gym RecordVideo wrapper for viewport recording
+    if cfg.enable_recording:
+        if cfg.recording_dir == '':
+            videos_dir = os.path.join(experiment_dir, "videos")
+        else:
+            videos_dir = cfg.recording_dir
+        video_interval = lambda step: step % cfg.recording_interval == 0
+        video_length = cfg.recording_length
+        env.is_vector_env = True
+        if env.metadata is None:
+            env.metadata = {"render_modes": ["rgb_array"], "render_fps": cfg.recording_fps}
+        else:
+            env.metadata["render_modes"] = ["rgb_array"]
+            env.metadata["render_fps"] = cfg.recording_fps
+        env = gym.wrappers.RecordVideo(
+            env, video_folder=videos_dir, step_trigger=video_interval, video_length=video_length
+        )
 
     # ensure checkpoints can be specified as relative paths
     if cfg.checkpoint:
@@ -139,7 +163,7 @@ def parse_hydra_configs(cfg: DictConfig):
     torch.cuda.set_device(local_rank)
     rlg_trainer = RLGTrainer(cfg, cfg_dict)
     rlg_trainer.launch_rlg_hydra(env)
-    rlg_trainer.run()
+    rlg_trainer.run(module_path, experiment_dir)
     env.close()
 
     if cfg.wandb_activate and global_rank == 0:

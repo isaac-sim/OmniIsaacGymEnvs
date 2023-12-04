@@ -4,15 +4,25 @@ Release Notes
 2023.1.1
 --------
 
+Additions
+---------
+- Add support for viewport recording during training/inferencing using gym wrapper class `RecordVideo`
+- Add `enable_recording`, `recording_interval`, `recording_length`, and `recording_fps`, `recording_dir` arguments to config/command-line for video recording
+- Add `moviepy` as dependency for video recording
+
 Changes
 -------
 - Use rl_device for sampling random policy (https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/pull/51)
 - Add FPS printouts for random policy
+- Use absolute path for default checkpoint folder for consistency between Python and extension workflows
 
 Fixes
 -----
 - Fix missing device in warp kernel launch for Ant and Humanoid
 - Fix typo for velocity iteration (https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/pull/111)
+- Clean up private variable access in task classes in favour of property getters
+- Clean up private variable access in extension.py in favour of setter methods
+- Unregister replicator in extension workflow on training completion to allow for restart
 
 
 2023.1.0b - November 02, 2023

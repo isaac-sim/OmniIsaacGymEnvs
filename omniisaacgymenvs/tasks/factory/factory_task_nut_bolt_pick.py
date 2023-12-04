@@ -141,7 +141,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
     def pre_physics_step(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -161,7 +161,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
     async def pre_physics_step_async(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -376,7 +376,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         self.progress_buf[:] += 1
 
-        if self._env._world.is_playing():
+        if self.world.is_playing():
             # In this policy, episode length is constant
             is_last_step = self.progress_buf[0] == self.max_episode_length - 1
             if is_last_step:
@@ -406,7 +406,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         self.progress_buf[:] += 1
 
-        if self._env._world.is_playing():
+        if self.world.is_playing():
             # In this policy, episode length is constant
             is_last_step = self.progress_buf[0] == self.max_episode_length - 1
 
@@ -552,7 +552,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # Step sim
         for _ in range(sim_steps):
-            SimulationContext.step(self._env._world, render=True)
+            SimulationContext.step(self.world, render=True)
 
     def _lift_gripper(
         self, franka_gripper_width=0.0, lift_distance=0.3, sim_steps=20
@@ -567,7 +567,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
             self._apply_actions_as_ctrl_targets(
                 delta_hand_pose, franka_gripper_width, do_scale=False
             )
-            SimulationContext.step(self._env._world, render=True)
+            SimulationContext.step(self.world, render=True)
 
     async def _close_gripper_async(self, sim_steps=20) -> None:
         """Fully close gripper using controller. Called outside RL loop (i.e., after last step of episode)."""
@@ -589,7 +589,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # Step sim
         for _ in range(sim_steps):
-            self._env._world.physics_sim_view.flush()
+            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
     async def _lift_gripper_async(
@@ -605,7 +605,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
             self._apply_actions_as_ctrl_targets(
                 delta_hand_pose, franka_gripper_width, do_scale=False
             )
-            self._env._world.physics_sim_view.flush()
+            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
     def _check_lift_success(self, height_multiple) -> torch.Tensor:
@@ -625,7 +625,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         """Move gripper to random pose."""
 
         # step once to update physx with the newly set joint positions from reset_franka()
-        SimulationContext.step(self._env._world, render=True)
+        SimulationContext.step(self.world, render=True)
 
         # Set target pos above table
         self.ctrl_target_fingertip_midpoint_pos = torch.tensor(
@@ -678,7 +678,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # Step sim and render
         for _ in range(sim_steps):
-            if not self._env._world.is_playing():
+            if not self.world.is_playing():
                 return
 
             self.refresh_base_tensors()
@@ -706,7 +706,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            SimulationContext.step(self._env._world, render=True)
+            SimulationContext.step(self.world, render=True)
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
 
@@ -714,7 +714,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # step once to update physx with the newly set joint velocities
-        SimulationContext.step(self._env._world, render=True)
+        SimulationContext.step(self.world, render=True)
 
     async def _randomize_gripper_pose_async(self, env_ids, sim_steps) -> None:
         """Move gripper to random pose."""
@@ -797,7 +797,7 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            self._env._world.physics_sim_view.flush()
+            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
@@ -806,5 +806,5 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # step once to update physx with the newly set joint velocities
-        self._env._world.physics_sim_view.flush()
+        self.world.physics_sim_view.flush()
         await omni.kit.app.get_app().next_update_async()

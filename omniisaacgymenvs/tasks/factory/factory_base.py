@@ -199,7 +199,7 @@ class FactoryBase(RLTask, FactoryABCBase):
     def refresh_base_tensors(self):
         """Refresh tensors."""
 
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         self.dof_pos = self.frankas.get_joint_positions(clone=False)
@@ -558,7 +558,7 @@ class FactoryBase(RLTask, FactoryABCBase):
         """Enable gravity."""
 
         gravity = [0.0, 0.0, -gravity_mag]
-        self._env._world._physics_sim_view.set_gravity(
+        self.world._physics_sim_view.set_gravity(
             carb.Float3(gravity[0], gravity[1], gravity[2])
         )
 
@@ -566,6 +566,6 @@ class FactoryBase(RLTask, FactoryABCBase):
         """Disable gravity."""
 
         gravity = [0.0, 0.0, 0.0]
-        self._env._world._physics_sim_view.set_gravity(
+        self.world._physics_sim_view.set_gravity(
             carb.Float3(gravity[0], gravity[1], gravity[2])
         )

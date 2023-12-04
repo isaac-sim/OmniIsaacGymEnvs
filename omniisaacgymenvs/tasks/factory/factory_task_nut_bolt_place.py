@@ -140,7 +140,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
     def pre_physics_step(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -158,7 +158,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
     async def pre_physics_step_async(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -391,7 +391,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
 
         self.progress_buf[:] += 1
 
-        if self._env._world.is_playing():
+        if self.world.is_playing():
             self.refresh_base_tensors()
             self.refresh_env_tensors()
             self._refresh_task_tensors()
@@ -507,7 +507,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
         """Move gripper to random pose."""
 
         # Step once to update PhysX with new joint positions and velocities from reset_franka()
-        SimulationContext.step(self._env._world, render=True)
+        SimulationContext.step(self.world, render=True)
 
         # Set target pos above table
         self.ctrl_target_fingertip_midpoint_pos = torch.tensor(
@@ -584,7 +584,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            SimulationContext.step(self._env._world, render=True)
+            SimulationContext.step(self.world, render=True)
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
 
@@ -592,13 +592,13 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # Step once to update PhysX with new joint velocities
-        SimulationContext.step(self._env._world, render=True)
+        SimulationContext.step(self.world, render=True)
 
     async def _randomize_gripper_pose_async(self, env_ids, sim_steps) -> None:
         """Move gripper to random pose."""
 
         # Step once to update PhysX with new joint positions and velocities from reset_franka()
-        self._env._world.physics_sim_view.flush()
+        self.world.physics_sim_view.flush()
         await omni.kit.app.get_app().next_update_async()
 
         # Set target pos above table
@@ -676,7 +676,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            self._env._world.physics_sim_view.flush()
+            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
@@ -685,7 +685,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # Step once to update PhysX with new joint velocities
-        self._env._world.physics_sim_view.flush()
+        self.world.physics_sim_view.flush()
         await omni.kit.app.get_app().next_update_async()
 
     def _close_gripper(self, sim_steps) -> None:
@@ -705,7 +705,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
             self._apply_actions_as_ctrl_targets(
                 delta_hand_pose, gripper_dof_pos, do_scale=False
             )
-            SimulationContext.step(self._env._world, render=True)
+            SimulationContext.step(self.world, render=True)
 
     async def _close_gripper_async(self, sim_steps) -> None:
         """Fully close gripper using controller. Called outside RL loop (i.e., after last step of episode)."""
@@ -727,7 +727,7 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
             self._apply_actions_as_ctrl_targets(
                 delta_hand_pose, gripper_dof_pos, do_scale=False
             )
-            self._env._world.physics_sim_view.flush()
+            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
     def _check_nut_close_to_bolt(self) -> torch.Tensor:

@@ -122,7 +122,7 @@ class FactoryTaskNutBoltScrew(FactoryEnvNutBolt, FactoryABCTask):
     def pre_physics_step(self, actions) -> None:
         """Reset environments. Apply actions from policy. Simulation step called after this method."""
 
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -289,7 +289,7 @@ class FactoryTaskNutBoltScrew(FactoryEnvNutBolt, FactoryABCTask):
 
         self.progress_buf[:] += 1
 
-        if self._env._world.is_playing():
+        if self.world.is_playing():
             self.refresh_base_tensors()
             self.refresh_env_tensors()
             self._refresh_task_tensors()

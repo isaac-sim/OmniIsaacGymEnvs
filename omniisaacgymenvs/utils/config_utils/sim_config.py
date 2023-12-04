@@ -54,13 +54,14 @@ class SimConfig:
             self._config["headless"] == True
             and not self._sim_params["enable_cameras"]
             and not self._config["enable_livestream"]
+            and not self._config.get("enable_recording", False)
         ):
             self._sim_params["use_fabric"] = False
             self._sim_params["enable_viewport"] = False
         else:
             self._sim_params["enable_viewport"] = True
             enable_extension("omni.kit.viewport.bundle")
-            if self._sim_params["enable_cameras"]:
+            if self._sim_params["enable_cameras"] or self._config.get("enable_recording", False):
                 enable_extension("omni.replicator.isaac")
 
         self._sim_params["warp"] = self._config["warp"]
