@@ -105,13 +105,13 @@ class RLTask(RLTaskInterface):
         # parse default viewport camera position and lookat target and resolution (width, height)
         self.camera_position = [10, 10, 3]
         self.camera_target = [0, 0, 0]
-        self.camera_width = 1280
-        self.camera_height = 720
+        self.viewport_camera_width = 1280
+        self.viewport_camera_height = 720
         if "viewport" in self._task_cfg:
             self.camera_position = self._task_cfg["viewport"].get("camera_position", self.camera_position)
             self.camera_target = self._task_cfg["viewport"].get("camera_target", self.camera_target)
-            self.camera_width = self._task_cfg["viewport"].get("camera_width", self.camera_width)
-            self.camera_height = self._task_cfg["viewport"].get("camera_height", self.camera_height)
+            self.viewport_camera_width = self._task_cfg["viewport"].get("viewport_camera_width", self.viewport_camera_width)
+            self.viewport_camera_height = self._task_cfg["viewport"].get("viewport_camera_height", self.viewport_camera_height)
 
         print("RL device: ", self.rl_device)
 
@@ -197,7 +197,7 @@ class RLTask(RLTaskInterface):
             # initialize capturer for viewport recording
             # this has to be called after initializing replicator for DR
             if self._cfg.get("enable_recording", False) and not self._dr_randomizer.randomize:
-                self._env.create_viewport_render_product(resolution=(self.camera_width, self.camera_height))
+                self._env.create_viewport_render_product(resolution=(self.viewport_camera_width, self.viewport_camera_height))
 
     def set_initial_camera_params(self, camera_position, camera_target):
         from omni.kit.viewport.utility import get_viewport_from_window_name
@@ -227,7 +227,7 @@ class RLTask(RLTaskInterface):
         if self._env.render_enabled:
             # initialize capturer for viewport recording
             if self._cfg.get("enable_recording", False) and not self._dr_randomizer.randomize:
-                self._env.create_viewport_render_product(resolution=(self.camera_width, self.camera_height))
+                self._env.create_viewport_render_product(resolution=(self.viewport_camera_width, self.viewport_camera_height))
 
     @property
     def default_base_env_path(self):

@@ -9,6 +9,7 @@ Additions
 - Add support for viewport recording during training/inferencing using gym wrapper class `RecordVideo`
 - Add `enable_recording`, `recording_interval`, `recording_length`, and `recording_fps`, `recording_dir` arguments to config/command-line for video recording
 - Add `moviepy` as dependency for video recording
+- Add video tutorial for extension workflow, available at [docs/framework/extension_workflow.md](docs/framework/extension_workflow.md)
 
 Changes
 -------
