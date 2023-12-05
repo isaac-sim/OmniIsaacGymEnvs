@@ -15,7 +15,7 @@ The extension workflow uses the multi-threaded VecEnv base environment for runni
 
 A quick video overview of the extension workflow is available below.
 
-![](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/59ec740a-9629-41ea-aad3-6532935be5fd)
+[![](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/59ec740a-9629-41ea-aad3-6532935be5fd)](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/cc6732f6-5a60-44f3-8c08-acf41e22a998)
 
 [Link to video.](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/cc6732f6-5a60-44f3-8c08-acf41e22a998)
 
