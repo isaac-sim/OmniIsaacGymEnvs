@@ -47,6 +47,7 @@ def import_tasks():
     from omniisaacgymenvs.tasks.shadow_hand import ShadowHandTask
     from omniisaacgymenvs.tasks.kinova_mobile_drawer import KinovaMobileDrawerTask
     from omniisaacgymenvs.tasks.franka_mobile_drawer import FrankaMobileDrawerTask
+    from omniisaacgymenvs.tasks.franka_multi_task import FrankaMobileMultiTask
 
     from omniisaacgymenvs.tasks.warp.ant import AntLocomotionTask as AntLocomotionTaskWarp
     from omniisaacgymenvs.tasks.warp.cartpole import CartpoleTask as CartpoleTaskWarp
@@ -75,6 +76,7 @@ def import_tasks():
         "ShadowHandOpenAI_LSTM": ShadowHandTask,
         # "KinovaMobileDrawer": KinovaMobileDrawerTask,
         "FrankaMobileDrawer": FrankaMobileDrawerTask,
+        "FrankaMobileMultiTask": FrankaMobileMultiTask
     }
 
     task_map_warp = {

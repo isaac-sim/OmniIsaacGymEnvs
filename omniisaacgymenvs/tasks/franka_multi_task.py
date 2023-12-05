@@ -21,12 +21,12 @@ from omni.isaac.core.utils.torch.transformations import *
 from omni.isaac.core.materials import PhysicsMaterial
 from omni.isaac.core import World
 # from omni.debugdraw import get_debug_draw_interface
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
+from omniisaacgymenvs.tasks.base.rl_multi_task import RLMultiTask
 from omniisaacgymenvs.robots.articulations.cabinet import Cabinet
+from omniisaacgymenvs.robots.articulations.views.cabinet_view2 import CabinetView
 # from omniisaacgymenvs.robots.articulations.franka import Franka
 from omniisaacgymenvs.robots.articulations.franka_mobile import FrankaMobile
 from omniisaacgymenvs.robots.articulations.views.franka_mobile_view import FrankaMobileView
-from omniisaacgymenvs.robots.articulations.views.cabinet_view2 import CabinetView
 # from omniisaacgymenvs.robots.articulations.views.franka_view import FrankaView
 # from pxr import Usd, UsdGeom
 from pxr import Usd, UsdPhysics, UsdShade, UsdGeom, PhysxSchema
@@ -44,15 +44,31 @@ from omni.isaac.core.utils.torch.rotations import (
 from typing import List, Type
 # from pytorch3d.transforms import quaternion_to_matrix
 from omni.physx.scripts import deformableUtils, physicsUtils
-# def quat_axis(q, axis=0):
-#     '''
-#     :func apply rotation represented by quanternion `q`
-#     on basis vector(along axis)
-#     :return vector after rotation
-#     '''
-#     basis_vec = torch.zeros(q.shape[0], 3, device=q.device)
-#     basis_vec[:, axis] = 1
-#     return quat_rotate(q, basis_vec)
+import os
+import json
+
+def load_annotation_file():
+    folder = '/home/nikepupu/Desktop/gapartnet_new_subdivition/partnet_all_annotated_new/annotation'
+    subfolders = os.listdir(folder)
+    subfolders.sort()
+    # filter out files starts with 4 and has 5 digits
+    subfolders = [f for f in subfolders if f.startswith('4') and len(f) == 5]
+    annotation_json = 'link_anno_gapartnet.json'
+    annotation = {}
+    for subfolder in subfolders:
+        annotation_path = os.path.join(folder, subfolder, annotation_json)
+        with open(annotation_path, 'r') as f:
+            annotation[int(subfolder)] = json.load(f)
+    return annotation
+
+def load_usd_paths():
+    folder = '/home/nikepupu/Desktop/Orbit/NewUSD'
+    subfolders = os.listdir(folder)
+    subfolders = [f for f in subfolders if f.startswith('4') and len(f) == 5]
+    usds = [os.path.join(folder, f, 'mobility_relabel_gapartnet.usd') for f in subfolders]
+    return usds
+
+
 
 def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     """
@@ -121,7 +137,12 @@ def combine_frame_transforms(
 
     return t02, q02
 
-class FrankaMobileDrawerTask(RLTask):
+def get_cabinet_position(index, spacing_x, spacing_y, cabinets_per_row):
+    x = index % cabinets_per_row
+    y = index // cabinets_per_row
+    return x * spacing_x, y * spacing_y
+
+class FrankaMobileMultiTask(RLMultiTask):
     def __init__(self, name, sim_config, env, offset=None) -> None:
         self.update_config(sim_config)
 
@@ -131,7 +152,10 @@ class FrankaMobileDrawerTask(RLTask):
         self._num_observations = 39  #37 + 3 + 7
         self._num_actions = 12  # 10 + 1
 
-        RLTask.__init__(self, name, env)
+        RLMultiTask.__init__(self, name, env)
+
+        self.annotations = load_annotation_file()
+        self.usds = load_usd_paths()[:100]
         return
 
     def update_config(self, sim_config):
@@ -160,11 +184,94 @@ class FrankaMobileDrawerTask(RLTask):
 
     def set_up_scene(self, scene) -> None:
 
+        
+
         self._usd_context = omni.usd.get_context()
-        self.get_franka()
-        self.get_cabinet()
-        # if self.num_props > 0:
-        #     self.get_props()
+        def get_assets(usd_path, env_id = 0, annotation = None):
+            env_path = f"{self.default_base_env_path}/env_{env_id}"
+            def find_prims_by_type(stage: Usd.Stage, prim_type: Type[Usd.Typed]) -> List[Usd.Prim]:
+                found_prims = [x for x in stage.Traverse() if x.IsA(prim_type) and 'collisions' in x.GetPath().pathString]
+                return found_prims
+            # cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
+            #                   usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet_instanceable.usd", 
+            #                   translation=[0,0,0.0], orientation=[0,0,0,1])
+            cabinet_scale = 1.0
+            
+            x, y = get_cabinet_position(env_id, 5, 5, 10)
+            # print('x, y: ', x, y)
+            cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
+                            usd_path=usd_path, 
+                            translation=[x,y, 0.0], orientation=[1,0,0,0], scale=[cabinet_scale, cabinet_scale, cabinet_scale])
+
+            # move cabinet to the ground
+            prim_path = env_path + "/cabinet"
+            bboxes = omni.usd.get_context().compute_path_world_bounding_box(prim_path)
+            min_box = np.array(bboxes[0])
+            zmin = min_box[2]
+            cabinet_offset = -zmin + 0.01
+            cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
+                            usd_path=usd_path, 
+                            translation=[x,y, cabinet_offset ], orientation=[1,0,0,0], scale=[cabinet_scale, cabinet_scale, cabinet_scale])
+            
+            franka = FrankaMobile(prim_path=env_path + "/franka", name="franka", translation=[-1.80+x, 0.20+y, 0.02])
+            # add physics material
+            stage = get_current_stage()
+            
+           
+            prims: List[Usd.Prim] = find_prims_by_type(stage, UsdGeom.Mesh)
+            for prim in prims:
+                collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
+                if not collision_api:
+                    collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+                
+                collision_api.CreateApproximationAttr().Set("boundingCube")
+
+            print('cabinet: ', env_path)
+            for anno in annotation:
+                if 'handle' in anno['category'] :
+                    link_name = anno['link_name']
+                    prim = stage.GetPrimAtPath( env_path + f"/cabinet/{link_name}/collisions")
+                    collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
+
+                    print(env_path + f"/cabinet/{link_name}/collisions")
+                    # while True:
+                    #     world = World()
+                    #     world.render()
+
+                    if not collision_api:
+                        collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+                    
+                    collision_api.CreateApproximationAttr().Set("convexDecomposition")
+                
+                    prim = stage.GetPrimAtPath(env_path + f"/cabinet/{link_name}/collisions")
+                    _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
+                    material = PhysicsMaterial(
+                            prim_path=_physicsMaterialPath,
+                            static_friction=1.0,
+                            dynamic_friction=1.0,
+                            restitution=0.0,
+                        )
+                    # -- enable patch-friction: yields better results!
+                    physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
+                    physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
+
+                    physicsUtils.add_physics_material_to_prim(
+                                stage,
+                                prim,
+                                _physicsMaterialPath,
+                            )
+        
+        super().set_up_scene(scene)
+        
+        for idx,  usd in enumerate(self.usds):
+            anno_id = int(usd.split('/')[-2])
+            print(anno_id)
+            get_assets(usd, env_id = idx, annotation = self.annotations[anno_id])
+        
+        while True:
+            world = World()
+            world.render()
+
 
         super().set_up_scene(scene, filter_collisions=False)
 
@@ -176,13 +283,7 @@ class FrankaMobileDrawerTask(RLTask):
         scene.add(self._frankas._lfingers)
         scene.add(self._frankas._rfingers)
         scene.add(self._cabinets)
-        # scene.add(self._cabinets._drawers)
-
-        # if self.num_props > 0:
-        #     self._props = RigidPrimView(
-        #         prim_paths_expr="/World/envs/.*/prop/.*", name="prop_view", reset_xform_properties=False
-        #     )
-        #     scene.add(self._props)
+        
 
         self.init_data()
         return
@@ -213,7 +314,7 @@ class FrankaMobileDrawerTask(RLTask):
         scene.add(self._frankas._rfingers)
         scene.add(self._cabinets)
 
-        self.init_data()
+        # self.init_data()
 
     def get_franka(self):
         franka = FrankaMobile(prim_path=self.default_zero_env_path + "/franka", name="franka", translation=[-1.80, 0.20, 0.02])
@@ -222,93 +323,7 @@ class FrankaMobileDrawerTask(RLTask):
             "franka", get_prim_at_path(franka.prim_path), self._sim_config.parse_actor_config("franka")
         )
 
-    def get_cabinet(self):
-        def find_prims_by_type(stage: Usd.Stage, prim_type: Type[Usd.Typed]) -> List[Usd.Prim]:
-            found_prims = [x for x in stage.Traverse() if x.IsA(prim_type) and 'collisions' in x.GetPath().pathString]
-            return found_prims
-        # cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
-        #                   usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet_instanceable.usd", 
-        #                   translation=[0,0,0.0], orientation=[0,0,0,1])
-        self.cabinet_scale = 1.0
-        cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
-                          usd_path="/home/nikepupu/Desktop/Orbit/NewUSD/40147/mobility_relabel_gapartnet.usd", 
-                          translation=[0,0,0.0], orientation=[1,0,0,0], scale=[self.cabinet_scale, self.cabinet_scale, self.cabinet_scale])
-
-        # move cabinet to the ground
-        prim_path = self.default_zero_env_path + "/cabinet"
-        bboxes = omni.usd.get_context().compute_path_world_bounding_box(prim_path)
-        min_box = np.array(bboxes[0])
-        zmin = min_box[2]
-        self.cabinet_offset = -zmin + 0.01
-        cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
-                          usd_path="/home/nikepupu/Desktop/Orbit/NewUSD/40147/mobility_relabel_gapartnet.usd", 
-                          translation=[0,0,self.cabinet_offset ], orientation=[1,0,0,0], scale=[self.cabinet_scale, self.cabinet_scale, self.cabinet_scale])
-        
-        # drawer = XFormPrim(prim_path=prim_path)
-        # position, orientation = drawer.get_world_pose()
-        # position[2] += -zmin +0.01
-        # self.cabinet_offset = -zmin + 0.01
-        # drawer.set_world_pose(position, orientation)
-
-        # add physics material
-        stage = get_current_stage()
-        
-        # prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet/link_4/collisions")
-        # _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
-        # material = PhysicsMaterial(
-        #         prim_path=_physicsMaterialPath,
-        #         static_friction=1.0,
-        #         dynamic_friction=1.0,
-        #         restitution=0.0,
-        #     )
-        # # -- enable patch-friction: yields better results!
-        # physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
-        # physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
-
-        # physicsUtils.add_physics_material_to_prim(
-        #             stage,
-        #             prim,
-        #             _physicsMaterialPath,
-        #         )
-        prims: List[Usd.Prim] = find_prims_by_type(stage, UsdGeom.Mesh)
-        for prim in prims:
-            collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
-            if not collision_api:
-                collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
-            
-            collision_api.CreateApproximationAttr().Set("boundingCube")
-        
-        prim = stage.GetPrimAtPath( self.default_zero_env_path + "/cabinet/link_3/collisions")
-        collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
-        if not collision_api:
-            collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
-        
-        collision_api.CreateApproximationAttr().Set("convexDecomposition")
-       
-        prim = stage.GetPrimAtPath(self.default_zero_env_path + "/cabinet/link_3/collisions")
-        _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
-        material = PhysicsMaterial(
-                prim_path=_physicsMaterialPath,
-                static_friction=1.0,
-                dynamic_friction=1.0,
-                restitution=0.0,
-            )
-        # -- enable patch-friction: yields better results!
-        physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
-        physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
-
-        physicsUtils.add_physics_material_to_prim(
-                    stage,
-                    prim,
-                    _physicsMaterialPath,
-                )
-        
-        
-        
-                          
-        self._sim_config.apply_articulation_settings(
-            "cabinet", get_prim_at_path(cabinet.prim_path), self._sim_config.parse_actor_config("cabinet")
-        )
+   
 
     def init_data(self) -> None:
         def get_env_local_pose(env_pos, xformable, device):
@@ -370,24 +385,6 @@ class FrankaMobileDrawerTask(RLTask):
         prim = stage.GetPrimAtPath(link_path)
         self.rotation_axis =  torch.tensor(omni.usd.get_world_transform_matrix(prim).ExtractTranslation()).to(self._device) - self._env_pos[0]
 
-        # corners = torch.zeros((8, 3))
-        # # Top right back
-        # corners[0] = torch.tensor([max_pt[0], min_pt[1], max_pt[2]])
-        # # Top right front
-        # corners[1] = torch.tensor([min_pt[0], min_pt[1], max_pt[2]])
-        # # Top left front
-        # corners[2] = torch.tensor([min_pt[0], max_pt[1], max_pt[2]])
-        # # Top left back (Maximum)
-        # corners[3] = max_pt
-        # # Bottom right back
-        # corners[4] = torch.tensor([max_pt[0], min_pt[1], min_pt[2]])
-        # # Bottom right front (Minimum)
-        # corners[5] = min_pt
-        # # Bottom left front
-        # corners[6] = torch.tensor([min_pt[0], max_pt[1], min_pt[2]])
-        # # Bottom left back
-        # corners[7] = torch.tensor([max_pt[0], max_pt[1], min_pt[2]])
-
         
         corners = corners.to(self._device)
         self.handle_short = torch.zeros((self._num_envs, 3))
@@ -395,15 +392,6 @@ class FrankaMobileDrawerTask(RLTask):
         self.handle_long = torch.zeros((self._num_envs, 3))
 
         for idx in range(self._num_envs):
-            # self.bboxes[idx] = corners + self._env_pos[idx]
-            # handle_short = corners[0] - corners[4]
-            # handle_out = corners[1] - corners[0]
-            # handle_long = corners[3] - corners[0]
-
-            
-            # self.handle_short[idx] = handle_short
-            # self.handle_out[idx] = handle_out
-            # self.handle_long[idx] = handle_long
 
             handle_out = corners[0] - corners[4]
             handle_long = corners[1] - corners[0]
@@ -891,110 +879,3 @@ class FrankaMobileDrawerTask(RLTask):
         )
 
         return global_franka_rot, global_franka_pos, global_drawer_rot, global_drawer_pos
-
-    # def compute_franka_reward(
-    #     self,
-    #     reset_buf,
-    #     progress_buf,
-    #     actions,
-    #     cabinet_dof_pos,
-    #     franka_grasp_pos,
-    #     drawer_grasp_pos,
-    #     franka_grasp_rot,
-    #     drawer_grasp_rot,
-    #     franka_lfinger_pos,
-    #     franka_rfinger_pos,
-    #     gripper_forward_axis,
-    #     drawer_inward_axis,
-    #     gripper_up_axis,
-    #     drawer_up_axis,
-    #     num_envs,
-    #     dist_reward_scale,
-    #     rot_reward_scale,
-    #     around_handle_reward_scale,
-    #     open_reward_scale,
-    #     finger_dist_reward_scale,
-    #     action_penalty_scale,
-    #     distX_offset,
-    #     max_episode_length,
-    #     joint_positions,
-    #     finger_close_reward_scale,
-    # ):
-    #     # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, int, float, float, float, float, float, float, float, float, Tensor) -> Tuple[Tensor, Tensor]
-
-    #     # distance from hand to the drawer
-    #     d = torch.norm(franka_grasp_pos - drawer_grasp_pos, p=2, dim=-1)
-    #     dist_reward = 1.0 / (1.0 + d**2)
-    #     dist_reward *= dist_reward
-    #     dist_reward = torch.where(d <= 0.02, dist_reward * 2, dist_reward)
-
-    #     axis1 = tf_vector(franka_grasp_rot, gripper_forward_axis)
-    #     axis2 = tf_vector(drawer_grasp_rot, drawer_inward_axis)
-    #     axis3 = tf_vector(franka_grasp_rot, gripper_up_axis)
-    #     axis4 = tf_vector(drawer_grasp_rot, drawer_up_axis)
-
-    #     dot1 = (
-    #         torch.bmm(axis1.view(num_envs, 1, 3), axis2.view(num_envs, 3, 1)).squeeze(-1).squeeze(-1)
-    #     )  # alignment of forward axis for gripper
-    #     dot2 = (
-    #         torch.bmm(axis3.view(num_envs, 1, 3), axis4.view(num_envs, 3, 1)).squeeze(-1).squeeze(-1)
-    #     )  # alignment of up axis for gripper
-    #     # reward for matching the orientation of the hand to the drawer (fingers wrapped)
-    #     rot_reward = 0.5 * (torch.sign(dot1) * dot1**2 + torch.sign(dot2) * dot2**2)
-
-    #     # bonus if left finger is above the drawer handle and right below
-    #     around_handle_reward = torch.zeros_like(rot_reward)
-    #     around_handle_reward = torch.where(
-    #         franka_lfinger_pos[:, 2] > drawer_grasp_pos[:, 2],
-    #         torch.where(
-    #             franka_rfinger_pos[:, 2] < drawer_grasp_pos[:, 2], around_handle_reward + 0.5, around_handle_reward
-    #         ),
-    #         around_handle_reward,
-    #     )
-    #     # reward for distance of each finger from the drawer
-    #     finger_dist_reward = torch.zeros_like(rot_reward)
-    #     lfinger_dist = torch.abs(franka_lfinger_pos[:, 2] - drawer_grasp_pos[:, 2])
-    #     rfinger_dist = torch.abs(franka_rfinger_pos[:, 2] - drawer_grasp_pos[:, 2])
-    #     finger_dist_reward = torch.where(
-    #         franka_lfinger_pos[:, 2] > drawer_grasp_pos[:, 2],
-    #         torch.where(
-    #             franka_rfinger_pos[:, 2] < drawer_grasp_pos[:, 2],
-    #             (0.04 - lfinger_dist) + (0.04 - rfinger_dist),
-    #             finger_dist_reward,
-    #         ),
-    #         finger_dist_reward,
-    #     )
-
-    #     finger_close_reward = torch.zeros_like(rot_reward)
-    #     finger_close_reward = torch.where(
-    #         d <= 0.03, (0.04 - joint_positions[:, 7]) + (0.04 - joint_positions[:, 8]), finger_close_reward
-    #     )
-
-    #     # regularization on the actions (summed for each environment)
-    #     action_penalty = torch.sum(actions**2, dim=-1)
-
-    #     # how far the cabinet has been opened out
-    #     open_reward = cabinet_dof_pos[:, 3] * around_handle_reward + cabinet_dof_pos[:, 3]  # drawer_top_joint
-
-    #     rewards = (
-    #         dist_reward_scale * dist_reward
-    #         + rot_reward_scale * rot_reward
-    #         + around_handle_reward_scale * around_handle_reward
-    #         + open_reward_scale * open_reward
-    #         + finger_dist_reward_scale * finger_dist_reward
-    #         - action_penalty_scale * action_penalty
-    #         + finger_close_reward * finger_close_reward_scale
-    #     )
-
-    #     # bonus for opening drawer properly
-    #     rewards = torch.where(cabinet_dof_pos[:, 3] > 0.01, rewards + 0.5, rewards)
-    #     rewards = torch.where(cabinet_dof_pos[:, 3] > 0.2, rewards + around_handle_reward, rewards)
-    #     rewards = torch.where(cabinet_dof_pos[:, 3] > 0.39, rewards + (2.0 * around_handle_reward), rewards)
-
-    #     # # prevent bad style in opening drawer
-    #     # rewards = torch.where(franka_lfinger_pos[:, 0] < drawer_grasp_pos[:, 0] - distX_offset,
-    #     #                       torch.ones_like(rewards) * -1, rewards)
-    #     # rewards = torch.where(franka_rfinger_pos[:, 0] < drawer_grasp_pos[:, 0] - distX_offset,
-    #     #                       torch.ones_like(rewards) * -1, rewards)
-
-    #     return rewards

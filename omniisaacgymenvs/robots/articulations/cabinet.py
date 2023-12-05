@@ -24,10 +24,12 @@ class Cabinet(Robot):
         usd_path: Optional[str] = None,
         translation: Optional[torch.tensor] = None,
         orientation: Optional[torch.tensor] = None,
+        scale: Optional[torch.tensor] = None,
     ) -> None:
         """[summary]"""
         self._usd_path = usd_path
         self._name = name
+        self._scale = scale
 
         if self._usd_path is None:
             assets_root_path = get_assets_root_path()
@@ -45,5 +47,6 @@ class Cabinet(Robot):
             name=name,
             translation=self._position,
             orientation=self._orientation,
+            scale=self._scale,
             articulation_controller=None,
         )
