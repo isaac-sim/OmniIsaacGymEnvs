@@ -205,9 +205,10 @@ class RLTask(RLTaskInterface):
         Args:
             scene (Scene): Scene to remove existing views and initialize/add new views.
         """
-        self._cloner = GridCloner(spacing=self._env_spacing)
-        pos, _ = self._cloner.get_clone_transforms(self._num_envs)
-        self._env_pos = torch.tensor(np.array(pos), device=self._device, dtype=torch.float)
+        pass
+        # self._cloner = GridCloner(spacing=self._env_spacing)
+        # pos, _ = self._cloner.get_clone_transforms(self._num_envs)
+        # self._env_pos = torch.tensor(np.array(pos), device=self._device, dtype=torch.float)
 
     @property
     def default_base_env_path(self):

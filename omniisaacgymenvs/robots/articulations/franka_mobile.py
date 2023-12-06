@@ -116,7 +116,7 @@ class FrankaMobile(Robot):
         # decrease max velocity by half
         # max_velocity = [x / 2 for x in max_velocity]
         for i, dof in enumerate(dof_paths):
-            print(f"{self.prim_path}/{dof}")
+            # print(f"{self.prim_path}/{dof}")
             set_drive(
                 prim_path=f"{self.prim_path}/{dof}",
                 drive_type=drive_type[i],
@@ -129,7 +129,7 @@ class FrankaMobile(Robot):
             PhysxSchema.PhysxJointAPI(get_prim_at_path(f"{self.prim_path}/{dof}")).CreateMaxJointVelocityAttr().Set(
                 max_velocity[i]
             )
-            print('Done')
+            # print('Done')
 
     def set_kinova_properties(self, stage, prim):
         for link_prim in prim.GetChildren():
