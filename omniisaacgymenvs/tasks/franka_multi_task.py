@@ -168,7 +168,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         RLMultiTask.__init__(self, name, env)
 
         self.annotations = load_annotation_file()
-        self.usds = load_usd_paths()[:50]
+        self.usds = load_usd_paths()[:]
         self.mobility = load_joint_file()
         self.bbox = []
         self.allJointData = []
@@ -265,9 +265,9 @@ class FrankaMobileMultiTask(RLMultiTask):
             
             bbox = np.array(anno['bbox']) + np.array([x, y, cabinet_offset ])
             self.bbox.append(bbox)
-            jointData['axis']['origin'] = np.array(jointData['axis']['origin']) + np.array([x, y, cabinet_offset ])
+            # jointData['axis']['origin'] = np.array(jointData['axis']['origin']) + np.array([x, y, cabinet_offset ])
         
-            self.allJointData.append(jointData)
+            # self.allJointData.append(jointData)
             prim = stage.GetPrimAtPath(prim_path)
             matrix = inv(np.array(omni.usd.get_world_transform_matrix(prim)))
         
@@ -314,30 +314,39 @@ class FrankaMobileMultiTask(RLMultiTask):
         
         super().set_up_scene(scene)
         cnt = 0
-        for idx,  usd in enumerate(self.usds):
-            anno_id = int(usd.split('/')[-2])
-            found_handle = False
-            for anno in self.annotations[anno_id]:
-                if 'handle' in anno['category'] :
-                    found_handle = True
-                    break
-
-            if found_handle: 
-                for anno in self.annotations[anno_id]:
-                    if 'slider_drawer' in anno['category']:
-                        joint_file = self.mobility[anno_id]
-                        link_id =int( anno['link_name'].split('_')[-1])
-                        # self.allJointIds.append(link_id)
-                        jointData = None
-                        for joint in joint_file:
-                            if joint['id'] == link_id:
-                               jointData = joint['jointData']
-                               break
-                    
-                        
-                        get_assets(usd, env_id = cnt, annotation = self.annotations[anno_id], anno=anno, link_name = anno['link_name'])
-                        cnt += 1
         
+        for idx,  usd in enumerate(self.usds):
+            # if idx != 2:
+                # continue
+            
+            if not int(usd.split('/')[-2]) == 40147:
+                continue
+            for _ in range(47 * 4):
+                anno_id = int(usd.split('/')[-2])
+                found_handle = False
+                for anno in self.annotations[anno_id]:
+                    if 'handle' in anno['category'] :
+                        found_handle = True
+                        break
+
+                if found_handle: 
+                    for anno in self.annotations[anno_id]:
+                        if 'slider_drawer' in anno['category']:
+                            # joint_file = self.mobility[anno_id]
+                            # link_id =int( anno['link_name'].split('_')[-1])
+                            # self.allJointIds.append(link_id)
+                            # jointData = None
+                            # for joint in joint_file:
+                            #     if joint['id'] == link_id:
+                            #     jointData = joint['jointData']
+                            #     break
+                        
+                            
+                            get_assets(usd, env_id = cnt, annotation = self.annotations[anno_id], anno=anno, link_name = anno['link_name'])
+                            cnt += 1
+
+           
+            
         self.bbox = torch.tensor(self.bbox)
         self.handle_out =   self.bbox[:,0] -  self.bbox[:,4]
         self.handle_long =  self.bbox[:,1] -  self.bbox[:,0]
@@ -438,7 +447,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         physxSceneAPI = PhysxSchema.PhysxSceneAPI.Apply(scene.GetPrim())
         physxSceneAPI.CreateEnableCCDAttr().Set(True)
 
-        self.centers_orig = (self.bbox[:, 0] + self.bbox[:, 6]) / 2
+        self.centers_orig = ((self.bbox[:, 0] + self.bbox[:, 6]) / 2).to(self._device)
 
 
         # for i in range(self.cnt):
@@ -450,63 +459,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         
 
         device = self._device
-        # hand_pos, hand_rot = self.get_ee_pose()
-
-        # file_to_read = '/home/nikepupu/Desktop/gapartnet_new_subdivition/partnet_all_annotated_new/annotation/40147/link_anno_gapartnet.json'
-        # import json
-        # with open(file_to_read) as json_file:
-        #     data = json.load(json_file)
         
-        # for d in data:
-        #     if d['link_name'] == 'link_3':
-        #         corners = torch.tensor(d['bbox'])
-
-        # corners = self.cabinet_scale * corners
-
-        # self.bboxes = torch.zeros(( self._num_envs, 8, 3), device=device)
-        # link_path =  f"/World/envs/env_0/cabinet"
-        # # min_box, max_box = omni.usd.get_context().compute_path_world_bounding_box(link_path)
-        # # min_pt = torch.tensor(np.array(min_box)).to(self._device) - self._env_pos[0]
-        # # max_pt = torch.tensor(np.array(max_box)).to(self._device) - self._env_pos[0]
-        # # # self.centers = torch.zeros((self._num_envs, 3)).to(self._device)
-        # # self.centers_orig = ((min_pt +  max_pt)/2.0).repeat((self._num_envs, 1)).to(torch.float).to(self._device) 
-        # # self.centers = self.centers_orig.clone() 
-
-        # prim = get_prim_at_path(link_path)
-        
-        # matrix = inv(np.array(omni.usd.get_world_transform_matrix(prim)))
-        
-        # self.forwardDir = matrix[0:3, 2]
-        # self.forwardDir = self.forwardDir/np.linalg.norm(self.forwardDir)
-        # self.forwardDir = torch.tensor(self.forwardDir).to(self._device).repeat((self._num_envs,1))
-
-        # link_path =  f"/World/envs/env_0/cabinet/link_0"
-        # prim = stage.GetPrimAtPath(link_path)
-        # self.rotation_axis =  torch.tensor(omni.usd.get_world_transform_matrix(prim).ExtractTranslation()).to(self._device) - self._env_pos[0]
-
-        
-        # corners = corners.to(self._device)
-        # self.handle_short = torch.zeros((self._num_envs, 3))
-        # self.handle_out = torch.zeros((self._num_envs, 3))
-        # self.handle_long = torch.zeros((self._num_envs, 3))
-
-        # for idx in range(self._num_envs):
-
-        #     handle_out = corners[0] - corners[4]
-        #     handle_long = corners[1] - corners[0]
-        #     handle_short = corners[3] - corners[0]
-
-        #     self.handle_short[idx] = handle_short
-        #     self.handle_out[idx] = handle_out
-        #     self.handle_long[idx] = handle_long
-        
-        # self.handle_short = self.handle_short.to(self._device)
-        # self.handle_out = self.handle_out.to(self._device)
-        # self.handle_long = self.handle_long.to(self._device)
-        
-        # self.corners = corners.unsqueeze(0).repeat((self._num_envs, 1,1))
-        # for idx in range(self._num_envs):
-        #     self.corners[idx] = self.corners[idx] + self._env_pos[idx] + torch.tensor([0,0, self.cabinet_offset]).to(self._device)
 
         self.actions = torch.zeros((self._num_envs, self._num_actions), device=self._device)
     
@@ -550,20 +503,9 @@ class FrankaMobileMultiTask(RLMultiTask):
         self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
         
 
-        # self.franka_lfinger_pos, self.franka_lfinger_rot = self._frankas._lfingers.get_world_poses(clone=False)
-        # self.franka_rfinger_pos, self.franka_rfinger_rot = self._frankas._lfingers.get_world_poses(clone=False)
-        # corners = self.corners.clone()
-        # corners = self.rotate_points_around_z(corners, self.cabinet_dof_pos[:, 0], (self.rotation_axis + self._env_pos).unsqueeze(1) )
-        # self.centers = corners.mean(dim=1)
-
-        # handle_out = corners[:, 0] - corners[:, 4]
-        # handle_long = corners[:, 1] - corners[:, 0]
-        # handle_short = corners[:, 3] - corners[:, 0]
-        # print(self.allForwardDirs.shape)
-        # print(self.cabinet_dof_pos.shape)
         scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
         position_diff = torch.mul(self.allForwardDirs, scale_tensor_t)
-        self.centers = self.centers_orig +  position_diff - self.environment_positions
+        self.centers = self.centers_orig +  position_diff #- self.environment_positions
 
         hand_pos, hand_rot = self.get_ee_pose()
         tool_pos_diff = hand_pos  - self.centers
@@ -762,21 +704,22 @@ class FrankaMobileMultiTask(RLMultiTask):
 
     def calculate_metrics(self) -> None:
         
-        self.rew_buf[:] = 0.0
-        self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
-        return
-        # import pdb; pdb.set_trace()
-        self.cabinet_dof_pos = self._cabinets.get_joint_positions(clone=False)
-        # self.centers = (self.centers_orig +  self.forwardDir * self.cabinet_dof_pos[:, 1].unsqueeze(-1)).to(torch.float32).to(self._device)
-        corners = self.corners.clone()
-        # for idx in range(self._num_envs):
+       
+        cabinet_dof_pos = []
+        cabinet_dof_vel = []
+        for dof_index, cabinet in zip(self.allJointIndices, self._cabinets):
+            cabinet_dof_pos.append(cabinet.get_joint_positions(clone=False)[:, dof_index])
+            cabinet_dof_vel.append(cabinet.get_joint_velocities(clone=False)[:, dof_index])
         
-        corners = self.rotate_points_around_z(corners, self.cabinet_dof_pos[:, 0], (self.rotation_axis + self._env_pos).unsqueeze(1) )
-        self.centers = corners.mean(dim=1)
-        # self.centers = self.rotate_points_around_z(self.centers_orig.clone().unsqueeze(1), self.cabinet_dof_pos[:, 0], self.rotation_axis )
-        # self.centers = self.centers.squeeze(1)
-        # centers are the mean of corners
+        self.cabinet_dof_pos = torch.stack(cabinet_dof_pos, dim=1)
+        self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
         
+
+        scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
+        position_diff = torch.mul(self.allForwardDirs, scale_tensor_t)
+        self.centers = self.centers_orig +  position_diff 
+        corners = self.bbox
+      
         
 
         handle_out = corners[:, 0] - corners[:, 4]
@@ -870,16 +813,14 @@ class FrankaMobileMultiTask(RLMultiTask):
 
         ############################
 
-        hand_grip_dir = quat_axis(hand_rot, 2).to(self._device)
-        hand_sep_dir = quat_axis(hand_rot, 1). to(self._device)
-        hand_down_dir = quat_axis(hand_rot, 0).to(self._device)
+        hand_grip_dir = quat_axis(hand_rot, 1).to(self._device)
+        hand_sep_dir = quat_axis(hand_rot, 0). to(self._device)
+        hand_down_dir = quat_axis(hand_rot, 2).to(self._device)
      
-        dot1 = torch.max((hand_grip_dir * handle_out  ).sum(dim=-1), (-hand_grip_dir * handle_out   ).sum(dim=-1))
-        # dot1 = (hand_grip_dir * handle_out  ).sum(dim=-1)
-        dot2 = torch.max((hand_sep_dir * handle_short ).sum(dim=-1), (-hand_sep_dir  * handle_short ).sum(dim=-1)) 
-        # dot2 = (hand_sep_dir * handle_short).sum(dim=-1) 
-        dot3 = torch.max((hand_down_dir * handle_long ).sum(dim=-1), (-hand_down_dir * handle_long  ).sum(dim=-1))
-        dot3 = (hand_down_dir * handle_long).sum(dim=-1)
+        dot1 = torch.max((hand_grip_dir * handle_out).sum(dim=-1), (-hand_grip_dir * handle_out).sum(dim=-1))
+        # dot2 = torch.max((hand_sep_dir * handle_short).sum(dim=-1), (-hand_sep_dir * handle_short).sum(dim=-1)) 
+        dot2 = (-hand_sep_dir * handle_short).sum(dim=-1)
+        dot3 = torch.max((hand_down_dir * handle_long).sum(dim=-1), (-hand_down_dir * handle_long).sum(dim=-1))
 
         rot_reward = dot1 + dot2 + dot3 - 3     
         reaching_reward = - tcp_to_obj_dist +  0.1 * (is_reached_short + is_reached_long + is_reached_out) 
@@ -930,8 +871,8 @@ class FrankaMobileMultiTask(RLMultiTask):
         #             world.step(render=True)
 
 
-        normalized_dof_pos = (self.cabinet_dof_pos[:, 0] - self.cabinet_dof_lower_limits) / (self.cabinet_dof_upper_limits - self.cabinet_dof_lower_limits)
-        condition_mask = (normalized_dof_pos >= 0.95) & grasp_success
+        normalized_dof_pos = (self.cabinet_dof_pos - self.cabinet_dof_lower_limits) / (self.cabinet_dof_upper_limits - self.cabinet_dof_lower_limits)
+        # condition_mask = (normalized_dof_pos >= 0.95) & grasp_success
 
         # if torch.any(normalized_dof_pos > 0.65):
         #     print('open 65%')
@@ -941,7 +882,7 @@ class FrankaMobileMultiTask(RLMultiTask):
 
         # self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
 
-        self.rew_buf[condition_mask] += 10.0
+        # self.rew_buf[condition_mask] += 10.0
         # self.rew_buf[:] = rot_reward
         # self.rew_buf[:] = rot_reward
         self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
