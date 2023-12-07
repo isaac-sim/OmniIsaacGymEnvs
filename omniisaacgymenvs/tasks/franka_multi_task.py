@@ -31,7 +31,7 @@ from omniisaacgymenvs.robots.articulations.views.franka_mobile_view import Frank
 # from pxr import Usd, UsdGeom
 from pxr import Usd, UsdPhysics, UsdShade, UsdGeom, PhysxSchema
 from typing import Optional, Sequence, Tuple, Union
-from omni.isaac.core.utils.prims import get_all_matching_child_prims, get_prim_children, get_prim_at_path
+from omni.isaac.core.utils.prims import get_all_matching_child_prims, get_prim_children, get_prim_at_path, delete_prim
 from numpy.linalg import inv
 from omni.isaac.core.utils.torch.rotations import (
     quat_apply,
@@ -162,7 +162,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         self.distX_offset = 0.04
         self.dt = 1 / 60.0
 
-        self._num_observations = 39  #37 + 3 + 7
+        self._num_observations = 39 + 9   #37 + 3 + 7
         self._num_actions = 12  # 10 + 1
 
         RLMultiTask.__init__(self, name, env)
@@ -216,16 +216,17 @@ class FrankaMobileMultiTask(RLMultiTask):
         self._usd_context = omni.usd.get_context()
         def get_assets(usd_path, env_id = 0, annotation = None, anno=None, link_name = ""):
             env_path = f"{self.default_base_env_path}/env_{env_id}"
+            stage = get_current_stage()
+            bbox_link = None
+            
             def find_prims_by_type(stage: Usd.Stage, prim_type: Type[Usd.Typed]) -> List[Usd.Prim]:
                 found_prims = [x for x in stage.Traverse() if x.IsA(prim_type) and 'collisions' in x.GetPath().pathString]
                 return found_prims
-            # cabinet = Cabinet(self.default_zero_env_path + "/cabinet", name="cabinet", 
-            #                   usd_path="/home/nikepupu/Desktop/Orbit/usd/40147/mobility_relabel_gapartnet_instanceable.usd", 
-            #                   translation=[0,0,0.0], orientation=[0,0,0,1])
+          
             cabinet_scale = 1.0
             
-            x, y = get_cabinet_position(env_id, 5, 5, 10)
-            self.environment_positions.append([x, y, 0])
+            x, y = get_cabinet_position(env_id, 15, 15, 10)
+            
             # print('x, y: ', x, y)
             cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
                             usd_path=usd_path, 
@@ -241,34 +242,55 @@ class FrankaMobileMultiTask(RLMultiTask):
                             usd_path=usd_path, 
                             translation=[x,y, cabinet_offset ], orientation=[1,0,0,0], scale=[cabinet_scale, cabinet_scale, cabinet_scale])
             
-            # find all joints in the usd
-            stage = get_current_stage()
+            
             prims: List[Usd.Prim] = [x for x in stage.Traverse() if x.IsA(UsdPhysics.Joint) and env_path in x.GetPath().pathString] 
             for joint in prims:
                 body1 = joint.GetRelationship("physics:body1").GetTargets()[0]
+                if bbox_link is None and len(joint.GetRelationship("physics:body0").GetTargets()) > 0:
+                    body0 = joint.GetRelationship("physics:body0").GetTargets()[0]
+                    if (body0.pathString).endswith(link_name):
+                        bbox_link = body1
+
+            if not bbox_link:
+
+                # delete
+                delete_prim(env_path + "/cabinet")
+                return False
+            
+            for joint in prims:
+                
+                body1 = joint.GetRelationship("physics:body1").GetTargets()[0]
                 if (body1.pathString).endswith(link_name):
                     self.allJointNames.append(joint.GetPath().pathString)
+         
+            self.environment_positions.append([x, y, 0])
+               
 
 
             franka = FrankaMobile(prim_path=env_path + "/franka", name="franka", translation=[-1.90+x, 0.20+y, 0.02])
             # add physics material
-            stage = get_current_stage()
-            
+           
+            # bbox_link_full = bbox_link
+            bbox_link = bbox_link.pathString.split('/')[-1]
            
             prims: List[Usd.Prim] = find_prims_by_type(stage, UsdGeom.Mesh)
-            for prim in prims:
-                collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
-                if not collision_api:
-                    collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
-                
-                collision_api.CreateApproximationAttr().Set("boundingCube")
             
-            bbox = np.array(anno['bbox']) + np.array([x, y, cabinet_offset ])
+            
+            for anno in annotation:
+                # print('bbox_link: ', bbox_link)
+                # print(anno['link_name'])
+                if anno['link_name'] == bbox_link:
+                    bbox_to_use = anno['bbox']
+                    break
+            # print(bbox_to_use)
+            # exit()
+
+            bbox = np.array(bbox_to_use) + np.array([x, y, cabinet_offset ])
             self.bbox.append(bbox)
             # jointData['axis']['origin'] = np.array(jointData['axis']['origin']) + np.array([x, y, cabinet_offset ])
         
             # self.allJointData.append(jointData)
-            prim = stage.GetPrimAtPath(prim_path)
+            prim = stage.GetPrimAtPath(env_path + f"/cabinet/{bbox_link}")
             matrix = inv(np.array(omni.usd.get_world_transform_matrix(prim)))
         
             forwardDir = matrix[0:3, 2]
@@ -277,88 +299,86 @@ class FrankaMobileMultiTask(RLMultiTask):
             self.allForwardDirs.append(forwardDir)
             
 
-            print('cabinet: ', env_path)
-            for anno in annotation:
-                if 'handle' in anno['category'] :
-                    link_name = anno['link_name']
-                    prim = stage.GetPrimAtPath( env_path + f"/cabinet/{link_name}/collisions")
-                    collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
+            # print('cabinet: ', env_path)
+            # for anno in annotation:
+                # if 'handle' in anno['category'] :
+                #     link_name = anno['link_name']
+            prim = stage.GetPrimAtPath( env_path + f"/cabinet/{bbox_link}/collisions")
+            # print('set collision for: ', prim)
+            collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
 
-                    print(env_path + f"/cabinet/{link_name}/collisions")
-                    # while True:
-                    #     world = World()
-                    #     world.render()
 
-                    if not collision_api:
-                        collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
-                    
-                    collision_api.CreateApproximationAttr().Set("convexDecomposition")
+            if not collision_api:
+                collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+            
+            collision_api.CreateApproximationAttr().Set("convexDecomposition")
+        
+            prim = stage.GetPrimAtPath(env_path + f"/cabinet/{bbox_link}/collisions")
+            _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
+            material = PhysicsMaterial(
+                    prim_path=_physicsMaterialPath,
+                    static_friction=1.0,
+                    dynamic_friction=1.0,
+                    restitution=0.0,
+                )
+            # -- enable patch-friction: yields better results!
+            physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
+            physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
+
+            physicsUtils.add_physics_material_to_prim(
+                        stage,
+                        prim,
+                        _physicsMaterialPath,
+                    )
+            
+            for prim in prims:
+                if env_path + f"/cabinet/{bbox_link}/collisions" == prim.GetPath().pathString:
+                    continue
+                if  'franka' in prim.GetPath().pathString or prim.GetPath().pathString.endswith('collisions'):
+                    continue
+                # print(prim)
+                collision_api = UsdPhysics.MeshCollisionAPI.Get(stage, prim.GetPath())
+                if not collision_api:
+                    collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
                 
-                    prim = stage.GetPrimAtPath(env_path + f"/cabinet/{link_name}/collisions")
-                    _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
-                    material = PhysicsMaterial(
-                            prim_path=_physicsMaterialPath,
-                            static_friction=1.0,
-                            dynamic_friction=1.0,
-                            restitution=0.0,
-                        )
-                    # -- enable patch-friction: yields better results!
-                    physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(material.prim)
-                    physx_material_api.CreateImprovePatchFrictionAttr().Set(True)
+                collision_api.CreateApproximationAttr().Set("boundingCube")
 
-                    physicsUtils.add_physics_material_to_prim(
-                                stage,
-                                prim,
-                                _physicsMaterialPath,
-                            )
+            return True
         
         super().set_up_scene(scene)
         cnt = 0
         
         for idx,  usd in enumerate(self.usds):
+            # if cnt >= 10:
+            #     break
+            print('setup: ', usd)
             # if idx != 2:
                 # continue
             
-            if not int(usd.split('/')[-2]) == 40147:
-                continue
-            for _ in range(47 * 4):
+            # if not int(usd.split('/')[-2]) == 40147:
+            #     continue
+            for _ in range(1):
                 anno_id = int(usd.split('/')[-2])
                 found_handle = False
                 for anno in self.annotations[anno_id]:
                     if 'handle' in anno['category'] :
                         found_handle = True
                         break
-
+            
                 if found_handle: 
                     for anno in self.annotations[anno_id]:
                         if 'slider_drawer' in anno['category']:
-                            # joint_file = self.mobility[anno_id]
-                            # link_id =int( anno['link_name'].split('_')[-1])
-                            # self.allJointIds.append(link_id)
-                            # jointData = None
-                            # for joint in joint_file:
-                            #     if joint['id'] == link_id:
-                            #     jointData = joint['jointData']
-                            #     break
-                        
-                            
-                            get_assets(usd, env_id = cnt, annotation = self.annotations[anno_id], anno=anno, link_name = anno['link_name'])
-                            cnt += 1
 
-           
+                            status = get_assets(usd, env_id = cnt, annotation = self.annotations[anno_id], anno=anno, link_name = anno['link_name'])
+                            
+                            if status:
+                                cnt += 1
+                                
             
         self.bbox = torch.tensor(self.bbox)
         self.handle_out =   self.bbox[:,0] -  self.bbox[:,4]
         self.handle_long =  self.bbox[:,1] -  self.bbox[:,0]
         self.handle_short = self.bbox[:,3] -  self.bbox[:,0]
-
-        # print('bbox: ', self.bbox.shape)
-        # print(self.handle_out.shape)
-        # print(self.handle_long.shape)
-        # print(self.handle_short.shape)
-        # exit()
-        # print(self.bbox.shape)
-        
 
 
         super().set_up_scene(scene, filter_collisions=False)
@@ -448,14 +468,6 @@ class FrankaMobileMultiTask(RLMultiTask):
         physxSceneAPI.CreateEnableCCDAttr().Set(True)
 
         self.centers_orig = ((self.bbox[:, 0] + self.bbox[:, 6]) / 2).to(self._device)
-
-
-        # for i in range(self.cnt):
-        #     _cabinet = CabinetView(prim_paths_expr=f"/World/envs/env_{i}/cabinet", name=f"cabinet_view_{i}")
-        #     # self._cabinets = CabinetView(prim_paths_expr="/World/envs/.*/cabinet", name="cabinet_view")
-        #     self._cabinets.append(_cabinet)
-        #     scene.add(_cabinet)
-
         
 
         device = self._device
@@ -506,6 +518,15 @@ class FrankaMobileMultiTask(RLMultiTask):
         scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
         position_diff = torch.mul(self.allForwardDirs, scale_tensor_t)
         self.centers = self.centers_orig +  position_diff #- self.environment_positions
+        torch.set_printoptions(sci_mode=False)
+        # print(self.bbox)
+        # print(self.environment_positions)
+        corners = self.bbox.to(self._device) + position_diff.unsqueeze(1) - self.environment_positions.unsqueeze(1)
+        
+        
+        handle_out = corners[:, 0] - corners[:, 4]
+        handle_long = corners[:, 1] - corners[:, 0]
+        handle_short = corners[:, 3] - corners[:, 0]
 
         hand_pos, hand_rot = self.get_ee_pose()
         tool_pos_diff = hand_pos  - self.centers
@@ -515,6 +536,11 @@ class FrankaMobileMultiTask(RLMultiTask):
             / (self.franka_dof_upper_limits - self.franka_dof_lower_limits)
             - 1.0
         )
+        corners = corners.reshape(-1, 24)
+        # print(handle_out)
+        # print(handle_out.shape)
+        # print(corners.shape)
+        # exit()
         # to_target = self.drawer_grasp_pos - self.franka_grasp_pos
         self.obs_buf = torch.cat(
             (
@@ -523,9 +549,10 @@ class FrankaMobileMultiTask(RLMultiTask):
                 tool_pos_diff,
                 hand_pos - self.environment_positions,
                 hand_rot,
-                # handle_out,
-                # handle_long,
-                # handle_short,
+                handle_out.reshape(-1, 3),
+                handle_long.reshape(-1, 3),
+                handle_short.reshape(-1, 3),
+                # corners,
                 self.centers - self.environment_positions,
                 self.cabinet_dof_pos.transpose(0, 1),
                 self.cabinet_dof_vel.transpose(0, 1),
@@ -750,17 +777,29 @@ class FrankaMobileMultiTask(RLMultiTask):
         # while True:
         #     color = 4283782485
         #     my_debugDraw = get_debug_draw_interface()
-        #     corners = self.corners.clone()
-        #     self.cabinet_dof_pos = self._cabinets.get_joint_positions(clone=False)
-        #     corners = self.rotate_points_around_z(corners, self.cabinet_dof_pos[:, 0], (self.rotation_axis + self._env_pos).unsqueeze(1) )
+        #     cabinet_dof_pos = []
+        #     cabinet_dof_vel = []
+        #     for dof_index, cabinet in zip(self.allJointIndices, self._cabinets):
+        #         cabinet_dof_pos.append(cabinet.get_joint_positions(clone=False)[:, dof_index])
+        #         cabinet_dof_vel.append(cabinet.get_joint_velocities(clone=False)[:, dof_index])
+        
+        
+        #     self.cabinet_dof_pos = torch.stack(cabinet_dof_pos, dim=1)
+        #     self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
+        #     scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
+        #     position_diff = torch.mul(self.allForwardDirs, scale_tensor_t).to(self._device)
+        #     self.centers = self.centers_orig +  position_diff 
+
+        #     corners = self.bbox.to(self._device) + position_diff.unsqueeze(1) 
+
         #     # print('pre corners: ', corners)     
-        #     self.centers = corners.mean(dim=1)   
+        #     # self.centers = corners.mean(dim=1)   
         #     for i, corner in enumerate(corners):
         #         corner = corner.cpu().numpy()
         #         my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(corner[4]), color)
         #         my_debugDraw.draw_line(carb.Float3(corner[1]),color, carb.Float3(corner[0]), color)
         #         my_debugDraw.draw_line(carb.Float3(corner[3]),color, carb.Float3(corner[0]), color)
-        #         my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(self.centers[i].cpu().numpy() ), color)
+        #         # my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(self.centers[i].cpu().numpy() ), color)
 
         #     world = World()
         #     world.step(render=True)
@@ -872,49 +911,20 @@ class FrankaMobileMultiTask(RLMultiTask):
 
 
         normalized_dof_pos = (self.cabinet_dof_pos - self.cabinet_dof_lower_limits) / (self.cabinet_dof_upper_limits - self.cabinet_dof_lower_limits)
-        # condition_mask = (normalized_dof_pos >= 0.95) & grasp_success
+        condition_mask = (normalized_dof_pos >= 0.95) & grasp_success
 
         # if torch.any(normalized_dof_pos > 0.65):
         #     print('open 65%')
         # print(normalized_dof_pos)
 
-        self.rew_buf[:] = 2*reaching_reward +  rot_reward * 0.5 + 10 * close_reward +   grasp_success  * 5 * ( 0.1 + normalized_dof_pos * 10)  
+        self.rew_buf[:] = reaching_reward +  rot_reward * 0.5 + 5 * close_reward + grasp_success * 10 * ( 0.1 + normalized_dof_pos) 
 
         # self.rew_buf = self.rew_buf + self.rew_buf.abs() * rot_reward
-
-        # self.rew_buf[condition_mask] += 10.0
-        # self.rew_buf[:] = rot_reward
-        # self.rew_buf[:] = rot_reward
+        condition_mask = condition_mask.squeeze(0)
+        self.rew_buf[condition_mask] += 10.0
+        
         self.rew_buf[:] = self.rew_buf[:].to(torch.float32)
-        # print()
-        # print('reward: ', self.rew_buf )
-        # self.rew_buf[:] = self.compute_franka_reward(
-        #     self.reset_buf,
-        #     self.progress_buf,
-        #     self.actions,
-        #     self.cabinet_dof_pos,
-        #     self.franka_grasp_pos,
-        #     self.drawer_grasp_pos,
-        #     self.franka_grasp_rot,
-        #     self.drawer_grasp_rot,
-        #     self.franka_lfinger_pos,
-        #     self.franka_rfinger_pos,
-        #     self.gripper_forward_axis,
-        #     self.drawer_inward_axis,
-        #     self.gripper_up_axis,
-        #     self.drawer_up_axis,
-        #     self._num_envs,
-        #     self.dist_reward_scale,
-        #     self.rot_reward_scale,
-        #     self.around_handle_reward_scale,
-        #     self.open_reward_scale,
-        #     self.finger_dist_reward_scale,
-        #     self.action_penalty_scale,
-        #     self.distX_offset,
-        #     self._max_episode_length,
-        #     self.franka_dof_pos,
-        #     self.finger_close_reward_scale,
-        # )
+        
 
     def is_done(self) -> None:
         # reset if drawer is open or max length reached
