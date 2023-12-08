@@ -51,7 +51,8 @@ Config files used for this task are:
 
 A variation of the Cartpole task showcases the usage of RGB image data as observations. This example
 can be launched with command line argument `task=CartpoleCamera`. Note that to use camera data as
-observations, `enable_cameras` must be set to `True` in the task config file. In addition, the example must be run with the `omni.isaac.sim.python.gym.camera.kit` app file provided under `apps`, which applies necessary settings to enable camera training. By default, this app file will be used automatically when `enable_cameras` is set to `True`.
+observations, `enable_cameras` must be set to `True` in the task config file. In addition, the example must be run with the `omni.isaac.sim.python.gym.camera.kit` app file provided under `apps`, which applies necessary settings to enable camera training. By default, this app file will be used automatically when `enable_cameras` is set to `True`. Due to this limitation, this 
+example is currently not available in the extension workflow.
 
 Config files used for this task are:
 
