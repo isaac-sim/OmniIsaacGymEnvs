@@ -200,7 +200,7 @@ class Randomizer:
             if self._config.get("enable_recording", False):
                 # we need to deal with initializing render product here because it has to be initialized after orchestrator.run.
                 # otherwise, replicator will stop the simulation
-                task._env.create_viewport_render_product(resolution=(task.camera_width, task.camera_height))
+                task._env.create_viewport_render_product(resolution=(task.viewport_camera_width, task.viewport_camera_height))
                 if not task.is_extension:
                     task.world.render()
         else:

@@ -81,7 +81,8 @@ class RLTask(RLTaskInterface):
             self.dr = dr
 
         # set up replicator for camera data collection
-        if self._task_cfg["sim"].get("enable_cameras", False):
+        self.enable_cameras = self._task_cfg["sim"].get("enable_cameras", False)
+        if self.enable_cameras:
             from omni.replicator.isaac.scripts.writers.pytorch_writer import PytorchWriter
             from omni.replicator.isaac.scripts.writers.pytorch_listener import PytorchListener
             import omni.replicator.core as rep
@@ -194,10 +195,10 @@ class RLTask(RLTaskInterface):
             self.set_initial_camera_params(camera_position=self.camera_position, camera_target=self.camera_target)
             if self._task_cfg["sim"].get("add_distant_light", True):
                 self._create_distant_light()
-            # initialize capturer for viewport recording
-            # this has to be called after initializing replicator for DR
-            if self._cfg.get("enable_recording", False) and not self._dr_randomizer.randomize:
-                self._env.create_viewport_render_product(resolution=(self.viewport_camera_width, self.viewport_camera_height))
+        # initialize capturer for viewport recording
+        # this has to be called after initializing replicator for DR
+        if self._cfg.get("enable_recording", False) and not self._dr_randomizer.randomize:
+            self._env.create_viewport_render_product(resolution=(self.viewport_camera_width, self.viewport_camera_height))
 
     def set_initial_camera_params(self, camera_position, camera_target):
         from omni.kit.viewport.utility import get_viewport_from_window_name
@@ -281,6 +282,15 @@ class RLTask(RLTaskInterface):
             world(World): Simulation World.
         """
         return self._env.world
+
+    @property
+    def cfg(self):
+        """Retrieves the main config.
+
+        Returns:
+            cfg(dict): Main config dictionary.
+        """
+        return self._cfg
 
     def set_is_extension(self, is_extension):
         self.is_extension = is_extension
