@@ -1,8 +1,8 @@
 Release Notes
 =============
 
-2023.1.1
---------
+2023.1.1 - December 12, 2023
+----------------------------
 
 Additions
 ---------
@@ -10,12 +10,14 @@ Additions
 - Add `enable_recording`, `recording_interval`, `recording_length`, and `recording_fps`, `recording_dir` arguments to config/command-line for video recording
 - Add `moviepy` as dependency for video recording
 - Add video tutorial for extension workflow, available at [docs/framework/extension_workflow.md](docs/framework/extension_workflow.md)
+- Add camera clipping for CartpoleCamera to avoid seeing other environments in the background
 
 Changes
 -------
 - Use rl_device for sampling random policy (https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/pull/51)
 - Add FPS printouts for random policy
 - Use absolute path for default checkpoint folder for consistency between Python and extension workflows
+- Change camera creation API in CartpoleCamera to use USD APIs instead of `rep.create`
 
 Fixes
 -----
