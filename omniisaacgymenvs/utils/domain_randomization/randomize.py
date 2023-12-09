@@ -31,6 +31,8 @@ import copy
 
 import numpy as np
 import torch
+
+import omni
 from omni.isaac.core.prims import RigidPrimView
 from omni.isaac.core.utils.extensions import enable_extension
 

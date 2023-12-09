@@ -46,7 +46,7 @@ class CartpoleCameraTask(CartpoleTask):
         self.update_config(sim_config)
         self._max_episode_length = 500
 
-        self._num_observations = 4
+        self._num_observations = self.camera_width * self.camera_height * 3
         self._num_actions = 1
 
         # use multi-dimensional observation for camera RGB
