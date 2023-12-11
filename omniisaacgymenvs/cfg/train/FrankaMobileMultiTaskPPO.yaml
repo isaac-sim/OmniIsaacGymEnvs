@@ -50,7 +50,7 @@ params:
     normalize_advantage: True
     gamma: 0.99
     tau: 0.95
-    learning_rate: 5e-4
+    learning_rate: 1e-4
     lr_schedule: adaptive
     kl_threshold: 0.008
     score_to_win: 100000000
@@ -63,7 +63,7 @@ params:
     truncate_grads: True
     e_clip: 0.2
     horizon_length: 16
-    minibatch_size: 160
+    minibatch_size: 1112
     mini_epochs: 8
     critic_coef: 4
     clip_value: True

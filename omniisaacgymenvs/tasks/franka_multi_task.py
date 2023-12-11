@@ -20,7 +20,7 @@ from omni.isaac.core.utils.torch.rotations import *
 from omni.isaac.core.utils.torch.transformations import *
 from omni.isaac.core.materials import PhysicsMaterial
 from omni.isaac.core import World
-from omni.debugdraw import get_debug_draw_interface
+# from omni.debugdraw import get_debug_draw_interface
 from omniisaacgymenvs.tasks.base.rl_multi_task import RLMultiTask
 from omniisaacgymenvs.robots.articulations.cabinet import Cabinet
 from omniisaacgymenvs.robots.articulations.views.cabinet_view2 import CabinetView
@@ -372,14 +372,15 @@ class FrankaMobileMultiTask(RLMultiTask):
         cnt = 0
         
         for idx,  usd in enumerate(self.usds):
-            if cnt >= 10:
-                break
+            # if cnt >= 10:
+            #     break
             print('setup: ', usd)
+
             # if idx != 2:
                 # continue
             
-            # if not int(usd.split('/')[-2]) == 40147:
-            #     continue
+            if int(usd.split('/')[-2]) in [46130, 46893]:
+                continue
             for _ in range(1):
                 anno_id = int(usd.split('/')[-2])
                 found_handle = False
@@ -395,9 +396,13 @@ class FrankaMobileMultiTask(RLMultiTask):
                             status = get_assets(usd, env_id = cnt, annotation = self.annotations[anno_id], anno=anno, link_name = anno['link_name'])
                             
                             if status:
+                            
                                 cnt += 1
-                                
-        
+                                # if cnt == 94:
+                                #     print(usd)
+                                #     exit()
+        # print('cnt; ', cnt)
+        # exit()
         self.bbox = torch.tensor(self.bbox)
         self.bbox_orig = self.bbox.clone()
         # print(self.bbox)
@@ -544,7 +549,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
         position_diff = torch.mul(self.allForwardDirs, scale_tensor_t)
         self.centers = self.centers_orig +  position_diff #- self.environment_positions
-        torch.set_printoptions(sci_mode=False)
+        # torch.set_printoptions(sci_mode=False)
         # print(self.bbox)
         # print(self.environment_positions)
         corners = self.bbox.to(self._device) + position_diff.unsqueeze(1) - self.environment_positions.unsqueeze(1)
@@ -591,6 +596,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         observations = {self._frankas.name: {"obs_buf": self.obs_buf.to(torch.float32)}}
         # observations = {self._frankas.name: {"obs_buf": torch.zeros((self._num_envs, self._num_observations))}}
         # print('obs: ', observations)
+        # print(self.obs_buf)
         return observations
 
     def pre_physics_step(self, actions) -> None:
@@ -656,6 +662,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         return rotated_points
 
     def reset_idx(self, env_ids):
+        print('reset;')
         indices = env_ids.to(dtype=torch.int32)
         num_indices = len(indices)
 
@@ -671,16 +678,37 @@ class FrankaMobileMultiTask(RLMultiTask):
         # dof_pos[:, :] = pos
         # self.franka_dof_targets[env_ids, :] = pos
         # self.franka_dof_pos[env_ids, :] = pos
+        timeline = omni.timeline.get_timeline_interface()
 
+        timeline.stop()
+
+        self._frankas.set_joint_position_targets(self.franka_dof_targets[env_ids], indices=indices)
+        self._frankas.set_joint_positions(dof_pos, indices=indices)
+        self._frankas.set_joint_velocities(dof_vel, indices=indices)
         # # reset cabinet
         stage = get_current_stage()
         self.allForwardDirs = []
+        for _cabinet in self._cabinets:
+            _cabinet.set_joint_positions(
+                torch.zeros_like(_cabinet.get_joint_positions(clone=False))
+            )
+            _cabinet.set_joint_velocities(
+                torch.zeros_like(_cabinet.get_joint_velocities(clone=False))
+            )
+
+        world = World()
+        # for _ in range(4):
+        #     world.step(render=False)
+
         for idx, (_cabinet, translation, box, bbox_link) in enumerate(zip(self._cabinets, self.all_translations, self.bbox_orig, self.allbbLinks)):
             
 
             # Randomly generating a rotation angle in the range from -90 to 90 degrees
-            angle_degrees = np.random.uniform(-90, 90)
+            angle_degrees = np.random.uniform(-60, 60)
             angle_radians = np.radians(angle_degrees)
+
+            # if idx == 94:
+            #     print(angle_radians)
 
             # # Creating a rotation object for rotation around the z-axis
             rotation = R.from_rotvec(angle_radians * np.array([0, 0, 1]))
@@ -695,32 +723,36 @@ class FrankaMobileMultiTask(RLMultiTask):
          
             _cabinet.set_local_poses(translations= translation, orientations=quaternion_reordered)
 
-            _cabinet.set_joint_positions(
-                torch.zeros_like(_cabinet.get_joint_positions(clone=False))
-            )
-            _cabinet.set_joint_velocities(
-                torch.zeros_like(_cabinet.get_joint_velocities(clone=False))
-            )
+            
             t = self.environment_positions[idx]
             # print('before: ', box)
-            box = self.rotate_points_around_z(box, np.array(t), angle_degrees)
+            # print(t)
+            # print(angle_degrees)
+            # exit()
+            box = self.rotate_points_around_z(box.cpu().numpy(), np.array(t.cpu().numpy()), angle_degrees)
             # print('after: ', box)
-            self.bbox[idx] = torch.tensor(box)
+            self.bbox[idx] = torch.tensor(box).to(self._device)
 
-            env_path = f"{self.default_base_env_path}/env_{idx}"
+            # env_path = f"{self.default_base_env_path}/env_{idx}"
             
             # prim = stage.GetPrimAtPath(env_path + f"/cabinet/{bbox_link}")
             rotation_matrix = R.from_rotvec(angle_radians * np.array([0, 0, 1])).as_matrix()
-            # print(rotation_matrix)
+            # print('rotation matrix: ',  angle_radians,rotation_matrix)
             # exit()
             
             forwardDir = -rotation_matrix[0:3, 0]
             forwardDir = forwardDir/np.linalg.norm(forwardDir)
-            # print(forwardDir)
+            # print('forwardDir: ', forwardDir)
             forwardDir = torch.tensor(forwardDir).to(self._device)
             self.allForwardDirs.append(forwardDir)
             
         self.allForwardDirs = torch.stack(self.allForwardDirs, dim=0).to(self._device)
+        self.centers_orig = ((self.bbox[:, 0] + self.bbox[:, 6]) / 2).to(self._device)
+
+        # for _ in range(4):
+        #     world.step(render=False)
+
+        timeline.play()
         # print(self.allForwardDirs)
         # print('after: ', self.bbox)
         # after = self.bbox[0].clone()
@@ -779,9 +811,7 @@ class FrankaMobileMultiTask(RLMultiTask):
             
             
         
-        self._frankas.set_joint_position_targets(self.franka_dof_targets[env_ids], indices=indices)
-        self._frankas.set_joint_positions(dof_pos, indices=indices)
-        self._frankas.set_joint_velocities(dof_vel, indices=indices)
+       
 
         # bookkeeping
         self.reset_buf[env_ids] = 0
@@ -914,35 +944,35 @@ class FrankaMobileMultiTask(RLMultiTask):
 
         # 
         
-        while True:
-            color = 4283782485
-            my_debugDraw = get_debug_draw_interface()
-            cabinet_dof_pos = []
-            cabinet_dof_vel = []
-            for dof_index, cabinet in zip(self.allJointIndices, self._cabinets):
-                cabinet_dof_pos.append(cabinet.get_joint_positions(clone=False)[:, dof_index])
-                cabinet_dof_vel.append(cabinet.get_joint_velocities(clone=False)[:, dof_index])
+        # while True:
+        #     color = 4283782485
+        #     my_debugDraw = get_debug_draw_interface()
+        #     cabinet_dof_pos = []
+        #     cabinet_dof_vel = []
+        #     for dof_index, cabinet in zip(self.allJointIndices, self._cabinets):
+        #         cabinet_dof_pos.append(cabinet.get_joint_positions(clone=False)[:, dof_index])
+        #         cabinet_dof_vel.append(cabinet.get_joint_velocities(clone=False)[:, dof_index])
         
         
-            self.cabinet_dof_pos = torch.stack(cabinet_dof_pos, dim=1)
-            self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
-            scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
-            position_diff = torch.mul(self.allForwardDirs, scale_tensor_t).to(self._device)
-            self.centers = self.centers_orig +  position_diff 
+        #     self.cabinet_dof_pos = torch.stack(cabinet_dof_pos, dim=1)
+        #     self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
+        #     scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
+        #     position_diff = torch.mul(self.allForwardDirs, scale_tensor_t).to(self._device)
+        #     self.centers = self.centers_orig +  position_diff 
 
-            corners = self.bbox.to(self._device) + position_diff.unsqueeze(1) 
+        #     corners = self.bbox.to(self._device) + position_diff.unsqueeze(1) 
 
-            # print('pre corners: ', corners)     
-            # self.centers = corners.mean(dim=1)   
-            for i, corner in enumerate(corners):
-                corner = corner.cpu().numpy()
-                my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(corner[4]), color)
-                my_debugDraw.draw_line(carb.Float3(corner[1]),color, carb.Float3(corner[0]), color)
-                my_debugDraw.draw_line(carb.Float3(corner[3]),color, carb.Float3(corner[0]), color)
-                # my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(self.centers[i].cpu().numpy() ), color)
+        #     # print('pre corners: ', corners)     
+        #     # self.centers = corners.mean(dim=1)   
+        #     for i, corner in enumerate(corners):
+        #         corner = corner.cpu().numpy()
+        #         my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(corner[4]), color)
+        #         my_debugDraw.draw_line(carb.Float3(corner[1]),color, carb.Float3(corner[0]), color)
+        #         my_debugDraw.draw_line(carb.Float3(corner[3]),color, carb.Float3(corner[0]), color)
+        #         my_debugDraw.draw_line(carb.Float3(corner[0]),color, carb.Float3(self.centers[i].cpu().numpy() ), color)
 
-            world = World()
-            world.step(render=True)
+        #     world = World()
+        #     world.step(render=True)
         # handle_out = corners[0] - corners[4]
         # handle_long = corners[1] - corners[0]
         # handle_short = corners[3] - corners[0]

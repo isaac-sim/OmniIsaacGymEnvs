@@ -6,10 +6,10 @@ physics_engine: ${..physics_engine}
 # if given, will override the device setting in gym. 
 #285 drawers
 env:
-  numEnvs: ${resolve_default:10,${...num_envs}}
+  numEnvs: ${resolve_default:278,${...num_envs}}
   envSpacing: 5.0
-  episodeLength: 480
-  enableDebugVis: True
+  episodeLength: 240
+  enableDebugVis: False
 
   clipObservations: 5.0
   clipActions: 1.0
@@ -39,7 +39,7 @@ sim:
   add_ground_plane: True
   add_distant_light: False
   use_fabric: True
-  enable_scene_query_support: True
+  enable_scene_query_support: False
   disable_contact_processing: False
 
   # set to True if you use camera sensors in the environment
