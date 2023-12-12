@@ -722,7 +722,7 @@ class FrankaMobileMultiTask(RLMultiTask):
                 
                 # while True:
                 # Randomly generating a rotation angle in the range from -90 to 90 degrees
-                angle_degrees = 90 #np.random.uniform(-10, 10)
+                angle_degrees = 0 #np.random.uniform(-10, 10)
                 angle_radians = np.radians(angle_degrees)
 
                 # if idx == 94:
