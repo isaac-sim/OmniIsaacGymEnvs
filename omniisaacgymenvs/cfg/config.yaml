@@ -29,7 +29,7 @@ rl_device: 'cuda:0'
 multi_gpu: False
 
 ## PhysX arguments
-num_threads: 4 # Number of worker threads per scene used by PhysX - for CPU PhysX only.
+num_threads: 12 # Number of worker threads per scene used by PhysX - for CPU PhysX only.
 solver_type: 1 # 0: pgs, 1: tgs
 
 # RLGames Arguments

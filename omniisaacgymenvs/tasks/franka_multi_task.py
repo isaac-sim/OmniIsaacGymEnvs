@@ -232,7 +232,7 @@ class FrankaMobileMultiTask(RLMultiTask):
           
             cabinet_scale = 1.0
             
-            x, y = get_cabinet_position(env_id, 15, 15, 10)
+            x, y = get_cabinet_position(env_id, 20, 20, 10)
             
             # print('x, y: ', x, y)
             cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
@@ -244,7 +244,7 @@ class FrankaMobileMultiTask(RLMultiTask):
             bboxes = omni.usd.get_context().compute_path_world_bounding_box(cabinet_prim_path)
             min_box = np.array(bboxes[0])
             zmin = min_box[2]
-            cabinet_offset = -zmin + 0.01
+            cabinet_offset = -zmin + 0.05
             cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
                             usd_path=usd_path, 
                             translation=[x,y, cabinet_offset ], orientation=[1,0,0,0], scale=[cabinet_scale, cabinet_scale, cabinet_scale])
@@ -335,6 +335,8 @@ class FrankaMobileMultiTask(RLMultiTask):
                 collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
             
             collision_api.CreateApproximationAttr().Set("convexDecomposition")
+            # mesh_collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+            # mesh_collision_api.GetApproximationAttr().Set("convexDecomposition")
         
             prim = stage.GetPrimAtPath(env_path + f"/cabinet/{bbox_link}/collisions")
             _physicsMaterialPath = prim.GetPath().AppendChild("physicsMaterial")
@@ -365,6 +367,11 @@ class FrankaMobileMultiTask(RLMultiTask):
                     collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
                 
                 collision_api.CreateApproximationAttr().Set("boundingCube")
+                # print(collision_api.GetAttributes())
+                # collision_api.GetCollisionEnabledAttr().Set(False)
+                # prim.GetAttribute("physics:collisionEnabled").Set(False)
+                # mesh_collision_api = UsdPhysics.MeshCollisionAPI.Apply(prim)
+                # mesh_collision_api.GetApproximationAttr().Set("boundingCube")
 
             return True
         
@@ -378,8 +385,8 @@ class FrankaMobileMultiTask(RLMultiTask):
 
             # if idx != 2:
                 # continue
-            
-            if int(usd.split('/')[-2]) in [46130, 46893]:
+            # 47570, 47565
+            if int(usd.split('/')[-2]) in [46130, 46893, 45235, 44853, 47570, 47565, 45238 ]:
                 continue
             for _ in range(1):
                 anno_id = int(usd.split('/')[-2])
@@ -398,9 +405,9 @@ class FrankaMobileMultiTask(RLMultiTask):
                             if status:
                             
                                 cnt += 1
-                                # if cnt == 94:
-                                #     print(usd)
-                                #     exit()
+                                # if cnt == 258 or cnt == 259:
+                                #     print('==========', usd)
+                                    
         # print('cnt; ', cnt)
         # exit()
         self.bbox = torch.tensor(self.bbox)
@@ -559,6 +566,15 @@ class FrankaMobileMultiTask(RLMultiTask):
         handle_long = corners[:, 1] - corners[:, 0]
         handle_short = corners[:, 3] - corners[:, 0]
 
+        handle_out_length = torch.norm(self.handle_out, dim = -1).to(self._device)
+        handle_long_length = torch.norm(self.handle_long, dim = -1).to(self._device)
+        handle_short_length = torch.norm(self.handle_short, dim = -1).to(self._device)
+
+    
+        handle_out = self.handle_out / handle_out_length.unsqueeze(-1).to(self._device)
+        handle_long = self.handle_long / handle_long_length.unsqueeze(-1).to(self._device)
+        handle_short = self.handle_short / handle_short_length.unsqueeze(-1).to(self._device)
+
         hand_pos, hand_rot = self.get_ee_pose()
         tool_pos_diff = hand_pos  - self.centers
         dof_pos_scaled = (
@@ -679,79 +695,85 @@ class FrankaMobileMultiTask(RLMultiTask):
         # self.franka_dof_targets[env_ids, :] = pos
         # self.franka_dof_pos[env_ids, :] = pos
         timeline = omni.timeline.get_timeline_interface()
-
-        timeline.stop()
-
-        self._frankas.set_joint_position_targets(self.franka_dof_targets[env_ids], indices=indices)
-        self._frankas.set_joint_positions(dof_pos, indices=indices)
-        self._frankas.set_joint_velocities(dof_vel, indices=indices)
-        # # reset cabinet
-        stage = get_current_stage()
-        self.allForwardDirs = []
-        for _cabinet in self._cabinets:
-            _cabinet.set_joint_positions(
-                torch.zeros_like(_cabinet.get_joint_positions(clone=False))
-            )
-            _cabinet.set_joint_velocities(
-                torch.zeros_like(_cabinet.get_joint_velocities(clone=False))
-            )
-
         world = World()
-        # for _ in range(4):
-        #     world.step(render=False)
 
-        for idx, (_cabinet, translation, box, bbox_link) in enumerate(zip(self._cabinets, self.all_translations, self.bbox_orig, self.allbbLinks)):
-            
+        timeline.pause()
 
-            # Randomly generating a rotation angle in the range from -90 to 90 degrees
-            angle_degrees = np.random.uniform(-60, 60)
-            angle_radians = np.radians(angle_degrees)
-
-            # if idx == 94:
-            #     print(angle_radians)
-
-            # # Creating a rotation object for rotation around the z-axis
-            rotation = R.from_rotvec(angle_radians * np.array([0, 0, 1]))
-
-            # # Converting the rotation to quaternion format
-            quaternion = rotation.as_quat()  # Returns in the format (x, y, z, w)
-            quaternion_reordered = torch.tensor([[quaternion[3], quaternion[0], quaternion[1],quaternion[2]]]).float()
+        while True:
+            self._frankas.set_joint_position_targets(self.franka_dof_targets[env_ids], indices=indices)
+            self._frankas.set_joint_positions(dof_pos, indices=indices)
+            self._frankas.set_joint_velocities(dof_vel, indices=indices)
+            # # reset cabinet
+            stage = get_current_stage()
+            self.allForwardDirs = []
+            for _cabinet in self._cabinets:
+                _cabinet.set_joint_positions(
+                    torch.zeros_like(_cabinet.get_joint_positions(clone=False))
+                )
+                _cabinet.set_joint_velocities(
+                    torch.zeros_like(_cabinet.get_joint_velocities(clone=False))
+                )
 
             
-            translation = torch.tensor([translation]).float()
-            _, rotation = _cabinet.get_local_poses()
-         
-            _cabinet.set_local_poses(translations= translation, orientations=quaternion_reordered)
-
+            # for _ in range(4):
+            #     world.step(render=False)
             
-            t = self.environment_positions[idx]
-            # print('before: ', box)
-            # print(t)
-            # print(angle_degrees)
-            # exit()
-            box = self.rotate_points_around_z(box.cpu().numpy(), np.array(t.cpu().numpy()), angle_degrees)
-            # print('after: ', box)
-            self.bbox[idx] = torch.tensor(box).to(self._device)
+            for idx, (_cabinet, translation_recoreded, box_recorded, bbox_link) in enumerate(zip(self._cabinets, self.all_translations, self.bbox_orig, self.allbbLinks)):
+                
+                # while True:
+                # Randomly generating a rotation angle in the range from -90 to 90 degrees
+                angle_degrees = 90 #np.random.uniform(-10, 10)
+                angle_radians = np.radians(angle_degrees)
 
-            # env_path = f"{self.default_base_env_path}/env_{idx}"
-            
-            # prim = stage.GetPrimAtPath(env_path + f"/cabinet/{bbox_link}")
-            rotation_matrix = R.from_rotvec(angle_radians * np.array([0, 0, 1])).as_matrix()
-            # print('rotation matrix: ',  angle_radians,rotation_matrix)
-            # exit()
-            
-            forwardDir = -rotation_matrix[0:3, 0]
-            forwardDir = forwardDir/np.linalg.norm(forwardDir)
-            # print('forwardDir: ', forwardDir)
-            forwardDir = torch.tensor(forwardDir).to(self._device)
-            self.allForwardDirs.append(forwardDir)
-            
-        self.allForwardDirs = torch.stack(self.allForwardDirs, dim=0).to(self._device)
-        self.centers_orig = ((self.bbox[:, 0] + self.bbox[:, 6]) / 2).to(self._device)
+                # if idx == 94:
+                #     print(angle_radians)
 
-        # for _ in range(4):
-        #     world.step(render=False)
+                # # Creating a rotation object for rotation around the z-axis
+                rotation = R.from_rotvec(angle_radians * np.array([0, 0, 1]))
 
+                # # Converting the rotation to quaternion format
+                quaternion = rotation.as_quat()  # Returns in the format (x, y, z, w)
+                quaternion_reordered = torch.tensor([[quaternion[3], quaternion[0], quaternion[1],quaternion[2]]]).float()
+
+                
+                translation = torch.tensor([translation_recoreded]).float()
+                _, rotation = _cabinet.get_local_poses()
+            
+                _cabinet.set_local_poses(translations= translation, orientations=quaternion_reordered)
+
+                # joint_positions = _cabinet.get_joint_positions(clone=False) 
+                # joint_velocities = _cabinet.get_joint_velocities(clone=False)
+
+                # # # check if joint positions and joint velocities are nan
+                # # if torch.isnan(joint_positions).any() or torch.isnan(joint_velocities).any():
+                # #     continue
+                
+                t = self.environment_positions[idx]
+                
+                box = self.rotate_points_around_z(box_recorded.cpu().numpy(), np.array(t.cpu().numpy()), angle_degrees)
+                # print('after: ', box)
+                self.bbox[idx] = torch.tensor(box).to(self._device)
+
+                rotation_matrix = R.from_rotvec(angle_radians * np.array([0, 0, 1])).as_matrix()
+                
+                forwardDir = -rotation_matrix[0:3, 0]
+                forwardDir = forwardDir/np.linalg.norm(forwardDir)
+                # print('forwardDir: ', forwardDir)
+                forwardDir = torch.tensor(forwardDir).to(self._device)
+                self.allForwardDirs.append(forwardDir)
+                
+            self.allForwardDirs = torch.stack(self.allForwardDirs, dim=0).to(self._device)
+            self.centers_orig = ((self.bbox[:, 0] + self.bbox[:, 6]) / 2).to(self._device)
+
+            for _ in range(4):
+                world.step(render=False)
+            self.get_observations()
+            obs = self.obs_buf
+            
+            # check if obs contains nan
+            if not torch.isnan(obs).any():
+                break
+        
         timeline.play()
         # print(self.allForwardDirs)
         # print('after: ', self.bbox)
