@@ -9,7 +9,7 @@ physics_engine: ${..physics_engine}
 env:
   numEnvs: ${resolve_default:269,${...num_envs}}
   envSpacing: 5.0
-  episodeLength: 360
+  episodeLength: 480
   enableDebugVis: False
 
   clipObservations: 5.0
