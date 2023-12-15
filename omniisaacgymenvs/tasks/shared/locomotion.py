@@ -228,7 +228,7 @@ class LocomotionTask(RLTask):
 
     def is_done(self) -> None:
         self.reset_buf[:] = is_done(
-            self.obs_buf, self.termination_height, self.reset_buf, self.progress_buf, self._max_episode_length
+            self.obs_buf, self.termination_height, self.termination_up, self.termination_heading , self.reset_buf, self.progress_buf, self._max_episode_length
         )
 
 
@@ -306,11 +306,11 @@ def get_observations(
 
 
 @torch.jit.script
-def is_done(obs_buf, termination_height, reset_buf, progress_buf, max_episode_length):
-    # type: (Tensor, float, Tensor, Tensor, float) -> Tensor
+def is_done(obs_buf, termination_height, termination_up, termination_heading, reset_buf, progress_buf, max_episode_length):
+    # type: (Tensor, float, float, float, Tensor, Tensor, float) -> Tensor
     reset = torch.where(obs_buf[:, 0] < termination_height, torch.ones_like(reset_buf), reset_buf)
-    reset = torch.where(obs_buf[:, 11] < 0.5, torch.ones_like(reset_buf), reset)                    # added to walk straight
-    reset = torch.where(obs_buf[:, 10] < 0.7, torch.ones_like(reset_buf), reset)                    # added to walk straight
+    reset = torch.where(obs_buf[:, 11] < termination_heading, torch.ones_like(reset_buf), reset)                    # added to walk straight
+    reset = torch.where(obs_buf[:, 10] < termination_up, torch.ones_like(reset_buf), reset)                    # added to walk straight
     reset = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(reset_buf), reset)
     return reset
 
