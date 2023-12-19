@@ -1,3 +1,50 @@
+# Biped Branch
+
+## About this repository
+
+This is the readme for the biped branch of OmniIsaacGymEnvs. To replicate the work, convert the biped URDF to a USD using the built in URDF converter. Make sure to make it instanceable (so it can run parallel efficiently) and remove the fixed base link (so it can walk and doesn't float in the air).
+
+## Important files
+Experiment Runner Bash Script: ./omniisaacgymenvs/auto_runner.sh
+
+Analyze Experiment Python Notebook: ./analysis.ipynb
+
+**Plots Directory:** ./plots/
+Folder for storing tensor plots (from tensorboard information), reward plots (including component-wise breakdowns of the reward function), and metrics plots (for comparing performance across experiments)
+
+**Utils:** ./omniisaacgymenvs/utils/task_util.py; ./omniisaacgymenvs/utils/config_utils/sim_config.py
+
+Added Biped to task_map, maps task name to environment
+
+**Configs:** ./omniisaacgymenvs/cfg/task/Biped.yaml; ./omniisaacgymenvs/cfg/train/BipedPPO.yaml
+
+Set up environment, simulation, and experiment variables (reward strengths, etc)
+
+Added speedWeight, terminationHeading, terminationUp, progress_reward
+
+--
+
+Set up learning variables (learning rate, epochs, etc)
+
+Experimented with lower minibatch_size and number of environments, resolved to defaults after subpar performance
+
+**Articulations:** ./omniisaacgymenvs/robots/articulations/biped.py
+
+Loads in the USD model
+
+**Tasks:** ./omniisaacgymenvs/tasks/base/rl_task.py; ./omniisaacgymenvs/tasks/biped.py; ./omniisaacgymenvs/tasks/shared/locomotion.py
+
+Added logger to save reward components to a text file during training
+
+--
+
+Set up crucial functions to be used when training, such as initializing the environment using the config, populating it with the robot models, resetting a particular environment when conditions are met, and getting joint information
+
+--
+
+Perhaps the most important file. Gets information to compile the reward buffer, uses observations and config variables to compute the reward buffer. Added steps for sending reward information to be logged for post-experiment analysis. Added extra reset conditions and their corresponding death costs, added speed reward and progress word, modified alive reward to alive/dead reward to be more interpretable
+
+---
 # Omniverse Isaac Gym Reinforcement Learning Environments for Isaac Sim
 
 ## About this repository
