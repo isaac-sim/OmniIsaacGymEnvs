@@ -27,7 +27,7 @@ class FrankaMobile(Robot):
         usd_path: Optional[str] = None,
         translation: Optional[torch.tensor] = None,
         orientation: Optional[torch.tensor] = None,
-        scale: Optional[torch.tensor] = None,
+        # scale: Optional[torch.tensor] = None,
     ) -> None:
         """[summary]"""
 
@@ -47,7 +47,7 @@ class FrankaMobile(Robot):
             name=name,
             translation=self._position,
             orientation=self._orientation,
-            scale = scale,
+            # scale = scale,
             articulation_controller=None,
         )
 

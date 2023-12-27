@@ -164,7 +164,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         self.distX_offset = 0.04
         self.dt = 1 / 60.0
 
-        self._num_observations = 39  #37 + 3 + 7
+        self._num_observations = 48  #37 + 3 + 7
         self._num_actions = 12  # 10 + 1
 
         RLMultiTask.__init__(self, name, env)
@@ -233,7 +233,7 @@ class FrankaMobileMultiTask(RLMultiTask):
           
            
             
-            x, y = get_cabinet_position(env_id, 5, 5, 10)
+            x, y = get_cabinet_position(env_id, 10, 10, 10)
             
             # print('x, y: ', x, y)
             cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
@@ -284,7 +284,7 @@ class FrankaMobileMultiTask(RLMultiTask):
                
 
 
-            franka = FrankaMobile(prim_path=env_path + "/franka", name="franka", translation=[-1.90+x, 0.20+y, 0.02], scale=[2.0, 2.0, 2.0])
+            franka = FrankaMobile(prim_path=env_path + "/franka", name="franka", translation=[-2.00+x, 0+y, 0.0])
             # add physics material
            
             # bbox_link_full = bbox_link
@@ -489,7 +489,7 @@ class FrankaMobileMultiTask(RLMultiTask):
         # self.init_data()
 
     def get_franka(self):
-        franka = FrankaMobile(prim_path=self.default_zero_env_path + "/franka", name="franka", translation=[-1.80, 0.20, 0.02])
+        franka = FrankaMobile(prim_path=self.default_zero_env_path + "/franka", name="franka", translation=[-2.0, 0.0, 0.00])
 
         self._sim_config.apply_articulation_settings(
             "franka", get_prim_at_path(franka.prim_path), self._sim_config.parse_actor_config("franka")
@@ -561,7 +561,27 @@ class FrankaMobileMultiTask(RLMultiTask):
         root_position_w = root_position_w
         return root_position_w, root_quat_w
     
-    def get_observations(self) -> dict:        
+    def get_observations(self) -> dict:
+        # hand_pos, hand_rot = self.get_ee_pose()
+
+        def get_env_local_pose(env_pos, xformable, device):
+            """Compute pose in env-local coordinates"""
+            world_transform = xformable.ComputeLocalToWorldTransform(0)
+            world_pos = world_transform.ExtractTranslation()
+            world_quat = world_transform.ExtractRotationQuat()
+
+            px = world_pos[0] - env_pos[0]
+            py = world_pos[1] - env_pos[1]
+            pz = world_pos[2] - env_pos[2]
+            qx = world_quat.imaginary[0]
+            qy = world_quat.imaginary[1]
+            qz = world_quat.imaginary[2]
+            qw = world_quat.real
+
+            return torch.tensor([px, py, pz, qw, qx, qy, qz], device=device, dtype=torch.float)
+        
+        
+        
         # drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses(clone=False)
         franka_dof_pos = self._frankas.get_joint_positions(clone=False)
         franka_dof_vel = self._frankas.get_joint_velocities(clone=False)
@@ -579,24 +599,15 @@ class FrankaMobileMultiTask(RLMultiTask):
         scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
         position_diff = torch.mul(self.allForwardDirs, scale_tensor_t)
         self.centers = self.centers_orig +  position_diff #- self.environment_positions
-        # torch.set_printoptions(sci_mode=False)
+        torch.set_printoptions(sci_mode=False)
         # print(self.bbox)
         # print(self.environment_positions)
         corners = self.bbox.to(self._device) + position_diff.unsqueeze(1) - self.environment_positions.unsqueeze(1)
         
         
-        # handle_out = corners[:, 0] - corners[:, 4]
-        # handle_long = corners[:, 1] - corners[:, 0]
-        # handle_short = corners[:, 3] - corners[:, 0]
-
-        # handle_out_length = torch.norm(self.handle_out, dim = -1).to(self._device)
-        # handle_long_length = torch.norm(self.handle_long, dim = -1).to(self._device)
-        # handle_short_length = torch.norm(self.handle_short, dim = -1).to(self._device)
-
-    
-        # handle_out = self.handle_out / handle_out_length.unsqueeze(-1).to(self._device)
-        # handle_long = self.handle_long / handle_long_length.unsqueeze(-1).to(self._device)
-        # handle_short = self.handle_short / handle_short_length.unsqueeze(-1).to(self._device)
+        handle_out = corners[:, 0] - corners[:, 4]
+        handle_long = corners[:, 1] - corners[:, 0]
+        handle_short = corners[:, 3] - corners[:, 0]
 
         hand_pos, hand_rot = self.get_ee_pose()
         tool_pos_diff = hand_pos  - self.centers
@@ -619,9 +630,9 @@ class FrankaMobileMultiTask(RLMultiTask):
                 tool_pos_diff,
                 hand_pos - self.environment_positions,
                 hand_rot,
-                # handle_out.reshape(-1, 3),
-                # handle_long.reshape(-1, 3),
-                # handle_short.reshape(-1, 3),
+                handle_out.reshape(-1, 3),
+                handle_long.reshape(-1, 3),
+                handle_short.reshape(-1, 3),
                 # corners,
                 self.centers - self.environment_positions,
                 self.cabinet_dof_pos.transpose(0, 1),
@@ -635,71 +646,75 @@ class FrankaMobileMultiTask(RLMultiTask):
         observations = {self._frankas.name: {"obs_buf": self.obs_buf.to(torch.float32)}}
         # observations = {self._frankas.name: {"obs_buf": torch.zeros((self._num_envs, self._num_observations))}}
         # print('obs: ', observations)
-        # print(self.obs_buf)
         return observations
 
-    def get_observations2(self) -> dict:        
-        # drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses(clone=False)
-        franka_dof_pos = self._frankas.get_joint_positions(clone=False)
-        franka_dof_vel = self._frankas.get_joint_velocities(clone=False)
+    # def get_observations(self) -> dict:        
+    #     # drawer_pos, drawer_rot = self._cabinets._drawers.get_world_poses(clone=False)
+    #     franka_dof_pos = self._frankas.get_joint_positions(clone=False)
+    #     franka_dof_vel = self._frankas.get_joint_velocities(clone=False)
 
-        cabinet_dof_pos = []
-        cabinet_dof_vel = []
-        for dof_index, cabinet in zip(self.allJointIndices, self._cabinets):
-            cabinet_dof_pos.append(cabinet.get_joint_positions(clone=False)[:, dof_index])
-            cabinet_dof_vel.append(cabinet.get_joint_velocities(clone=False)[:, dof_index])
+    #     cabinet_dof_pos = []
+    #     cabinet_dof_vel = []
+    #     for dof_index, cabinet in zip(self.allJointIndices, self._cabinets):
+    #         cabinet_dof_pos.append(cabinet.get_joint_positions(clone=False)[:, dof_index])
+    #         cabinet_dof_vel.append(cabinet.get_joint_velocities(clone=False)[:, dof_index])
         
-        self.cabinet_dof_pos = torch.stack(cabinet_dof_pos, dim=1)
-        self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
-        
-
-        scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
-        position_diff = torch.mul(self.allForwardDirs, scale_tensor_t)
-        self.centers = self.centers_orig +  position_diff #- self.environment_positions
+    #     self.cabinet_dof_pos = torch.stack(cabinet_dof_pos, dim=1)
+    #     self.cabinet_dof_vel = torch.stack(cabinet_dof_vel, dim=1)
         
 
-        hand_pos, hand_rot = self.get_ee_pose_o()
-        hand_pos = hand_pos.squeeze(-1)
-        dof_pos_scaled = (
-            2.0
-            * (franka_dof_pos - self.franka_dof_lower_limits)
-            / (self.franka_dof_upper_limits - self.franka_dof_lower_limits)
-            - 1.0
-        )
+    #     scale_tensor_t = self.cabinet_dof_pos.transpose(0, 1)
+    #     # forwardDirs = torch.tensor([1, 0, 0]).to(self._device).repeat((self._num_envs, 1))
+    #     num_envs = len(self._cabinets)
+    #     forwardDirs = [torch.tensor([1, 0, 0]) for _ in range(num_envs)]
+    #     forwardDirs = torch.stack(forwardDirs, dim=0).to(self._device)
+    #     position_diff = torch.mul(forwardDirs, scale_tensor_t)
+    #     # centers = self.centers_obj.to(self._device)  +  position_diff 
+    #     centers = self.centers_orig.to(self._device)  +  position_diff
+        
 
-        forwardDir = torch.tensor([1, 0, 0]).to(self._device)
-        # print(self.centers_obj.shape)
-        centers = (self.centers_obj.to(self._device) +  forwardDir * self.cabinet_dof_pos[:, 3].unsqueeze(-1)).to(torch.float32).to(self._device)
-        # print('centers: ', centers.shape)
-        # print('hand_pos: ', hand_pos.shape)
-        # exit()
-        tool_pos_diff = hand_pos  - centers
+    #     hand_pos, hand_rot = self.get_ee_pose()
+    #     hand_pos = hand_pos.squeeze(-1)
+    #     dof_pos_scaled = (
+    #         2.0
+    #         * (franka_dof_pos - self.franka_dof_lower_limits)
+    #         / (self.franka_dof_upper_limits - self.franka_dof_lower_limits)
+    #         - 1.0
+    #     )
 
-        # print(dof_pos_scaled.shape)
-        # print(franka_dof_vel.shape)
-        # print(tool_pos_diff.shape)
-        # print(hand_pos.shape)
-        # print(centers.shape)
-        # print(self.cabinet_dof_pos.transpose(0, 1).shape)
-        # print(self.cabinet_dof_vel.transpose(0, 1).shape)
+        
+    #     # print(self.centers_obj.shape)
+    #     # centers = (self.centers_obj.to(self._device) +  forwardDir * self.cabinet_dof_pos[:, 3].unsqueeze(-1)).to(torch.float32).to(self._device)
+    #     # print('centers: ', centers.shape)
+    #     # print('hand_pos: ', hand_pos.shape)
+    #     # exit()
+    #     tool_pos_diff = hand_pos  - centers
+
+    #     # print(dof_pos_scaled.shape)
+    #     # print(franka_dof_vel.shape)
+    #     # print(tool_pos_diff.shape)
+    #     # print(hand_pos.shape)
+    #     # print(centers.shape)
+    #     # print(self.cabinet_dof_pos.transpose(0, 1).shape)
+    #     # print(self.cabinet_dof_vel.transpose(0, 1).shape)
        
-        self.obs_buf = torch.cat(
-            (
-                dof_pos_scaled,  # 12
-                franka_dof_vel * self.dof_vel_scale, #12
-                tool_pos_diff, # 3
-                hand_pos, # 3
-                centers, # 3
-                self.cabinet_dof_pos.transpose(0, 1), # 1
-                self.cabinet_dof_vel.transpose(0, 1), # 1 
-            ),
-            dim=-1,
-        )
+    #     self.obs_buf = torch.cat(
+    #         (
+    #             dof_pos_scaled,  # 12
+    #             franka_dof_vel * self.dof_vel_scale, #12
+    #             tool_pos_diff, # 3
+    #             hand_pos - self.environment_positions, # 3
+    #             centers, # 3
+    #             self.cabinet_dof_pos.transpose(0, 1), # 1
+    #             self.cabinet_dof_vel.transpose(0, 1), # 1 
+    #         ),
+    #         dim=-1,
+    #     )
         
-        self.obs_buf = self.obs_buf.to(torch.float32)
-        observations = {self._frankas.name: {"obs_buf": self.obs_buf.to(torch.float32)}}
+    #     self.obs_buf = self.obs_buf.to(torch.float32)
+    #     observations = {self._frankas.name: {"obs_buf": self.obs_buf.to(torch.float32)}}
         
-        return observations
+    #     return observations
 
     def pre_physics_step(self, actions) -> None:
         if not self._env._world.is_playing():
@@ -764,38 +779,26 @@ class FrankaMobileMultiTask(RLMultiTask):
         return rotated_points
 
     def reset_idx(self, env_ids):
-        print('reset;')
         indices = env_ids.to(dtype=torch.int32)
         num_indices = len(indices)
 
-        # # reset franka
-        # pos = tensor_clamp(
-        #     self.franka_default_dof_pos.unsqueeze(0)
-        #     + 0.25 * (torch.rand((len(env_ids), self.num_franka_dofs), device=self._device) - 0.5),
-        #     self.franka_dof_lower_limits,
-        #     self.franka_dof_upper_limits,
-        # )
         dof_pos = torch.zeros((num_indices, self._frankas.num_dof), device=self._device)
         dof_vel = torch.zeros((num_indices, self._frankas.num_dof), device=self._device)
-        # dof_pos[:, :] = pos
-        # self.franka_dof_targets[env_ids, :] = pos
-        # self.franka_dof_pos[env_ids, :] = pos
+   
 
+        # # reset cabinet
+        for _cabinet in self._cabinets:
+            _cabinet.set_joint_positions(
+                torch.zeros_like(_cabinet.get_joint_positions(clone=False))
+            )
+            _cabinet.set_joint_velocities(
+                torch.zeros_like(_cabinet.get_joint_velocities(clone=False))
+            )
+
+        
         self._frankas.set_joint_position_targets(self.franka_dof_targets[env_ids], indices=indices)
         self._frankas.set_joint_positions(dof_pos, indices=indices)
         self._frankas.set_joint_velocities(dof_vel, indices=indices)
-
-        for _cabinet in self._cabinets:
-                _cabinet.set_joint_positions(
-                    torch.zeros_like(_cabinet.get_joint_positions(clone=False))
-                )
-                _cabinet.set_joint_velocities(
-                    torch.zeros_like(_cabinet.get_joint_velocities(clone=False))
-                )
-            
-            
-        
-       
 
         # bookkeeping
         self.reset_buf[env_ids] = 0
