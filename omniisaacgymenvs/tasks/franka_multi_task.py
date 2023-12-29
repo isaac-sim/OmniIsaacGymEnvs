@@ -179,21 +179,16 @@ class FrankaMobileMultiTask(RLMultiTask):
         self.mobility = load_joint_file()
         self.bbox = []
         self.bbox_object = []
-        self.allJointData = []
-        self.allJointAxis = []
-        self.allJointDirection = []
+
         self.allForwardDirs = []
 
         self.allJointNames = []
 
         self.allJointIndices = []
 
-        self.rotation_axes = []
         self.environment_positions = []
         self.all_cabinets = []
-        self.all_cabinets_path = []
-        self.allbbLinks = []
-        self.all_translations = []
+   
         self.success_buf = torch.zeros((self._num_envs, 1), device=self._device)
 
         return
@@ -224,7 +219,7 @@ class FrankaMobileMultiTask(RLMultiTask):
 
     def set_up_scene(self, scene) -> None:
 
-        self.cabinet_scale = 0.5
+        self.cabinet_scale = 0.45
         self.cabinet_orientation = torch.tensor([ 1.0, 0, 0, 0]).to(torch.float32)
         self._usd_context = omni.usd.get_context()
         def get_assets(usd_path, env_id = 0, annotation = None, anno=None, link_name = ""):
@@ -255,12 +250,11 @@ class FrankaMobileMultiTask(RLMultiTask):
             cabinet = Cabinet(env_path + "/cabinet", name="cabinet", 
                             usd_path=usd_path, 
                             translation=[x,y, cabinet_offset ], orientation=self.cabinet_orientation, scale=[self.cabinet_scale, self.cabinet_scale, self.cabinet_scale])
-            self.all_translations.append([x, y, cabinet_offset])
+          
 
             
 
             self.all_cabinets.append(cabinet)
-            self.all_cabinets_path.append(cabinet_prim_path)
             
             children = get_all_matching_child_prims(env_path + "/cabinet")
             # print('children: ', children)
@@ -316,7 +310,6 @@ class FrankaMobileMultiTask(RLMultiTask):
             #     "franka", get_prim_at_path(env_path + "/franka"), self._sim_config.parse_actor_config("franka")
             # )
 
-            self.allbbLinks.append(bbox_link)
 
 
             
@@ -336,7 +329,6 @@ class FrankaMobileMultiTask(RLMultiTask):
             self.bbox.append(bbox)
             # jointData['axis']['origin'] = np.array(jointData['axis']['origin']) + np.array([x, y, cabinet_offset ])
         
-            # self.allJointData.append(jointData)
             prim = stage.GetPrimAtPath(env_path + f"/cabinet/{bbox_link}")
             matrix = inv(np.array(omni.usd.get_world_transform_matrix(prim)))
         
