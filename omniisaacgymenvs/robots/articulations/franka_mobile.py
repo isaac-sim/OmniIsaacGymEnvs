@@ -114,7 +114,9 @@ class FrankaMobile(Robot):
         stiffness = [800]*3 + [400 * np.pi / 180] * 7 + [10000] * 2
         damping =  [200]*3 + [80 * np.pi / 180] * 7 + [100] * 2
         max_force = [300, 300, 300, 87, 87, 87, 87, 12, 12, 12, 200, 200]
+        max_force = [x * 2  for x in max_force]
         max_velocity = [300 ] * 3 +  [math.degrees(x) for x in [2.175, 2.175, 2.175, 2.175, 2.61, 2.61, 2.61]] + [0.2, 0.2]
+        max_velocity = [x * 2  for x in max_velocity]
         # decrease max velocity by half
         # max_velocity = [x / 2 for x in max_velocity]
         for i, dof in enumerate(dof_paths):

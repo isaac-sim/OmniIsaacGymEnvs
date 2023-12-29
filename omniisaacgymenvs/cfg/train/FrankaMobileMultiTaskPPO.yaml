@@ -21,7 +21,7 @@ params:
           val: 0
         fixed_sigma: True
     mlp:
-      units:  [512, 512, 128]
+      units:  [512, 512, 256]
       activation: elu
       d2rl: False
 
@@ -54,7 +54,7 @@ params:
     lr_schedule: adaptive
     kl_threshold: 0.008
     score_to_win: 100000000
-    max_epochs: ${resolve_default:15000,${....max_iterations}}
+    max_epochs: ${resolve_default:25000,${....max_iterations}}
     save_best_after: 200
     save_frequency: 200
     print_stats: True
