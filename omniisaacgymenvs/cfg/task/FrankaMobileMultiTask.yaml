@@ -7,9 +7,9 @@ physics_engine: ${..physics_engine}
 #285 drawers
 # 269
 env:
-  numEnvs: ${resolve_default:570,${...num_envs}}
+  numEnvs: ${resolve_default:20,${...num_envs}}
   envSpacing: 5.0
-  episodeLength: 360
+  episodeLength: 480
   enableDebugVis: False
 
   clipObservations: 5.0
