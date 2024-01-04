@@ -84,7 +84,7 @@ class Randomizer:
                                                     f"Please ensure the following randomization parameters for {view_name} {attribute} "
                                                     + "on_startup are provided: operation, distribution, distribution_parameters."
                                                 )
-                                            view = task._env._world.scene._scene_registry.rigid_prim_views[view_name]
+                                            view = task.world.scene._scene_registry.rigid_prim_views[view_name]
                                             if attribute == "scale":
                                                 self.randomize_scale_on_startup(
                                                     view=view,
@@ -128,7 +128,7 @@ class Randomizer:
                                                     f"Please ensure the following randomization parameters for {view_name} {attribute} "
                                                     + "on_startup are provided: operation, distribution, distribution_parameters."
                                                 )
-                                            view = task._env._world.scene._scene_registry.articulated_views[view_name]
+                                            view = task.world.scene._scene_registry.articulated_views[view_name]
                                             if attribute == "scale":
                                                 self.randomize_scale_on_startup(
                                                     view=view,
@@ -161,7 +161,7 @@ class Randomizer:
                     elif opt == "simulation":
                         if randomization_params["simulation"] is not None:
                             self.distributions["simulation"] = dict()
-                            self.dr.physics_view.register_simulation_context(task._env._world)
+                            self.dr.physics_view.register_simulation_context(task.world)
                             for attribute, params in randomization_params["simulation"].items():
                                 self._set_up_simulation_randomization(attribute, params)
                     elif opt == "rigid_prim_views":
@@ -171,7 +171,7 @@ class Randomizer:
                                 if randomization_params["rigid_prim_views"][view_name] is not None:
                                     self.distributions["rigid_prim_views"][view_name] = dict()
                                     self.dr.physics_view.register_rigid_prim_view(
-                                        rigid_prim_view=task._env._world.scene._scene_registry.rigid_prim_views[
+                                        rigid_prim_view=task.world.scene._scene_registry.rigid_prim_views[
                                             view_name
                                         ],
                                     )
@@ -187,7 +187,7 @@ class Randomizer:
                                 if randomization_params["articulation_views"][view_name] is not None:
                                     self.distributions["articulation_views"][view_name] = dict()
                                     self.dr.physics_view.register_articulation_view(
-                                        articulation_view=task._env._world.scene._scene_registry.articulated_views[
+                                        articulation_view=task.world.scene._scene_registry.articulated_views[
                                             view_name
                                         ],
                                     )
@@ -197,6 +197,12 @@ class Randomizer:
                                         if attribute not in ["scale"]:
                                             self._set_up_articulation_view_randomization(view_name, attribute, params)
             self.rep.orchestrator.run()
+            if self._config.get("enable_recording", False):
+                # we need to deal with initializing render product here because it has to be initialized after orchestrator.run.
+                # otherwise, replicator will stop the simulation
+                task._env.create_viewport_render_product(resolution=(task.viewport_camera_width, task.viewport_camera_height))
+                if not task.is_extension:
+                    task.world.render()
         else:
             dr_config = self._cfg.get("domain_randomization", None)
             if dr_config is None:

@@ -120,7 +120,7 @@ class HumanoidLocomotionTask(LocomotionTask):
 
     def get_dof_at_limit_cost(self):
         wp.launch(get_dof_at_limit_cost, dim=(self._num_envs, self._humanoids._num_dof),
-            inputs=[self.dof_at_limit_cost, self.obs_buf, self.motor_effort_ratio, self.joints_at_limit_cost_scale])
+            inputs=[self.dof_at_limit_cost, self.obs_buf, self.motor_effort_ratio, self.joints_at_limit_cost_scale], device=self._device)
         return self.dof_at_limit_cost
 
 @wp.kernel

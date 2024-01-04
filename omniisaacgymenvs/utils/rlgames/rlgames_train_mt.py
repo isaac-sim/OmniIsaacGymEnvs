@@ -37,6 +37,7 @@ import traceback
 import hydra
 from omegaconf import DictConfig
 from omni.isaac.gym.vec_env.vec_env_mt import TrainerMT
+import omniisaacgymenvs
 from omniisaacgymenvs.envs.vec_env_rlgames_mt import VecEnvRLGamesMT
 from omniisaacgymenvs.utils.config_utils.path_utils import retrieve_checkpoint_path
 from omniisaacgymenvs.utils.hydra_cfg.hydra_utils import *
@@ -82,12 +83,15 @@ class RLGTrainer:
             player_config["dir_to_monitor"] = os.path.dirname(self.cfg.checkpoint)
             self.rlg_config_dict["params"]["config"]["player"] = player_config
 
+        module_path = os.path.abspath(os.path.join(os.path.dirname(omniisaacgymenvs.__file__)))
+        self.rlg_config_dict["params"]["config"]["train_dir"] = os.path.join(module_path, "runs")
+
         # load config
         runner.load(copy.deepcopy(self.rlg_config_dict))
         runner.reset()
 
         # dump config dict
-        experiment_dir = os.path.join("runs", self.cfg.train.params.config.name)
+        experiment_dir = os.path.join(module_path, "runs", self.cfg.train.params.config.name)
         os.makedirs(experiment_dir, exist_ok=True)
         with open(os.path.join(experiment_dir, "config.yaml"), "w") as f:
             f.write(OmegaConf.to_yaml(self.cfg))
@@ -135,7 +139,7 @@ class Trainer(TrainerMT):
     def create_task(self):
         self.trainer.launch_rlg_hydra(self.env)
         # task = initialize_task(self.trainer.cfg_dict, self.env, init_sim=False)
-        self.task = self.env._task
+        self.task = self.env.task
 
     def run(self):
         self.is_running = True

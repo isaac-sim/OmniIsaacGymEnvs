@@ -389,12 +389,12 @@ class AnymalTerrainTask(RLTask):
         self.knee_pos, self.knee_quat = self._anymals._knees.get_world_poses(clone=False)
 
     def pre_physics_step(self, actions):
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         self.actions = actions.clone().to(self.device)
         for i in range(self.decimation):
-            if self._env._world.is_playing():
+            if self.world.is_playing():
                 torques = torch.clip(
                     self.Kp * (self.action_scale * self.actions + self.default_dof_pos - self.dof_pos)
                     - self.Kd * self.dof_vel,
@@ -403,13 +403,13 @@ class AnymalTerrainTask(RLTask):
                 )
                 self._anymals.set_joint_efforts(torques)
                 self.torques = torques
-                SimulationContext.step(self._env._world, render=False)
+                SimulationContext.step(self.world, render=False)
                 self.refresh_dof_state_tensors()
 
     def post_physics_step(self):
         self.progress_buf[:] += 1
 
-        if self._env._world.is_playing():
+        if self.world.is_playing():
 
             self.refresh_dof_state_tensors()
             self.refresh_body_state_tensors()

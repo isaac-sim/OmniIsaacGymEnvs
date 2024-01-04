@@ -106,7 +106,7 @@ class CartpoleTask(RLTask):
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)

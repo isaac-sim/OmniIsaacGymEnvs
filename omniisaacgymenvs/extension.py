@@ -14,6 +14,7 @@ import traceback
 import weakref
 from abc import abstractmethod
 
+import gym
 import hydra
 import omni.ext
 import omni.timeline
@@ -26,6 +27,7 @@ from omni.isaac.core.utils.extensions import disable_extension, enable_extension
 from omni.isaac.core.utils.torch.maths import set_seed
 from omni.isaac.core.utils.viewports import set_camera_view
 from omni.isaac.core.world import World
+import omniisaacgymenvs
 from omniisaacgymenvs.envs.vec_env_rlgames_mt import VecEnvRLGamesMT
 from omniisaacgymenvs.utils.config_utils.sim_config import SimConfig
 from omniisaacgymenvs.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
@@ -299,11 +301,34 @@ class RLExtension(omni.ext.IExt):
             headless=headless,
             sim_device=self._cfg.device_id,
             enable_livestream=self._cfg.enable_livestream,
-            enable_viewport=enable_viewport,
+            enable_viewport=enable_viewport or self._cfg.enable_recording,
             launch_simulation_app=False,
         )
+        # parse experiment directory
+        module_path = os.path.abspath(os.path.join(os.path.dirname(omniisaacgymenvs.__file__)))
+        experiment_dir = os.path.join(module_path, "runs", self._cfg.train.params.config.name)
+
+        # use gym RecordVideo wrapper for viewport recording
+        if self._cfg.enable_recording:
+            if self._cfg.recording_dir == '':
+                videos_dir = os.path.join(experiment_dir, "videos")
+            else:
+                videos_dir = self._cfg.recording_dir
+            video_interval = lambda step: step % self._cfg.recording_interval == 0
+            video_length = self._cfg.recording_length
+            self._env.is_vector_env = True
+            if self._env.metadata is None:
+                self._env.metadata = {"render_modes": ["rgb_array"], "render_fps": self._cfg.recording_fps}
+            else:
+                self._env.metadata["render_modes"] = ["rgb_array"]
+                self._env.metadata["render_fps"] = self._cfg.recording_fps
+            self._env = gym.wrappers.RecordVideo(
+                self._env, video_folder=videos_dir, step_trigger=video_interval, video_length=video_length
+            )
+
         self._task = initialize_task(self._cfg_dict, self._env, init_sim=False)
         self._task_initialized = True
+        self._task.set_is_extension(True)
 
     def _on_task_select(self, value):
         if self._task_initialized and value != self._task_name:
@@ -320,29 +345,29 @@ class RLExtension(omni.ext.IExt):
             window = ui.Workspace.get_window("Viewport")
             window.visible = True
             if self._env:
-                self._env._update_viewport = True
-                self._env._render_mode = 0
+                self._env.update_viewport = True
+                self._env.set_render_mode(0)
         elif value == self._render_modes[1]:
             self._viewport.updates_enabled = False
             window = ui.Workspace.get_window("Viewport")
             window.visible = False
             if self._env:
-                self._env._update_viewport = False
-                self._env._render_mode = 1
+                self._env.update_viewport = False
+                self._env.set_render_mode(1)
         elif value == self._render_modes[2]:
             self._viewport.updates_enabled = False
             window = ui.Workspace.get_window("Viewport")
             window.visible = False
             if self._env:
-                self._env._update_viewport = False
-                self._env._render_mode = 2
+                self._env.update_viewport = False
+                self._env.set_render_mode(2)
 
     def _on_render_cb_update(self, value):
         self._render = value
         print("updates enabled", value)
         self._viewport.updates_enabled = value
         if self._env:
-            self._env._update_viewport = value
+            self._env.update_viewport = value
         if value:
             window = ui.Workspace.get_window("Viewport")
             window.visible = True
@@ -372,12 +397,14 @@ class RLExtension(omni.ext.IExt):
     def _on_test_cb_update(self, value):
         self._test = value
         if value is True and self._checkpoint_path.strip() == "":
-            self._checkpoint_str.set_value(f"runs/{self._task_name}/nn/{self._task_name}.pth")
+            module_path = os.path.abspath(os.path.join(os.path.dirname(omniisaacgymenvs.__file__)))
+            self._checkpoint_str.set_value(os.path.join(module_path, f"runs/{self._task_name}/nn/{self._task_name}.pth"))
 
     def _on_resume_cb_update(self, value):
         self._resume = value
         if value is True and self._checkpoint_path.strip() == "":
-            self._checkpoint_str.set_value(f"runs/{self._task_name}/nn/{self._task_name}.pth")
+            module_path = os.path.abspath(os.path.join(os.path.dirname(omniisaacgymenvs.__file__)))
+            self._checkpoint_str.set_value(os.path.join(module_path, f"runs/{self._task_name}/nn/{self._task_name}.pth"))
 
     def _on_evaluate_cb_update(self, value):
         self._evaluate = value
@@ -395,24 +422,24 @@ class RLExtension(omni.ext.IExt):
             self._parse_config(task=self._task_name, num_envs=self._num_envs_int.get_value_as_int())
             self._task.update_config(self._sim_config)
             # clear scene
-            # self._env._world.scene.clear()
+            # self._env.world.scene.clear()
 
-        self._env._world._sim_params = self._sim_config.get_physics_params()
-        await self._env._world.initialize_simulation_context_async()
+        self._env.world._sim_params = self._sim_config.get_physics_params()
+        await self._env.world.initialize_simulation_context_async()
         set_camera_view(eye=[10, 10, 3], target=[0, 0, 0], camera_prim_path="/OmniverseKit_Persp")
 
         if not use_existing_stage:
             # clear scene
-            self._env._world.scene.clear()
+            self._env.world.scene.clear()
             # clear environments added to world
             omni.usd.get_context().get_stage().RemovePrim("/World/collisions")
             omni.usd.get_context().get_stage().RemovePrim("/World/envs")
             # create scene
-            await self._env._world.reset_async_set_up_scene()
+            await self._env.world.reset_async_set_up_scene()
             # update num_envs in envs
             self._env.update_task_params()
         else:
-            self._task.initialize_views(self._env._world.scene)
+            self._task.initialize_views(self._env.world.scene)
 
     def _on_load_world(self):
         # stop simulation before updating stage
@@ -421,7 +448,7 @@ class RLExtension(omni.ext.IExt):
 
     def _on_train_stop(self):
         if self._task_initialized:
-            asyncio.ensure_future(self._env._world.stop_async())
+            asyncio.ensure_future(self._env.world.stop_async())
 
     async def _on_train_async(self, overrides=None):
         try:
@@ -458,15 +485,20 @@ class RLExtension(omni.ext.IExt):
             rlg_trainer = RLGTrainer(self._cfg, cfg_dict)
             if not rlg_trainer._bad_checkpoint:
                 trainer = Trainer(rlg_trainer, self._env)
-
-                await self._env._world.reset_async_no_set_up_scene()
-                self._env._render_mode = self._render_dropdown.get_item_value_model().as_int
+                await self._env.world.reset_async_no_set_up_scene()
+                # this is needed to enable rendering for viewport recording
+                for _ in range(5):
+                    await self._env.world.render_async()
+                self._env.set_render_mode(self._render_dropdown.get_item_value_model().as_int)
                 await self._env.run(trainer)
                 await omni.kit.app.get_app().next_update_async()
         except Exception as e:
             print(traceback.format_exc())
         finally:
             self._is_training = False
+            if self._task._dr_randomizer.randomize:
+                await self._task._dr_randomizer.rep.orchestrator.stop_async()
+                self._task._dr_randomizer.rep.orchestrator._orchestrator.shutdown()
 
     def _on_train(self):
         # stop simulation if still running

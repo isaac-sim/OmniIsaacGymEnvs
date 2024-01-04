@@ -30,6 +30,8 @@
 from gym import spaces
 import numpy as np
 import torch
+import omni.usd
+from pxr import UsdGeom
 
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.utils.prims import get_prim_at_path
@@ -83,8 +85,29 @@ class CartpoleCameraTask(CartpoleTask):
         self.obs_buf = torch.zeros(
             (self.num_envs, self.camera_width, self.camera_height, 3), device=self.device, dtype=torch.float)
 
+    def add_camera(self) -> None:
+        stage = get_current_stage()
+        camera_path = f"/World/envs/env_0/Camera"
+        camera_xform = stage.DefinePrim(f'{camera_path}_Xform', 'Xform')
+        # set up transforms for parent and camera prims
+        position = (-4.2, 0.0, 3.0)
+        rotation = (0, -6.1155, -180)
+        UsdGeom.Xformable(camera_xform).AddTranslateOp()
+        UsdGeom.Xformable(camera_xform).AddRotateXYZOp()
+        camera_xform.GetAttribute('xformOp:translate').Set(position)
+        camera_xform.GetAttribute('xformOp:rotateXYZ').Set(rotation)
+        camera = stage.DefinePrim(f'{camera_path}_Xform/Camera', 'Camera')
+        UsdGeom.Xformable(camera).AddRotateXYZOp()
+        camera.GetAttribute("xformOp:rotateXYZ").Set((90, 0, 90))
+        # set camera properties
+        camera.GetAttribute('focalLength').Set(24)
+        camera.GetAttribute('focusDistance').Set(400)
+        # hide other environments in the background
+        camera.GetAttribute("clippingRange").Set((0.01, 20.0))
+
     def set_up_scene(self, scene) -> None:
         self.get_cartpole()
+        self.add_camera()
 
         RLTask.set_up_scene(self, scene)
 
@@ -94,10 +117,9 @@ class CartpoleCameraTask(CartpoleTask):
         # set up cameras
         self.render_products = []
         env_pos = self._env_pos.cpu()
+        camera_paths = [f"/World/envs/env_{i}/Camera_Xform/Camera" for i in range(self._num_envs)]
         for i in range(self._num_envs):
-            camera = self.rep.create.camera(
-                position=(-4.2 + env_pos[i][0], env_pos[i][1], 3.0), look_at=(env_pos[i][0], env_pos[i][1], 2.55))
-            render_product = self.rep.create.render_product(camera, resolution=(self.camera_width, self.camera_height))
+            render_product = self.rep.create.render_product(camera_paths[i], resolution=(self.camera_width, self.camera_height))
             self.render_products.append(render_product)
 
         # initialize pytorch writer for vectorized collection

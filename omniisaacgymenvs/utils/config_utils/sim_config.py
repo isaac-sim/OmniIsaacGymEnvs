@@ -54,13 +54,14 @@ class SimConfig:
             self._config["headless"] == True
             and not self._sim_params["enable_cameras"]
             and not self._config["enable_livestream"]
+            and not self._config.get("enable_recording", False)
         ):
             self._sim_params["use_fabric"] = False
             self._sim_params["enable_viewport"] = False
         else:
             self._sim_params["enable_viewport"] = True
             enable_extension("omni.kit.viewport.bundle")
-            if self._sim_params["enable_cameras"]:
+            if self._sim_params["enable_cameras"] or self._config.get("enable_recording", False):
                 enable_extension("omni.replicator.isaac")
 
         self._sim_params["warp"] = self._config["warp"]
@@ -90,6 +91,9 @@ class SimConfig:
         dock_window(main_dockspace, "Content", omni.ui.DockPosition.BOTTOM, 0.3)
 
         window = omni.ui.Workspace.get_window("Content")
+        if window:
+            window.visible = False
+        window = omni.ui.Workspace.get_window("Simulation Settings")
         if window:
             window.visible = False
 
@@ -353,7 +357,7 @@ class SimConfig:
         solver_velocity_iteration_count = arti_api.GetSolverVelocityIterationCountAttr()
         if value is None:
             value = self._get_actor_config_value(
-                name, "solver_velocity_iteration_count", solver_position_iteration_count
+                name, "solver_velocity_iteration_count", solver_velocity_iteration_count
             )
         if value != -1:
             solver_velocity_iteration_count.Set(value)

@@ -29,7 +29,9 @@ rl_device: 'cuda:0'
 multi_gpu: False
 
 ## PhysX arguments
+
 num_threads: 16 # Number of worker threads per scene used by PhysX - for CPU PhysX only.
+
 solver_type: 1 # 0: pgs, 1: tgs
 
 # RLGames Arguments
@@ -45,7 +47,18 @@ headless: False
 # enables native livestream
 enable_livestream: False
 # timeout for MT script
-mt_timeout: 90
+mt_timeout: 300
+
+# enables viewport recording
+enable_recording: False
+# interval between video recordings (in steps)
+recording_interval: 2000
+# length of the recorded video (in steps)
+recording_length: 100
+# fps for writing recorded video
+recording_fps: 30
+# directory to save recordings in
+recording_dir: ''
 
 wandb_activate: False
 wandb_group: ''

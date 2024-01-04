@@ -11,6 +11,15 @@ Updating task code and configuration parameters while running the extension work
 The extension workflow uses the multi-threaded VecEnv base environment for running RL training and inferencing. Since the UI requires having its own control loop, the RL policy runs on a separate thread that maintains its own execution loop. The two threads communicated via multi-threaded queueus in the VecEnv class for passing actions and states.
 
 
+### Video Tutorial
+
+A quick video overview of the extension workflow is available below.
+
+[![](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/59ec740a-9629-41ea-aad3-6532935be5fd)](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/cc6732f6-5a60-44f3-8c08-acf41e22a998)
+
+[Link to video.](https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/assets/6352136/cc6732f6-5a60-44f3-8c08-acf41e22a998)
+
+
 ### Launching Isaac Sim
 
 To use the extension workflow, an Isaac Sim app instance must be launched first. A dedicated kit app file is provided for the purpose of the extension workflow. However, the path to the OmniIsaacGymEnvs repo must be provided as a command line argument in order for the Isaac Sim app to find the OIGE extension. This path should be the **parent** directory of where the OIGE extension is cloned at. For example, if OIGE is cloned to `/home/user/OmniIsaacGymEnvs`, then the required argument will be `--ext-folder /home/user`.

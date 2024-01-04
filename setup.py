@@ -44,14 +44,15 @@ INSTALL_REQUIRES = [
     "omegaconf==2.3.0",
     "hydra-core==1.3.2",
     "urllib3==1.26.16",
-    "rl-games==1.6.1"
+    "rl-games==1.6.1",
+    "moviepy==1.0.3"
 ]
 
 # Installation operation
 setup(
     name="omniisaacgymenvs",
     author="NVIDIA",
-    version="2023.1.0b",
+    version="2023.1.1",
     description="RL environments for robot learning in NVIDIA Isaac Sim.",
     keywords=["robotics", "rl"],
     include_package_data=True,

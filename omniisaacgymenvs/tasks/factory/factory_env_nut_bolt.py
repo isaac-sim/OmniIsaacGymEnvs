@@ -99,7 +99,7 @@ class FactoryEnvNutBolt(FactoryBase, FactoryABCEnv):
         """Import assets. Add to scene."""
 
         # Increase buffer size to prevent overflow for Place and Screw tasks
-        physxSceneAPI = self._env._world.get_physics_context()._physx_scene_api
+        physxSceneAPI = self.world.get_physics_context()._physx_scene_api
         physxSceneAPI.CreateGpuCollisionStackSizeAttr().Set(256 * 1024 * 1024)
 
         self.import_franka_assets(add_to_stage=True)

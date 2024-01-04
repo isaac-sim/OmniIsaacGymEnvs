@@ -81,7 +81,8 @@ class RLTask(RLTaskInterface):
             self.dr = dr
 
         # set up replicator for camera data collection
-        if self._task_cfg["sim"].get("enable_cameras", False):
+        self.enable_cameras = self._task_cfg["sim"].get("enable_cameras", False)
+        if self.enable_cameras:
             from omni.replicator.isaac.scripts.writers.pytorch_writer import PytorchWriter
             from omni.replicator.isaac.scripts.writers.pytorch_listener import PytorchListener
             import omni.replicator.core as rep
@@ -102,9 +103,21 @@ class RLTask(RLTaskInterface):
         self.control_frequency_inv = self._task_cfg["env"].get("controlFrequencyInv", 1)
         self.rendering_interval = self._task_cfg.get("renderingInterval", 1)
 
+        # parse default viewport camera position and lookat target and resolution (width, height)
+        self.camera_position = [10, 10, 3]
+        self.camera_target = [0, 0, 0]
+        self.viewport_camera_width = 1280
+        self.viewport_camera_height = 720
+        if "viewport" in self._task_cfg:
+            self.camera_position = self._task_cfg["viewport"].get("camera_position", self.camera_position)
+            self.camera_target = self._task_cfg["viewport"].get("camera_target", self.camera_target)
+            self.viewport_camera_width = self._task_cfg["viewport"].get("viewport_camera_width", self.viewport_camera_width)
+            self.viewport_camera_height = self._task_cfg["viewport"].get("viewport_camera_height", self.viewport_camera_height)
+
         print("RL device: ", self.rl_device)
 
         self._env = env
+        self.is_extension = False
 
         if not hasattr(self, "_num_agents"):
             self._num_agents = 1  # used for multi-agent environments
@@ -173,17 +186,21 @@ class RLTask(RLTaskInterface):
         self._env_pos = torch.tensor(np.array(self._env_pos), device=self._device, dtype=torch.float)
         if filter_collisions:
             self._cloner.filter_collisions(
-                self._env._world.get_physics_context().prim_path,
+                self._env.world.get_physics_context().prim_path,
                 "/World/collisions",
                 prim_paths,
                 collision_filter_global_paths,
             )
-        if self._env._render:
-            self.set_initial_camera_params(camera_position=[10, 10, 3], camera_target=[0, 0, 0])
+        if self._env.render_enabled:
+            self.set_initial_camera_params(camera_position=self.camera_position, camera_target=self.camera_target)
             if self._task_cfg["sim"].get("add_distant_light", True):
                 self._create_distant_light()
+        # initialize capturer for viewport recording
+        # this has to be called after initializing replicator for DR
+        if self._cfg.get("enable_recording", False) and not self._dr_randomizer.randomize:
+            self._env.create_viewport_render_product(resolution=(self.viewport_camera_width, self.viewport_camera_height))
 
-    def set_initial_camera_params(self, camera_position=[10, 10, 3], camera_target=[0, 0, 0]):
+    def set_initial_camera_params(self, camera_position, camera_target):
         from omni.kit.viewport.utility import get_viewport_from_window_name
         from omni.kit.viewport.utility.camera_state import ViewportCameraState
 
@@ -205,10 +222,15 @@ class RLTask(RLTaskInterface):
         Args:
             scene (Scene): Scene to remove existing views and initialize/add new views.
         """
-        pass
-        # self._cloner = GridCloner(spacing=self._env_spacing)
-        # pos, _ = self._cloner.get_clone_transforms(self._num_envs)
-        # self._env_pos = torch.tensor(np.array(pos), device=self._device, dtype=torch.float)
+
+        self._cloner = GridCloner(spacing=self._env_spacing)
+        pos, _ = self._cloner.get_clone_transforms(self._num_envs)
+        self._env_pos = torch.tensor(np.array(pos), device=self._device, dtype=torch.float)
+        if self._env.render_enabled:
+            # initialize capturer for viewport recording
+            if self._cfg.get("enable_recording", False) and not self._dr_randomizer.randomize:
+                self._env.create_viewport_render_product(resolution=(self.viewport_camera_width, self.viewport_camera_height))
+
 
     @property
     def default_base_env_path(self):
@@ -245,7 +267,7 @@ class RLTask(RLTaskInterface):
 
         self.progress_buf[:] += 1
 
-        if self._env._world.is_playing():
+        if self._env.world.is_playing():
             self.get_observations()
             self.get_states()
             self.calculate_metrics()
@@ -253,6 +275,27 @@ class RLTask(RLTaskInterface):
             self.get_extras()
 
         return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
+
+    @property
+    def world(self):
+        """Retrieves the World object for simulation.
+
+        Returns:
+            world(World): Simulation World.
+        """
+        return self._env.world
+
+    @property
+    def cfg(self):
+        """Retrieves the main config.
+
+        Returns:
+            cfg(dict): Main config dictionary.
+        """
+        return self._cfg
+
+    def set_is_extension(self, is_extension):
+        self.is_extension = is_extension
 
 class RLTaskWarp(RLTask):
     def cleanup(self) -> None:
@@ -285,7 +328,7 @@ class RLTaskWarp(RLTask):
 
         wp.launch(increment_progress, dim=self._num_envs, inputs=[self.progress_buf], device=self._device)
 
-        if self._env._world.is_playing():
+        if self._env.world.is_playing():
             self.get_observations()
             self.get_states()
             self.calculate_metrics()
