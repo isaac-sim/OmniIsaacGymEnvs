@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+Additions
+---------
+- Add `TargetFollowing` example with wheeled robot.
+
 2023.1.1 - December 12, 2023
 ----------------------------
 

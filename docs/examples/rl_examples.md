@@ -24,6 +24,7 @@ Pre-trained checkpoints can be found on the Nucleus server. To set up localhost,
   - [Franka Cabinet franka_cabinet.py](#franka-cabinet-franka_cabinetpy)
   - [Franka Deformable franka_deformable.py](#franka-deformablepy)
   - [Factory: Fast Contact for Robotic Assembly](#factory-fast-contact-for-robotic-assembly)
+  - [Target Following target_following.py](#target-following-target_followingpy)
 
 
 ### Cartpole [cartpole.py](../../omniisaacgymenvs/tasks/cartpole.py)
@@ -385,3 +386,16 @@ If you use the Factory simulation methods (e.g., SDF collisions, contact reducti
 Also note that our original formulations of SDF collisions and contact reduction were developed by [Macklin, et al.](https://dl.acm.org/doi/abs/10.1145/3384538) and [Moravanszky and Terdiman](https://scholar.google.com/scholar?q=Game+Programming+Gems+4%2C+chapter+Fast+Contact+Reduction+for+Dynamics+Simulation), respectively.
 
 <img src="https://user-images.githubusercontent.com/6352136/205978286-fa2ae714-a3cb-4acd-9f5f-a467338a8bb3.gif"/>
+
+### Target Following [target_following.py](../../omniisaacgymenvs/tasks/target_following.py)
+
+This wheeled robot example demonstrates using vision observations to train the Carter V2 robots to navigate to a target location. Usage of RGB and segmentation masks are demonstrated in this example. This example also shows how to enable and use other isaac sim examples (`omni.isaac.wheeled_robots` and `omni.issac.sensors`) with RL training.
+
+Training can be launched with command line argument `task=TargetFollowing`.
+
+Running inference with pre-trained model can be launched with command line argument `task=TargetFollowing test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/target_following.pth`
+
+Config files used for this task are:
+
+-   **Task config**: [TargetFollowing.yaml](../../omniisaacgymenvs/cfg/task/TargetFollowing.yaml)
+-   **rl_games training config**: [TargetFollowingPPO.yaml](../../omniisaacgymenvs/cfg/train/TargetFollowingPPO.yaml)

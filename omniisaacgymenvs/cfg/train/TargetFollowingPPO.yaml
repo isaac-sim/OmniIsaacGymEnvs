@@ -1,0 +1,97 @@
+params:
+  seed: ${...seed}
+
+  algo:
+    name: a2c_continuous
+
+  model:
+    name: continuous_a2c_logstd
+
+  network:
+    name: actor_critic
+    separate: False  ## Use separate CNN+MLP backbones for Actor and Critic: A2CBuilder.Network
+    ## False means A and C share the same CNN and MLP model, C will follow by a single-layer Value Head
+    space:
+      continuous:
+        mu_activation: None
+        sigma_activation: None
+
+        mu_init:
+          name: default
+        sigma_init:
+          name: const_initializer
+          val: 0
+        fixed_sigma: True
+    cnn:
+      type: conv2d
+      activation: tanh #relu
+      initializer:
+          name: default
+      regularizer:
+        name: None
+      convs:    
+        - filters: 32
+          kernel_size: 8
+          strides: 4
+          padding: 0
+        - filters: 64
+          kernel_size: 4
+          strides: 2
+          padding: 0
+        - filters: 64
+          kernel_size: 3
+          strides: 1
+          padding: 0
+      
+    mlp:
+      units: [256, 128]
+      activation: tanh #elu
+      initializer:
+          name: default
+
+    # rnn:
+    #   name: lstm
+    #   units: 128
+    #   layers: 1
+    #   before_mlp: False
+    #   concat_input: True
+    #   layer_norm: True
+
+  load_checkpoint: ${if:${...checkpoint},True,False} # flag which sets whether to load the checkpoint
+  load_path: ${...checkpoint} # path to the checkpoint to load
+
+  config:
+    name: ${resolve_default:TargetFollowing,${....experiment}}
+    full_experiment_name: ${.name}
+    device: ${....rl_device}
+    device_name: ${....rl_device}
+    env_name: rlgpu
+    multi_gpu: ${....multi_gpu}
+    ppo: True
+    mixed_precision: False
+    normalize_input: False
+    normalize_value: True
+    num_actors: ${....task.env.numEnvs}
+    reward_shaper:
+      scale_value: 1.0 #0.1
+    normalize_advantage: True
+    gamma: 0.999 #0.99 # Reward Discount: larger for longer episode
+    tau: 0.95 # Lambda for GAE. Called tau by mistake long time ago because lambda is keyword in python
+    learning_rate: 2e-4 ## 1e-4
+    lr_schedule: adaptive # Adaptive is the best for continuous control tasks. Learning rate is changed changed every miniepoch
+    kl_threshold: 0.008  # target kl for adaptive lr: if KL < kl_threshold/2 lr = lr * 1.5 and opposite.
+    score_to_win: 20000  #If score is >=value then this value training will stop.
+    max_epochs: ${resolve_default:200,${....max_iterations}}
+    save_best_after: 10
+    save_frequency: 50 #10
+    grad_norm: 10 #1.0
+    entropy_coef: 0.0  # To encourage actor to explore more; Entropy coefficient. Good value for continuous space is 0. For discrete is 0.02
+    truncate_grads: True  # Apply truncate grads or not. It stabilizes training.
+    e_clip: 0.2 # clip parameter for ppo loss.
+    horizon_length: 512 # self.batch_size = self.horizon_length * self.num_actors * self.num_agents
+    minibatch_size: 2048
+    mini_epochs: 4
+    critic_coef: 0.005 #2 # Critic coef. by default critic_loss = critic_coef * 1/2 * MSE. 
+    clip_value: False #True Apply clip to the value loss. If you are using normalize_value you don't need it.
+    seq_length: 4
+    bounds_loss_coef: 0.0001 # Adds aux loss for continuous case. 'regularisation' is the sum of sqaured actions. 'bound' is the sum of actions higher than 1.1.
