@@ -4,6 +4,8 @@
 
 This is the readme for the biped branch of OmniIsaacGymEnvs. To replicate the work, convert the biped URDF to a USD using the built in URDF converter. Make sure to make it instanceable (so it can run parallel efficiently) and remove the fixed base link (so it can walk and doesn't float in the air).
 
+[To view the report for this project](https://github.com/ACK101101/OmniIsaacGymEnvs/blob/biped/Biped_AlexKumar.pdf)
+
 ## Important files
 Experiment Runner Bash Script: ./omniisaacgymenvs/auto_runner.sh
 
