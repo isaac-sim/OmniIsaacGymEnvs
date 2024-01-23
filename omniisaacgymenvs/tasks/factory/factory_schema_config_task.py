@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2022, NVIDIA Corporation
+# Copyright (c) 2018-2023, NVIDIA Corporation
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 """Factory: schema for task class configurations.
 
 Used by Hydra. Defines template for task class YAML files. Not enforced.
 """
 
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 
@@ -57,10 +58,18 @@ class Randomize:
 
 @dataclass
 class RL:
-    pos_action_scale: list[float]  # scale on pos displacement targets (3), to convert [-1, 1] to +- x m
-    rot_action_scale: list[float]  # scale on rot displacement targets (3), to convert [-1, 1] to +- x rad
-    force_action_scale: list[float]  # scale on force targets (3), to convert [-1, 1] to +- x N
-    torque_action_scale: list[float]  # scale on torque targets (3), to convert [-1, 1] to +- x Nm
+    pos_action_scale: list[
+        float
+    ]  # scale on pos displacement targets (3), to convert [-1, 1] to +- x m
+    rot_action_scale: list[
+        float
+    ]  # scale on rot displacement targets (3), to convert [-1, 1] to +- x rad
+    force_action_scale: list[
+        float
+    ]  # scale on force targets (3), to convert [-1, 1] to +- x N
+    torque_action_scale: list[
+        float
+    ]  # scale on torque targets (3), to convert [-1, 1] to +- x Nm
 
     clamp_rot: bool  # clamp small values of rotation actions to zero
     clamp_rot_thresh: float  # smallest acceptable value
@@ -71,8 +80,12 @@ class RL:
 @dataclass
 class All:
     jacobian_type: str  # map between joint space and task space via geometric or analytic Jacobian {geometric, analytic}
-    gripper_prop_gains: list[float]  # proportional gains on left and right Franka gripper finger DOF position (2)
-    gripper_deriv_gains: list[float]  # derivative gains on left and right Franka gripper finger DOF position (2)
+    gripper_prop_gains: list[
+        float
+    ]  # proportional gains on left and right Franka gripper finger DOF position (2)
+    gripper_deriv_gains: list[
+        float
+    ]  # derivative gains on left and right Franka gripper finger DOF position (2)
 
 
 @dataclass
@@ -131,14 +144,14 @@ class HybridForceMotion:
 
 @dataclass
 class Ctrl:
-    ctrl_type: str # {gym_default,
-                   #  joint_space_ik,
-                   #  joint_space_id,
-                   #  task_space_impedance,
-                   #  operational_space_motion,
-                   #  open_loop_force,
-                   #  closed_loop_force,
-                   #  hybrid_force_motion}
+    ctrl_type: str  # {gym_default,
+    #  joint_space_ik,
+    #  joint_space_id,
+    #  task_space_impedance,
+    #  operational_space_motion,
+    #  open_loop_force,
+    #  closed_loop_force,
+    #  hybrid_force_motion}
     gym_default: GymDefault
     joint_space_ik: JointSpaceIK
     joint_space_id: JointSpaceID
@@ -157,4 +170,3 @@ class FactorySchemaConfigTask:
     env: Env
     rl: RL
     ctrl: Ctrl
-

@@ -27,14 +27,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omniisaacgymenvs.utils.config_utils.default_scene_params import *
-import copy
-import omni.usd
-import numpy as np
-import torch
-import carb
 
-class SimConfig():
+import copy
+
+import carb
+import numpy as np
+import omni.usd
+import torch
+from omni.isaac.core.utils.extensions import enable_extension
+from omniisaacgymenvs.utils.config_utils.default_scene_params import *
+
+
+class SimConfig:
     def __init__(self, config: dict = None):
         if config is None:
             config = dict()
@@ -46,19 +50,52 @@ class SimConfig():
         if self._config["test"] == True:
             self._sim_params["enable_scene_query_support"] = True
 
-        from omni.isaac.core.utils.extensions import enable_extension
-        if self._config["headless"] == True and not self._sim_params["enable_cameras"] and not self._config["enable_livestream"]:
-            self._sim_params["use_flatcache"] = False
+        if (
+            self._config["headless"] == True
+            and not self._sim_params["enable_cameras"]
+            and not self._config["enable_livestream"]
+            and not self._config.get("enable_recording", False)
+        ):
+            self._sim_params["use_fabric"] = False
             self._sim_params["enable_viewport"] = False
         else:
             self._sim_params["enable_viewport"] = True
             enable_extension("omni.kit.viewport.bundle")
-        enable_extension("omni.replicator.isaac")
+            if self._sim_params["enable_cameras"] or self._config.get("enable_recording", False):
+                enable_extension("omni.replicator.isaac")
+
+        self._sim_params["warp"] = self._config["warp"]
+        self._sim_params["sim_device"] = self._config["sim_device"]
+
+        self._adjust_dt()
 
         if self._sim_params["disable_contact_processing"]:
             carb.settings.get_settings().set_bool("/physics/disableContactProcessing", True)
 
         carb.settings.get_settings().set_bool("/physics/physxDispatcher", True)
+        # Force the background grid off all the time for RL tasks, to avoid the grid showing up in any RL camera task
+        carb.settings.get_settings().set("/app/viewport/grid/enabled", False)
+        # Disable framerate limiting which might cause rendering slowdowns
+        carb.settings.get_settings().set("/app/runLoops/main/rateLimitEnabled", False)
+
+        import omni.ui 
+        # Dock floating UIs this might not be needed anymore as extensions dock themselves
+        # Method for docking a particular window to a location
+        def dock_window(space, name, location, ratio=0.5):
+            window = omni.ui.Workspace.get_window(name)
+            if window and space:
+                window.dock_in(space, location, ratio=ratio)
+            return window
+        # Acquire the main docking station
+        main_dockspace = omni.ui.Workspace.get_window("DockSpace")
+        dock_window(main_dockspace, "Content", omni.ui.DockPosition.BOTTOM, 0.3)
+
+        window = omni.ui.Workspace.get_window("Content")
+        if window:
+            window.visible = False
+        window = omni.ui.Workspace.get_window("Simulation Settings")
+        if window:
+            window.visible = False
 
     def _parse_config(self):
         # general sim parameter
@@ -131,6 +168,20 @@ class SimConfig():
         else:
             if actor_params[attribute_name] != -1:
                 return actor_params[attribute_name]
+            
+    def _adjust_dt(self):
+        # re-evaluate rendering dt to simulate physics substeps
+        physics_dt = self.sim_params["dt"]
+        rendering_dt = self.sim_params["rendering_dt"]
+
+        # by default, rendering dt = physics dt
+        if rendering_dt <= 0:
+            rendering_dt = physics_dt
+
+        self.task_config["renderingInterval"] = max(round((1/physics_dt) / (1/rendering_dt)), 1)
+
+        # we always set rendering dt to be the same as physics dt, stepping is taken care of in VecEnvRLGames
+        self.sim_params["rendering_dt"] = physics_dt
 
     @property
     def sim_params(self):
@@ -139,7 +190,7 @@ class SimConfig():
     @property
     def config(self):
         return self._config
-    
+
     @property
     def task_config(self):
         return self._cfg
@@ -152,21 +203,24 @@ class SimConfig():
         return {**self.sim_params, **self.physx_params}
 
     def _get_physx_collision_api(self, prim):
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
+
         physx_collision_api = PhysxSchema.PhysxCollisionAPI(prim)
         if not physx_collision_api:
             physx_collision_api = PhysxSchema.PhysxCollisionAPI.Apply(prim)
         return physx_collision_api
 
     def _get_physx_rigid_body_api(self, prim):
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
+
         physx_rb_api = PhysxSchema.PhysxRigidBodyAPI(prim)
         if not physx_rb_api:
             physx_rb_api = PhysxSchema.PhysxRigidBodyAPI.Apply(prim)
         return physx_rb_api
 
     def _get_physx_articulation_api(self, prim):
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
+
         arti_api = PhysxSchema.PhysxArticulationAPI(prim)
         if not arti_api:
             arti_api = PhysxSchema.PhysxArticulationAPI.Apply(prim)
@@ -196,7 +250,9 @@ class SimConfig():
         physx_rb_api = self._get_physx_rigid_body_api(prim)
         solver_position_iteration_count = physx_rb_api.GetSolverPositionIterationCountAttr()
         if value is None:
-            value = self._get_actor_config_value(name, "solver_position_iteration_count", solver_position_iteration_count)
+            value = self._get_actor_config_value(
+                name, "solver_position_iteration_count", solver_position_iteration_count
+            )
         if value != -1:
             solver_position_iteration_count.Set(value)
 
@@ -204,7 +260,9 @@ class SimConfig():
         physx_rb_api = self._get_physx_rigid_body_api(prim)
         solver_velocity_iteration_count = physx_rb_api.GetSolverVelocityIterationCountAttr()
         if value is None:
-            value = self._get_actor_config_value(name, "solver_velocity_iteration_count", solver_position_iteration_count)
+            value = self._get_actor_config_value(
+                name, "solver_velocity_iteration_count", solver_velocity_iteration_count
+            )
         if value != -1:
             solver_velocity_iteration_count.Set(value)
 
@@ -266,11 +324,12 @@ class SimConfig():
 
     def make_kinematic(self, name, prim, cfg, value=None):
         # make rigid body kinematic (fixed base and no collision)
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
+
         stage = omni.usd.get_context().get_stage()
         if value is None:
             value = self._get_actor_config_value(name, "make_kinematic")
-        if value:
+        if value == True:
             # parse through all children prims
             prims = [prim]
             while len(prims) > 0:
@@ -287,7 +346,9 @@ class SimConfig():
         arti_api = self._get_physx_articulation_api(prim)
         solver_position_iteration_count = arti_api.GetSolverPositionIterationCountAttr()
         if value is None:
-            value = self._get_actor_config_value(name, "solver_position_iteration_count", solver_position_iteration_count)
+            value = self._get_actor_config_value(
+                name, "solver_position_iteration_count", solver_position_iteration_count
+            )
         if value != -1:
             solver_position_iteration_count.Set(value)
 
@@ -295,7 +356,9 @@ class SimConfig():
         arti_api = self._get_physx_articulation_api(prim)
         solver_velocity_iteration_count = arti_api.GetSolverVelocityIterationCountAttr()
         if value is None:
-            value = self._get_actor_config_value(name, "solver_velocity_iteration_count", solver_position_iteration_count)
+            value = self._get_actor_config_value(
+                name, "solver_velocity_iteration_count", solver_velocity_iteration_count
+            )
         if value != -1:
             solver_velocity_iteration_count.Set(value)
 
@@ -316,7 +379,7 @@ class SimConfig():
             stabilization_threshold.Set(value)
 
     def apply_rigid_body_settings(self, name, prim, cfg, is_articulation):
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
 
         stage = omni.usd.get_context().get_stage()
         rb_api = UsdPhysics.RigidBodyAPI.Get(stage, prim.GetPath())
@@ -333,7 +396,7 @@ class SimConfig():
         self.set_sleep_threshold(name, prim, cfg["sleep_threshold"])
         self.set_stabilization_threshold(name, prim, cfg["stabilization_threshold"])
         self.set_gyroscopic_forces(name, prim, cfg["enable_gyroscopic_forces"])
-        
+
         # density and mass
         mass_api = UsdPhysics.MassAPI.Get(stage, prim.GetPath())
         if mass_api is None:
@@ -347,14 +410,15 @@ class SimConfig():
 
         if cfg["density"] != -1:
             density_attr.Set(cfg["density"])
-            mass_attr.Set(0.0) # mass is to be computed
+            mass_attr.Set(0.0)  # mass is to be computed
         elif cfg["override_usd_defaults"] and not density_attr.IsAuthored() and not mass_attr.IsAuthored():
             density_attr.Set(self._physx_params["density"])
 
         self.retain_acceleration(prim)
 
     def apply_rigid_shape_settings(self, name, prim, cfg):
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
+
         stage = omni.usd.get_context().get_stage()
 
         # collision APIs
@@ -369,7 +433,7 @@ class SimConfig():
         self.set_rest_offset(name, prim, cfg["rest_offset"])
 
     def apply_articulation_settings(self, name, prim, cfg):
-        from pxr import UsdPhysics, PhysxSchema
+        from pxr import PhysxSchema, UsdPhysics
 
         stage = omni.usd.get_context().get_stage()
 

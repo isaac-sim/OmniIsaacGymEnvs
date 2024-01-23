@@ -9,7 +9,7 @@ to Isaac Sim.
 ### Isaac Sim RL Extensions
 
 Unlike the monolithic standalone Isaac Gym Preview Releases, Omniverse is 
-a highly modular system, with functionality split between various [Extensions](https://docs.omniverse.nvidia.com/prod_extensions/prod_extensions.html).
+a highly modular system, with functionality split between various [Extensions](https://docs.omniverse.nvidia.com/extensions/latest/index.html).
 
 The APIs used by typical robotics RL systems are split between a handful of 
 extensions in Isaac Sim. These include `omni.isaac.core`, which provides 
@@ -36,12 +36,12 @@ are in `wxyz` before passing them in any of the utility functions in `omni.isaac
 
 ### Assets
 
-Isaac Sim provides [URDF](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/ext_omni_isaac_urdf.html) 
-and [MJCF](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/ext_omni_isaac_mjcf.html) importers for translating URDF and MJCF assets into USD format.
+Isaac Sim provides [URDF](https://docs.omniverse.nvidia.com/isaacsim/latest/advanced_tutorials/tutorial_advanced_import_urdf.html) 
+and [MJCF](https://docs.omniverse.nvidia.com/isaacsim/latest/advanced_tutorials/tutorial_advanced_import_mjcf.html) importers for translating URDF and MJCF assets into USD format.
 Any robot or object assets must be in .usd, .usda, or .usdc format for Isaac Sim and Omniverse.
-For more details on working with USD, please see https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/tutorial_intro_usd.html.
+For more details on working with USD, please see https://docs.omniverse.nvidia.com/isaacsim/latest/reference_glossary.html#usd.
 Importer tools are also available for other common geometry file formats, such as .obj, .fbx, and more.
-Please see [Asset Importer](https://docs.omniverse.nvidia.com/app_create/prod_extensions/ext_asset-importer.html) for more details.
+Please see [Asset Importer](https://docs.omniverse.nvidia.com/extensions/latest/ext_asset-importer.html) for more details.
 
 
 ### Joint Order
@@ -213,8 +213,8 @@ self._sim_config.apply_articulation_settings("Humanoid", get_prim_at_path(humano
 ```
 #### Additional Simulation Parameters
 
-- `use_flatcache`: Setting this paramter to `True` enables [PhysX Flatcache](https://docs.omniverse.nvidia.com/prod_extensions/prod_extensions/ext_physics.html#flatcache), which offers a significant increase in simulation speed. However, this parameter must 
-be set to `False` if soft-body simulation is required because `PhysX Flatcache` curently only supports rigid-body simulation.
+- `use_fabric`: Setting this paramter to `True` enables [PhysX Fabric](https://docs.omniverse.nvidia.com/prod_extensions/prod_extensions/ext_physics.html#flatcache), which offers a significant increase in simulation speed. However, this parameter must 
+be set to `False` if soft-body simulation is required because `PhysX Fabric` curently only supports rigid-body simulation.
 - `enable_scene_query_support`: Setting this paramter to `True` allows the user to interact with prims in the scene. Keeping this setting to `False` during
 training improves simulation speed. Note that this parameter is always set to `True` if in test/inference mode to enable user interaction with trained models.
 

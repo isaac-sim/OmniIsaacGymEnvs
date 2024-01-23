@@ -18,8 +18,8 @@ sim:
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
   add_ground_plane: True
-  add_distant_light: True
-  use_flatcache: True
+  add_distant_light: False
+  use_fabric: True
   enable_scene_query_support: False
   disable_contact_processing: False
 
@@ -49,9 +49,9 @@ sim:
     # GPU buffers
     gpu_max_rigid_contact_count: 524288
     gpu_max_rigid_patch_count: 81920
-    gpu_found_lost_pairs_capacity: 8192
+    gpu_found_lost_pairs_capacity: 262144
     gpu_found_lost_aggregate_pairs_capacity: 262144
-    gpu_total_aggregate_pairs_capacity: 8192
+    gpu_total_aggregate_pairs_capacity: 262144
     gpu_max_soft_body_contacts: 1048576
     gpu_max_particle_contacts: 1048576
     gpu_heap_capacity: 67108864

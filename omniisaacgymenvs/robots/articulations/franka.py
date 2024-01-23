@@ -7,17 +7,18 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 #
 
-from typing import Optional
 import math
+from typing import Optional
+
 import numpy as np
 import torch
 from omni.isaac.core.robots.robot import Robot
 from omni.isaac.core.utils.nucleus import get_assets_root_path
+from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
 from omniisaacgymenvs.tasks.utils.usd_utils import set_drive
-
-from omni.isaac.core.utils.prims import get_prim_at_path
 from pxr import PhysxSchema
+
 
 class Franka(Robot):
     def __init__(
@@ -28,8 +29,7 @@ class Franka(Robot):
         translation: Optional[torch.tensor] = None,
         orientation: Optional[torch.tensor] = None,
     ) -> None:
-        """[summary]
-        """
+        """[summary]"""
 
         self._usd_path = usd_path
         self._name = name
@@ -44,7 +44,7 @@ class Franka(Robot):
             self._usd_path = assets_root_path + "/Isaac/Robots/Franka/franka_instanceable.usd"
 
         add_reference_to_stage(self._usd_path, prim_path)
-        
+
         super().__init__(
             prim_path=prim_path,
             name=name,
@@ -62,13 +62,13 @@ class Franka(Robot):
             "panda_link5/panda_joint6",
             "panda_link6/panda_joint7",
             "panda_hand/panda_finger_joint1",
-            "panda_hand/panda_finger_joint2"
+            "panda_hand/panda_finger_joint2",
         ]
 
         drive_type = ["angular"] * 7 + ["linear"] * 2
         default_dof_pos = [math.degrees(x) for x in [0.0, -1.0, 0.0, -2.2, 0.0, 2.4, 0.8]] + [0.02, 0.02]
-        stiffness = [400*np.pi/180] * 7 + [10000] * 2
-        damping = [80*np.pi/180] * 7 + [100] * 2
+        stiffness = [400 * np.pi / 180] * 7 + [10000] * 2
+        damping = [80 * np.pi / 180] * 7 + [100] * 2
         max_force = [87, 87, 87, 87, 12, 12, 12, 200, 200]
         max_velocity = [math.degrees(x) for x in [2.175, 2.175, 2.175, 2.175, 2.61, 2.61, 2.61]] + [0.2, 0.2]
 
@@ -80,7 +80,16 @@ class Franka(Robot):
                 target_value=default_dof_pos[i],
                 stiffness=stiffness[i],
                 damping=damping[i],
-                max_force=max_force[i]
+                max_force=max_force[i],
             )
 
-            PhysxSchema.PhysxJointAPI(get_prim_at_path(f"{self.prim_path}/{dof}")).CreateMaxJointVelocityAttr().Set(max_velocity[i])
+            PhysxSchema.PhysxJointAPI(get_prim_at_path(f"{self.prim_path}/{dof}")).CreateMaxJointVelocityAttr().Set(
+                max_velocity[i]
+            )
+
+    def set_franka_properties(self, stage, prim):
+        for link_prim in prim.GetChildren():
+            if link_prim.HasAPI(PhysxSchema.PhysxRigidBodyAPI): 
+                rb = PhysxSchema.PhysxRigidBodyAPI.Get(stage, link_prim.GetPrimPath())
+                rb.GetDisableGravityAttr().Set(True)
+

@@ -27,26 +27,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
-from omniisaacgymenvs.robots.articulations.cartpole import Cartpole
-
-from omni.isaac.core.articulations import ArticulationView
-from omni.isaac.core.utils.prims import get_prim_at_path
+import math
 
 import numpy as np
 import torch
-import math
+from omni.isaac.core.articulations import ArticulationView
+from omni.isaac.core.utils.prims import get_prim_at_path
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
+from omniisaacgymenvs.robots.articulations.cartpole import Cartpole
 
 
 class CartpoleTask(RLTask):
-    def __init__(
-        self,
-        name,
-        sim_config,
-        env,
-        offset=None
-    ) -> None:
+    def __init__(self, name, sim_config, env, offset=None) -> None:
 
+        self.update_config(sim_config)
+        self._max_episode_length = 500
+
+        self._num_observations = 4
+        self._num_actions = 1
+
+        RLTask.__init__(self, name, env)
+        return
+
+    def update_config(self, sim_config):
         self._sim_config = sim_config
         self._cfg = sim_config.config
         self._task_cfg = sim_config.task_config
@@ -57,49 +60,53 @@ class CartpoleTask(RLTask):
 
         self._reset_dist = self._task_cfg["env"]["resetDist"]
         self._max_push_effort = self._task_cfg["env"]["maxEffort"]
-        self._max_episode_length = 500
-
-        self._num_observations = 4
-        self._num_actions = 1
-
-        RLTask.__init__(self, name, env)
-        return
 
     def set_up_scene(self, scene) -> None:
         self.get_cartpole()
         super().set_up_scene(scene)
-        self._cartpoles = ArticulationView(prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False)
+        self._cartpoles = ArticulationView(
+            prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False
+        )
         scene.add(self._cartpoles)
         return
 
+    def initialize_views(self, scene):
+        super().initialize_views(scene)
+        if scene.object_exists("cartpole_view"):
+            scene.remove_object("cartpole_view", registry_only=True)
+        self._cartpoles = ArticulationView(
+            prim_paths_expr="/World/envs/.*/Cartpole", name="cartpole_view", reset_xform_properties=False
+        )
+        scene.add(self._cartpoles)
+
     def get_cartpole(self):
-        cartpole = Cartpole(prim_path=self.default_zero_env_path + "/Cartpole", name="Cartpole", translation=self._cartpole_positions)
+        cartpole = Cartpole(
+            prim_path=self.default_zero_env_path + "/Cartpole", name="Cartpole", translation=self._cartpole_positions
+        )
         # applies articulation settings from the task configuration yaml file
-        self._sim_config.apply_articulation_settings("Cartpole", get_prim_at_path(cartpole.prim_path), self._sim_config.parse_actor_config("Cartpole"))
+        self._sim_config.apply_articulation_settings(
+            "Cartpole", get_prim_at_path(cartpole.prim_path), self._sim_config.parse_actor_config("Cartpole")
+        )
 
     def get_observations(self) -> dict:
         dof_pos = self._cartpoles.get_joint_positions(clone=False)
         dof_vel = self._cartpoles.get_joint_velocities(clone=False)
 
-        cart_pos = dof_pos[:, self._cart_dof_idx]
-        cart_vel = dof_vel[:, self._cart_dof_idx]
-        pole_pos = dof_pos[:, self._pole_dof_idx]
-        pole_vel = dof_vel[:, self._pole_dof_idx]
+        self.cart_pos = dof_pos[:, self._cart_dof_idx]
+        self.cart_vel = dof_vel[:, self._cart_dof_idx]
+        self.pole_pos = dof_pos[:, self._pole_dof_idx]
+        self.pole_vel = dof_vel[:, self._pole_dof_idx]
 
-        self.obs_buf[:, 0] = cart_pos
-        self.obs_buf[:, 1] = cart_vel
-        self.obs_buf[:, 2] = pole_pos
-        self.obs_buf[:, 3] = pole_vel
+        self.obs_buf[:, 0] = self.cart_pos
+        self.obs_buf[:, 1] = self.cart_vel
+        self.obs_buf[:, 2] = self.pole_pos
+        self.obs_buf[:, 3] = self.pole_vel
 
-        observations = {
-            self._cartpoles.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self._cartpoles.name: {"obs_buf": self.obs_buf}}
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -144,22 +151,14 @@ class CartpoleTask(RLTask):
         self.reset_idx(indices)
 
     def calculate_metrics(self) -> None:
-        cart_pos = self.obs_buf[:, 0]
-        cart_vel = self.obs_buf[:, 1]
-        pole_angle = self.obs_buf[:, 2]
-        pole_vel = self.obs_buf[:, 3]
-
-        reward = 1.0 - pole_angle * pole_angle - 0.01 * torch.abs(cart_vel) - 0.005 * torch.abs(pole_vel)
-        reward = torch.where(torch.abs(cart_pos) > self._reset_dist, torch.ones_like(reward) * -2.0, reward)
-        reward = torch.where(torch.abs(pole_angle) > np.pi / 2, torch.ones_like(reward) * -2.0, reward)
+        reward = 1.0 - self.pole_pos * self.pole_pos - 0.01 * torch.abs(self.cart_vel) - 0.005 * torch.abs(self.pole_vel)
+        reward = torch.where(torch.abs(self.cart_pos) > self._reset_dist, torch.ones_like(reward) * -2.0, reward)
+        reward = torch.where(torch.abs(self.pole_pos) > np.pi / 2, torch.ones_like(reward) * -2.0, reward)
 
         self.rew_buf[:] = reward
 
     def is_done(self) -> None:
-        cart_pos = self.obs_buf[:, 0]
-        pole_pos = self.obs_buf[:, 2]
-
-        resets = torch.where(torch.abs(cart_pos) > self._reset_dist, 1, 0)
-        resets = torch.where(torch.abs(pole_pos) > math.pi / 2, 1, resets)
+        resets = torch.where(torch.abs(self.cart_pos) > self._reset_dist, 1, 0)
+        resets = torch.where(torch.abs(self.pole_pos) > math.pi / 2, 1, resets)
         resets = torch.where(self.progress_buf >= self._max_episode_length, 1, resets)
         self.reset_buf[:] = resets

@@ -1,0 +1,4 @@
+FROM nvcr.io/nvidia/isaac-sim:2023.1.1
+COPY ./ /workspace/omniisaacgymenvs/
+RUN /isaac-sim/python.sh -m pip install -e /workspace/omniisaacgymenvs
+ENTRYPOINT ["sh", "-c", "cd /workspace/omniisaacgymenvs/omniisaacgymenvs && bash"]

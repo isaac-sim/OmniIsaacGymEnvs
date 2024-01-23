@@ -18,8 +18,8 @@ sim:
   use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
   gravity: [0.0, 0.0, -9.81]
   add_ground_plane: True
-  add_distant_light: True
-  use_flatcache: True
+  add_distant_light: False
+  use_fabric: True
   enable_scene_query_support: False
   disable_contact_processing: False
 
@@ -66,6 +66,23 @@ sim:
     # also in stage params
     # per-actor
     solver_position_iteration_count: 4
+    solver_velocity_iteration_count: 0
+    sleep_threshold: 0.005
+    stabilization_threshold: 0.001
+    # per-body
+    density: -1
+    max_depenetration_velocity: 1000.0
+
+
+  ball:
+    # -1 to use default values
+    override_usd_defaults: False
+    make_kinematic: True
+    enable_self_collisions: False
+    enable_gyroscopic_forces: True
+    # also in stage params
+    # per-actor
+    solver_position_iteration_count: 6
     solver_velocity_iteration_count: 0
     sleep_threshold: 0.005
     stabilization_threshold: 0.001

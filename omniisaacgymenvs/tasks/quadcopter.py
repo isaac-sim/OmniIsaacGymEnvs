@@ -26,37 +26,22 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
+
+import numpy as np
+import torch
+from omni.isaac.core.objects import DynamicSphere
+from omni.isaac.core.prims import RigidPrimView
+from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.core.utils.torch.rotations import *
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.quadcopter import Quadcopter
 from omniisaacgymenvs.robots.articulations.views.quadcopter_view import QuadcopterView
 
-from omni.isaac.core.utils.prims import get_prim_at_path
-from omni.isaac.core.utils.torch.rotations import *
-from omni.isaac.core.objects import DynamicSphere
-from omni.isaac.core.prims import RigidPrimView
-
-import numpy as np
-import torch
-import math
-
 
 class QuadcopterTask(RLTask):
-    def __init__(
-        self,
-        name,
-        sim_config,
-        env,
-        offset=None
-    ) -> None:
-        self._sim_config = sim_config
-        self._cfg = sim_config.config
-        self._task_cfg = sim_config.task_config
-
-        self._num_envs = self._task_cfg["env"]["numEnvs"]
-        self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._max_episode_length = self._task_cfg["env"]["maxEpisodeLength"]
-
-        self.dt = self._task_cfg["sim"]["dt"]
+    def __init__(self, name, sim_config, env, offset=None) -> None:
+        self.update_config(sim_config)
 
         self._num_observations = 21
         self._num_actions = 12
@@ -73,31 +58,67 @@ class QuadcopterTask(RLTask):
 
         return
 
+    def update_config(self, sim_config):
+        self._sim_config = sim_config
+        self._cfg = sim_config.config
+        self._task_cfg = sim_config.task_config
+
+        self._num_envs = self._task_cfg["env"]["numEnvs"]
+        self._env_spacing = self._task_cfg["env"]["envSpacing"]
+        self._max_episode_length = self._task_cfg["env"]["maxEpisodeLength"]
+
+        self.dt = self._task_cfg["sim"]["dt"]
+
     def set_up_scene(self, scene) -> None:
         self.get_copter()
         self.get_target()
         RLTask.set_up_scene(self, scene)
         self._copters = QuadcopterView(prim_paths_expr="/World/envs/.*/Quadcopter", name="quadcopter_view")
-        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
+        self._balls = RigidPrimView(
+            prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False
+        )
+        self._balls._non_root_link = True # do not set states for kinematics
         scene.add(self._copters)
         scene.add(self._copters.rotors)
         scene.add(self._balls)
         return
 
+    def initialize_views(self, scene):
+        super().initialize_views(scene)
+        if scene.object_exists("quadcopter_view"):
+            scene.remove_object("quadcopter_view", registry_only=True)
+        if scene.object_exists("rotors_view"):
+            scene.remove_object("rotors_view", registry_only=True)
+        if scene.object_exists("targets_view"):
+            scene.remove_object("targets_view", registry_only=True)
+        self._copters = QuadcopterView(prim_paths_expr="/World/envs/.*/Quadcopter", name="quadcopter_view")
+        self._balls = RigidPrimView(
+            prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False
+        )
+        scene.add(self._copters)
+        scene.add(self._copters.rotors)
+        scene.add(self._balls)
+
     def get_copter(self):
-        copter = Quadcopter(prim_path=self.default_zero_env_path + "/Quadcopter", name="quadcopter", translation=self._copter_position)
-        self._sim_config.apply_articulation_settings("copter", get_prim_at_path(copter.prim_path), self._sim_config.parse_actor_config("copter"))
-    
+        copter = Quadcopter(
+            prim_path=self.default_zero_env_path + "/Quadcopter", name="quadcopter", translation=self._copter_position
+        )
+        self._sim_config.apply_articulation_settings(
+            "copter", get_prim_at_path(copter.prim_path), self._sim_config.parse_actor_config("copter")
+        )
+
     def get_target(self):
         radius = 0.05
         color = torch.tensor([1, 0, 0])
         ball = DynamicSphere(
-            prim_path=self.default_zero_env_path + "/ball", 
+            prim_path=self.default_zero_env_path + "/ball",
             name="target_0",
             radius=radius,
             color=color,
         )
-        self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
+        self._sim_config.apply_articulation_settings(
+            "ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball")
+        )
         ball.set_collision_enabled(False)
 
     def get_observations(self) -> dict:
@@ -116,17 +137,13 @@ class QuadcopterTask(RLTask):
         self.obs_buf[..., 10:13] = root_angvels / math.pi
         self.obs_buf[..., 13:21] = self.dof_pos
 
-        observations = {
-            self._copters.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self._copters.name: {"obs_buf": self.obs_buf}}
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
-    
+
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(reset_env_ids) > 0:
             self.reset_idx(reset_env_ids)
@@ -135,7 +152,9 @@ class QuadcopterTask(RLTask):
 
         dof_action_speed_scale = 8 * math.pi
         self.dof_position_targets += self.dt * dof_action_speed_scale * actions[:, 0:8]
-        self.dof_position_targets[:] = tensor_clamp(self.dof_position_targets, self.dof_lower_limits, self.dof_upper_limits)
+        self.dof_position_targets[:] = tensor_clamp(
+            self.dof_position_targets, self.dof_lower_limits, self.dof_upper_limits
+        )
 
         thrust_action_speed_scale = 100
         self.thrusts += self.dt * thrust_action_speed_scale * actions[:, 8:12]
@@ -152,14 +171,21 @@ class QuadcopterTask(RLTask):
         self.dof_position_targets[reset_env_ids] = self.dof_pos[reset_env_ids]
 
         # apply actions
-        self._copters.set_joint_position_targets(self.dof_position_targets)        
+        self._copters.set_joint_position_targets(self.dof_position_targets)
         self._copters.rotors.apply_forces(self.forces, is_global=False)
 
     def post_reset(self):
         # control tensors
-        self.dof_position_targets = torch.zeros((self._num_envs, self._copters.num_dof), dtype=torch.float32, device=self._device, requires_grad=False)
+        self.dof_position_targets = torch.zeros(
+            (self._num_envs, self._copters.num_dof), dtype=torch.float32, device=self._device, requires_grad=False
+        )
         self.thrusts = torch.zeros((self._num_envs, 4), dtype=torch.float32, device=self._device, requires_grad=False)
-        self.forces = torch.zeros((self._num_envs, self._copters.rotors.count // self._num_envs, 3), dtype=torch.float32, device=self._device, requires_grad=False)
+        self.forces = torch.zeros(
+            (self._num_envs, self._copters.rotors.count // self._num_envs, 3),
+            dtype=torch.float32,
+            device=self._device,
+            requires_grad=False,
+        )
 
         self.target_positions = torch.zeros((self._num_envs, 3), device=self._device)
         self.target_positions[:, 2] = 1.0
@@ -207,7 +233,7 @@ class QuadcopterTask(RLTask):
 
         # distance to target
         target_dist = torch.sqrt(torch.square(self.target_positions - root_positions).sum(-1))
-        pos_reward = 1.0 / (1.0 + 3*target_dist * target_dist) # 2
+        pos_reward = 1.0 / (1.0 + 3 * target_dist * target_dist)  # 2
         self.target_dist = target_dist
         self.root_positions = root_positions
 
@@ -220,7 +246,7 @@ class QuadcopterTask(RLTask):
         spinnage = torch.abs(root_angvels[..., 2])
         spinnage_reward = 1.0 / (1.0 + 0.001 * spinnage * spinnage)
 
-        rew = pos_reward + pos_reward * (up_reward + spinnage_reward + spinnage * spinnage * (-1/400)) 
+        rew = pos_reward + pos_reward * (up_reward + spinnage_reward + spinnage * spinnage * (-1 / 400))
         rew = torch.clip(rew, 0.0, None)
         self.rew_buf[:] = rew
 

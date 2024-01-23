@@ -27,30 +27,40 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import math
 from abc import abstractmethod
-
-from omniisaacgymenvs.tasks.base.rl_task import RLTask
-from omni.isaac.core.prims import RigidPrimView, XFormPrim
-from omni.isaac.core.utils.nucleus import get_assets_root_path
-from omni.isaac.core.utils.prims import get_prim_at_path
-from omni.isaac.core.utils.stage import get_current_stage, add_reference_to_stage
-from omni.isaac.core.utils.torch import *
 
 import numpy as np
 import torch
-import math
+from omni.isaac.core.prims import RigidPrimView, XFormPrim
+from omni.isaac.core.utils.nucleus import get_assets_root_path
+from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.core.utils.stage import add_reference_to_stage, get_current_stage
+from omni.isaac.core.utils.torch import *
+from omniisaacgymenvs.tasks.base.rl_task import RLTask
 
-import omni.replicator.isaac as dr
 
 class InHandManipulationTask(RLTask):
-    def __init__(
-        self,
-        name,
-        env,
-        offset=None
-    ) -> None:
-        """[summary]
-        """
+    def __init__(self, name, env, offset=None) -> None:
+
+        InHandManipulationTask.update_config(self)
+
+        RLTask.__init__(self, name, env)
+
+        self.x_unit_tensor = torch.tensor([1, 0, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
+        self.y_unit_tensor = torch.tensor([0, 1, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
+        self.z_unit_tensor = torch.tensor([0, 0, 1], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
+
+        self.reset_goal_buf = self.reset_buf.clone()
+        self.successes = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
+        self.consecutive_successes = torch.zeros(1, dtype=torch.float, device=self.device)
+        self.randomization_buf = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
+
+        self.av_factor = torch.tensor(self.av_factor, dtype=torch.float, device=self.device)
+        self.total_successes = 0
+        self.total_resets = 0
+
+    def update_config(self):
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
 
@@ -82,56 +92,93 @@ class InHandManipulationTask(RLTask):
         self.dt = 1.0 / 60
         control_freq_inv = self._task_cfg["env"].get("controlFrequencyInv", 1)
         if self.reset_time > 0.0:
-            self.max_episode_length = int(round(self.reset_time/(control_freq_inv * self.dt)))
+            self.max_episode_length = int(round(self.reset_time / (control_freq_inv * self.dt)))
             print("Reset time: ", self.reset_time)
             print("New episode length: ", self.max_episode_length)
 
-        RLTask.__init__(self, name, env)
-
-        self.x_unit_tensor = torch.tensor([1, 0, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
-        self.y_unit_tensor = torch.tensor([0, 1, 0], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
-        self.z_unit_tensor = torch.tensor([0, 0, 1], dtype=torch.float, device=self.device).repeat((self.num_envs, 1))
-
-        self.reset_goal_buf = self.reset_buf.clone()
-        self.successes = torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
-        self.consecutive_successes = torch.zeros(1, dtype=torch.float, device=self.device)
-        self.randomization_buf = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
-
-        self.av_factor = torch.tensor(self.av_factor, dtype=torch.float, device=self.device)
-        self.total_successes = 0
-        self.total_resets = 0
-        return
-    
     def set_up_scene(self, scene) -> None:
         self._stage = get_current_stage()
         self._assets_root_path = get_assets_root_path()
-        hand_start_translation, pose_dy, pose_dz = self.get_hand()
-        self.get_object(hand_start_translation, pose_dy, pose_dz)
+
+        self.get_starting_positions()
+        self.get_hand()
+
+        self.object_start_translation = self.hand_start_translation.clone()
+        self.object_start_translation[1] += self.pose_dy
+        self.object_start_translation[2] += self.pose_dz
+        self.object_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
+
+        self.goal_displacement_tensor = torch.tensor([-0.2, -0.06, 0.12], device=self.device)
+        self.goal_start_translation = self.object_start_translation + self.goal_displacement_tensor
+        self.goal_start_translation[2] -= 0.04
+        self.goal_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
+
+        self.get_object(self.hand_start_translation, self.pose_dy, self.pose_dz)
         self.get_goal()
 
-        replicate_physics = False if self._dr_randomizer.randomize else True
-        super().set_up_scene(scene, replicate_physics)
-   
+        super().set_up_scene(scene, filter_collisions=False)
+
         self._hands = self.get_hand_view(scene)
         scene.add(self._hands)
         self._objects = RigidPrimView(
             prim_paths_expr="/World/envs/env_.*/object/object",
-            name="object_view", 
+            name="object_view",
             reset_xform_properties=False,
-            masses=torch.tensor([0.07087]*self._num_envs, device=self.device),
+            masses=torch.tensor([0.07087] * self._num_envs, device=self.device),
         )
         scene.add(self._objects)
         self._goals = RigidPrimView(
-            prim_paths_expr="/World/envs/env_.*/goal/object", 
-            name="goal_view", 
-            reset_xform_properties=False
+            prim_paths_expr="/World/envs/env_.*/goal/object", name="goal_view", reset_xform_properties=False
         )
-        self._goals._non_root_link = True # hack to ignore kinematics
+        self._goals._non_root_link = True  # hack to ignore kinematics
         scene.add(self._goals)
 
         if self._dr_randomizer.randomize:
             self._dr_randomizer.apply_on_startup_domain_randomization(self)
-    
+
+    def initialize_views(self, scene):
+        RLTask.initialize_views(self, scene)
+
+        if scene.object_exists("shadow_hand_view"):
+            scene.remove_object("shadow_hand_view", registry_only=True)
+        if scene.object_exists("finger_view"):
+            scene.remove_object("finger_view", registry_only=True)
+        if scene.object_exists("allegro_hand_view"):
+            scene.remove_object("allegro_hand_view", registry_only=True)
+        if scene.object_exists("goal_view"):
+            scene.remove_object("goal_view", registry_only=True)
+        if scene.object_exists("object_view"):
+            scene.remove_object("object_view", registry_only=True)
+
+        self.get_starting_positions()
+        self.object_start_translation = self.hand_start_translation.clone()
+        self.object_start_translation[1] += self.pose_dy
+        self.object_start_translation[2] += self.pose_dz
+        self.object_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
+
+        self.goal_displacement_tensor = torch.tensor([-0.2, -0.06, 0.12], device=self.device)
+        self.goal_start_translation = self.object_start_translation + self.goal_displacement_tensor
+        self.goal_start_translation[2] -= 0.04
+        self.goal_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
+
+        self._hands = self.get_hand_view(scene)
+        scene.add(self._hands)
+        self._objects = RigidPrimView(
+            prim_paths_expr="/World/envs/env_.*/object/object",
+            name="object_view",
+            reset_xform_properties=False,
+            masses=torch.tensor([0.07087] * self._num_envs, device=self.device),
+        )
+        scene.add(self._objects)
+        self._goals = RigidPrimView(
+            prim_paths_expr="/World/envs/env_.*/goal/object", name="goal_view", reset_xform_properties=False
+        )
+        self._goals._non_root_link = True  # hack to ignore kinematics
+        scene.add(self._goals)
+
+        if self._dr_randomizer.randomize:
+            self._dr_randomizer.apply_on_startup_domain_randomization(self)
+
     @abstractmethod
     def get_hand(self):
         pass
@@ -145,10 +192,6 @@ class InHandManipulationTask(RLTask):
         pass
 
     def get_object(self, hand_start_translation, pose_dy, pose_dz):
-        self.object_start_translation = hand_start_translation.clone()
-        self.object_start_translation[1] += pose_dy
-        self.object_start_translation[2] += pose_dz
-        self.object_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
         self.object_usd_path = f"{self._assets_root_path}/Isaac/Props/Blocks/block_instanceable.usd"
         add_reference_to_stage(self.object_usd_path, self.default_zero_env_path + "/object")
         obj = XFormPrim(
@@ -158,32 +201,32 @@ class InHandManipulationTask(RLTask):
             orientation=self.object_start_orientation,
             scale=self.object_scale,
         )
-        self._sim_config.apply_articulation_settings("object", get_prim_at_path(obj.prim_path), self._sim_config.parse_actor_config("object"))
-    
+        self._sim_config.apply_articulation_settings(
+            "object", get_prim_at_path(obj.prim_path), self._sim_config.parse_actor_config("object")
+        )
+
     def get_goal(self):
-        self.goal_displacement_tensor = torch.tensor([-0.2, -0.06, 0.12], device=self.device)
-        self.goal_start_translation = self.object_start_translation + self.goal_displacement_tensor
-        self.goal_start_translation[2] -= 0.04
-        self.goal_start_orientation = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device)
         add_reference_to_stage(self.object_usd_path, self.default_zero_env_path + "/goal")
         goal = XFormPrim(
             prim_path=self.default_zero_env_path + "/goal",
             name="goal",
             translation=self.goal_start_translation,
             orientation=self.goal_start_orientation,
-            scale=self.object_scale
+            scale=self.object_scale,
         )
-        self._sim_config.apply_articulation_settings("goal", get_prim_at_path(goal.prim_path), self._sim_config.parse_actor_config("goal_object"))
+        self._sim_config.apply_articulation_settings(
+            "goal", get_prim_at_path(goal.prim_path), self._sim_config.parse_actor_config("goal_object")
+        )
 
     def post_reset(self):
         self.num_hand_dofs = self._hands.num_dof
-        self.actuated_dof_indices = self._hands.actuated_dof_indices 
+        self.actuated_dof_indices = self._hands.actuated_dof_indices
 
         self.hand_dof_targets = torch.zeros((self.num_envs, self.num_hand_dofs), dtype=torch.float, device=self.device)
 
         self.prev_targets = torch.zeros((self.num_envs, self.num_hand_dofs), dtype=torch.float, device=self.device)
         self.cur_targets = torch.zeros((self.num_envs, self.num_hand_dofs), dtype=torch.float, device=self.device)
-        
+
         dof_limits = self._hands.get_dof_limits()
         self.hand_dof_lower_limits, self.hand_dof_upper_limits = torch.t(dof_limits[0].to(self.device))
 
@@ -192,7 +235,9 @@ class InHandManipulationTask(RLTask):
 
         self.object_init_pos, self.object_init_rot = self._objects.get_world_poses()
         self.object_init_pos -= self._env_pos
-        self.object_init_velocities = torch.zeros_like(self._objects.get_velocities(), dtype=torch.float, device=self.device)
+        self.object_init_velocities = torch.zeros_like(
+            self._objects.get_velocities(), dtype=torch.float, device=self.device
+        )
 
         self.goal_pos = self.object_init_pos.clone()
         self.goal_pos[:, 2] -= 0.04
@@ -214,17 +259,41 @@ class InHandManipulationTask(RLTask):
         self.object_velocities = self._objects.get_velocities(clone=False)
         self.object_linvel = self.object_velocities[:, 0:3]
         self.object_angvel = self.object_velocities[:, 3:6]
-    
+
     def calculate_metrics(self):
-        self.rew_buf[:], self.reset_buf[:], self.reset_goal_buf[:], self.progress_buf[:], self.successes[:], self.consecutive_successes[:] = compute_hand_reward(
-            self.rew_buf, self.reset_buf, self.reset_goal_buf, self.progress_buf, self.successes, self.consecutive_successes,
-            self.max_episode_length, self.object_pos, self.object_rot, self.goal_pos, self.goal_rot,
-            self.dist_reward_scale, self.rot_reward_scale, self.rot_eps, self.actions, self.action_penalty_scale,
-            self.success_tolerance, self.reach_goal_bonus, self.fall_dist, self.fall_penalty,
-            self.max_consecutive_successes, self.av_factor,
+        (
+            self.rew_buf[:],
+            self.reset_buf[:],
+            self.reset_goal_buf[:],
+            self.progress_buf[:],
+            self.successes[:],
+            self.consecutive_successes[:],
+        ) = compute_hand_reward(
+            self.rew_buf,
+            self.reset_buf,
+            self.reset_goal_buf,
+            self.progress_buf,
+            self.successes,
+            self.consecutive_successes,
+            self.max_episode_length,
+            self.object_pos,
+            self.object_rot,
+            self.goal_pos,
+            self.goal_rot,
+            self.dist_reward_scale,
+            self.rot_reward_scale,
+            self.rot_eps,
+            self.actions,
+            self.action_penalty_scale,
+            self.success_tolerance,
+            self.reach_goal_bonus,
+            self.fall_dist,
+            self.fall_penalty,
+            self.max_consecutive_successes,
+            self.av_factor,
         )
 
-        self.extras['consecutive_successes'] = self.consecutive_successes.mean()
+        self.extras["consecutive_successes"] = self.consecutive_successes.mean()
         self.randomization_buf += 1
 
         if self.print_success_stat:
@@ -232,12 +301,18 @@ class InHandManipulationTask(RLTask):
             direct_average_successes = self.total_successes + self.successes.sum()
             self.total_successes = self.total_successes + (self.successes * self.reset_buf).sum()
             # The direct average shows the overall result more quickly, but slightly undershoots long term policy performance.
-            print("Direct average consecutive successes = {:.1f}".format(direct_average_successes/(self.total_resets + self.num_envs)))
+            print(
+                "Direct average consecutive successes = {:.1f}".format(
+                    direct_average_successes / (self.total_resets + self.num_envs)
+                )
+            )
             if self.total_resets > 0:
-                print("Post-Reset average consecutive successes = {:.1f}".format(self.total_successes/self.total_resets))
-    
+                print(
+                    "Post-Reset average consecutive successes = {:.1f}".format(self.total_successes / self.total_resets)
+                )
+
     def pre_physics_step(self, actions):
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -256,16 +331,29 @@ class InHandManipulationTask(RLTask):
         self.actions = actions.clone().to(self.device)
 
         if self.use_relative_control:
-            targets = self.prev_targets[:, self.actuated_dof_indices] + self.hand_dof_speed_scale * self.dt * self.actions
-            self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(targets,
-                self.hand_dof_lower_limits[self.actuated_dof_indices], self.hand_dof_upper_limits[self.actuated_dof_indices])
+            targets = (
+                self.prev_targets[:, self.actuated_dof_indices] + self.hand_dof_speed_scale * self.dt * self.actions
+            )
+            self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(
+                targets,
+                self.hand_dof_lower_limits[self.actuated_dof_indices],
+                self.hand_dof_upper_limits[self.actuated_dof_indices],
+            )
         else:
-            self.cur_targets[:, self.actuated_dof_indices] = scale(self.actions,
-                self.hand_dof_lower_limits[self.actuated_dof_indices], self.hand_dof_upper_limits[self.actuated_dof_indices])
-            self.cur_targets[:, self.actuated_dof_indices] = self.act_moving_average * self.cur_targets[:, self.actuated_dof_indices] + \
-                (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
-            self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(self.cur_targets[:, self.actuated_dof_indices],
-                self.hand_dof_lower_limits[self.actuated_dof_indices], self.hand_dof_upper_limits[self.actuated_dof_indices])
+            self.cur_targets[:, self.actuated_dof_indices] = scale(
+                self.actions,
+                self.hand_dof_lower_limits[self.actuated_dof_indices],
+                self.hand_dof_upper_limits[self.actuated_dof_indices],
+            )
+            self.cur_targets[:, self.actuated_dof_indices] = (
+                self.act_moving_average * self.cur_targets[:, self.actuated_dof_indices]
+                + (1.0 - self.act_moving_average) * self.prev_targets[:, self.actuated_dof_indices]
+            )
+            self.cur_targets[:, self.actuated_dof_indices] = tensor_clamp(
+                self.cur_targets[:, self.actuated_dof_indices],
+                self.hand_dof_lower_limits[self.actuated_dof_indices],
+                self.hand_dof_upper_limits[self.actuated_dof_indices],
+            )
 
         self.prev_targets[:, self.actuated_dof_indices] = self.cur_targets[:, self.actuated_dof_indices]
 
@@ -274,9 +362,13 @@ class InHandManipulationTask(RLTask):
         )
 
         if self._dr_randomizer.randomize:
-            rand_envs = torch.where(self.randomization_buf >= self._dr_randomizer.min_frequency, torch.ones_like(self.randomization_buf), torch.zeros_like(self.randomization_buf))
+            rand_envs = torch.where(
+                self.randomization_buf >= self._dr_randomizer.min_frequency,
+                torch.ones_like(self.randomization_buf),
+                torch.zeros_like(self.randomization_buf),
+            )
             rand_env_ids = torch.nonzero(torch.logical_and(rand_envs, reset_buf))
-            dr.physics_view.step_randomization(rand_env_ids)
+            self.dr.physics_view.step_randomization(rand_env_ids)
             self.randomization_buf[rand_env_ids] = 0
 
     def is_done(self):
@@ -287,14 +379,18 @@ class InHandManipulationTask(RLTask):
         indices = env_ids.to(dtype=torch.int32)
         rand_floats = torch_rand_float(-1.0, 1.0, (len(env_ids), 4), device=self.device)
 
-        new_rot = randomize_rotation(rand_floats[:, 0], rand_floats[:, 1], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
+        new_rot = randomize_rotation(
+            rand_floats[:, 0], rand_floats[:, 1], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids]
+        )
 
         self.goal_pos[env_ids] = self.goal_init_pos[env_ids, 0:3]
         self.goal_rot[env_ids] = new_rot
 
         goal_pos, goal_rot = self.goal_pos.clone(), self.goal_rot.clone()
-        goal_pos[env_ids] = self.goal_pos[env_ids] + self.goal_displacement_tensor + self._env_pos[env_ids] # add world env pos
-        
+        goal_pos[env_ids] = (
+            self.goal_pos[env_ids] + self.goal_displacement_tensor + self._env_pos[env_ids]
+        )  # add world env pos
+
         self._goals.set_world_poses(goal_pos[env_ids], goal_rot[env_ids], indices)
         self.reset_goal_buf[env_ids] = 0
 
@@ -303,12 +399,15 @@ class InHandManipulationTask(RLTask):
         rand_floats = torch_rand_float(-1.0, 1.0, (len(env_ids), self.num_hand_dofs * 2 + 5), device=self.device)
 
         self.reset_target_pose(env_ids)
-        
-        # reset object
-        new_object_pos = self.object_init_pos[env_ids] + \
-            self.reset_position_noise * rand_floats[:, 0:3] + self._env_pos[env_ids] # add world env pos
 
-        new_object_rot = randomize_rotation(rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids])
+        # reset object
+        new_object_pos = (
+            self.object_init_pos[env_ids] + self.reset_position_noise * rand_floats[:, 0:3] + self._env_pos[env_ids]
+        )  # add world env pos
+
+        new_object_rot = randomize_rotation(
+            rand_floats[:, 3], rand_floats[:, 4], self.x_unit_tensor[env_ids], self.y_unit_tensor[env_ids]
+        )
 
         object_velocities = torch.zeros_like(self.object_init_velocities, dtype=torch.float, device=self.device)
         self._objects.set_velocities(object_velocities[env_ids], indices)
@@ -317,18 +416,20 @@ class InHandManipulationTask(RLTask):
         # reset hand
         delta_max = self.hand_dof_upper_limits - self.hand_dof_default_pos
         delta_min = self.hand_dof_lower_limits - self.hand_dof_default_pos
-        rand_delta = delta_min + (delta_max - delta_min) * 0.5 * (rand_floats[:, 5:5+self.num_hand_dofs] + 1.0)
+        rand_delta = delta_min + (delta_max - delta_min) * 0.5 * (rand_floats[:, 5 : 5 + self.num_hand_dofs] + 1.0)
 
         pos = self.hand_dof_default_pos + self.reset_dof_pos_noise * rand_delta
         dof_pos = torch.zeros((self.num_envs, self.num_hand_dofs), device=self.device)
         dof_pos[env_ids, :] = pos
 
         dof_vel = torch.zeros((self.num_envs, self.num_hand_dofs), device=self.device)
-        dof_vel[env_ids, :] = self.hand_dof_default_vel + \
-            self.reset_dof_vel_noise * rand_floats[:, 5+self.num_hand_dofs:5+self.num_hand_dofs*2]
+        dof_vel[env_ids, :] = (
+            self.hand_dof_default_vel
+            + self.reset_dof_vel_noise * rand_floats[:, 5 + self.num_hand_dofs : 5 + self.num_hand_dofs * 2]
+        )
 
-        self.prev_targets[env_ids, :self.num_hand_dofs] = pos
-        self.cur_targets[env_ids, :self.num_hand_dofs] = pos
+        self.prev_targets[env_ids, : self.num_hand_dofs] = pos
+        self.cur_targets[env_ids, : self.num_hand_dofs] = pos
         self.hand_dof_targets[env_ids, :] = pos
 
         self._hands.set_joint_position_targets(self.hand_dof_targets[env_ids], indices)
@@ -344,31 +445,52 @@ class InHandManipulationTask(RLTask):
 ###=========================jit functions=========================###
 #####################################################################
 
+
 @torch.jit.script
 def randomize_rotation(rand0, rand1, x_unit_tensor, y_unit_tensor):
-    return quat_mul(quat_from_angle_axis(rand0 * np.pi, x_unit_tensor), quat_from_angle_axis(rand1 * np.pi, y_unit_tensor))
+    return quat_mul(
+        quat_from_angle_axis(rand0 * np.pi, x_unit_tensor), quat_from_angle_axis(rand1 * np.pi, y_unit_tensor)
+    )
 
 
 @torch.jit.script
 def compute_hand_reward(
-    rew_buf, reset_buf, reset_goal_buf, progress_buf, successes, consecutive_successes,
-    max_episode_length: float, object_pos, object_rot, target_pos, target_rot,
-    dist_reward_scale: float, rot_reward_scale: float, rot_eps: float,
-    actions, action_penalty_scale: float,
-    success_tolerance: float, reach_goal_bonus: float, fall_dist: float,
-    fall_penalty: float, max_consecutive_successes: int, av_factor: float
+    rew_buf,
+    reset_buf,
+    reset_goal_buf,
+    progress_buf,
+    successes,
+    consecutive_successes,
+    max_episode_length: float,
+    object_pos,
+    object_rot,
+    target_pos,
+    target_rot,
+    dist_reward_scale: float,
+    rot_reward_scale: float,
+    rot_eps: float,
+    actions,
+    action_penalty_scale: float,
+    success_tolerance: float,
+    reach_goal_bonus: float,
+    fall_dist: float,
+    fall_penalty: float,
+    max_consecutive_successes: int,
+    av_factor: float,
 ):
 
     goal_dist = torch.norm(object_pos - target_pos, p=2, dim=-1)
 
     # Orientation alignment for the cube in hand and goal cube
     quat_diff = quat_mul(object_rot, quat_conjugate(target_rot))
-    rot_dist = 2.0 * torch.asin(torch.clamp(torch.norm(quat_diff[:, 1:4], p=2, dim=-1), max=1.0)) # changed quat convention
+    rot_dist = 2.0 * torch.asin(
+        torch.clamp(torch.norm(quat_diff[:, 1:4], p=2, dim=-1), max=1.0)
+    )  # changed quat convention
 
     dist_rew = goal_dist * dist_reward_scale
-    rot_rew = 1.0/(torch.abs(rot_dist) + rot_eps) * rot_reward_scale
+    rot_rew = 1.0 / (torch.abs(rot_dist) + rot_eps) * rot_reward_scale
 
-    action_penalty = torch.sum(actions ** 2, dim=-1)
+    action_penalty = torch.sum(actions**2, dim=-1)
 
     # Total reward is: position distance + orientation alignment + action regularization + success bonus + fall penalty
     reward = dist_rew + rot_rew + action_penalty * action_penalty_scale
@@ -387,7 +509,9 @@ def compute_hand_reward(
     resets = torch.where(goal_dist >= fall_dist, torch.ones_like(reset_buf), reset_buf)
     if max_consecutive_successes > 0:
         # Reset progress buffer on goal envs if max_consecutive_successes > 0
-        progress_buf = torch.where(torch.abs(rot_dist) <= success_tolerance, torch.zeros_like(progress_buf), progress_buf)
+        progress_buf = torch.where(
+            torch.abs(rot_dist) <= success_tolerance, torch.zeros_like(progress_buf), progress_buf
+        )
         resets = torch.where(successes >= max_consecutive_successes, torch.ones_like(resets), resets)
     resets = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(resets), resets)
 
@@ -398,13 +522,10 @@ def compute_hand_reward(
     num_resets = torch.sum(resets)
     finished_cons_successes = torch.sum(successes * resets.float())
 
-    cons_successes = torch.where(num_resets > 0, av_factor*finished_cons_successes/num_resets + (1.0 - av_factor)*consecutive_successes, consecutive_successes)
+    cons_successes = torch.where(
+        num_resets > 0,
+        av_factor * finished_cons_successes / num_resets + (1.0 - av_factor) * consecutive_successes,
+        consecutive_successes,
+    )
 
     return reward, resets, goal_resets, progress_buf, successes, cons_successes
-        
-
-
-
-
-
-    

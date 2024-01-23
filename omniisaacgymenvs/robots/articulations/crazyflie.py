@@ -29,13 +29,12 @@
 
 from typing import Optional
 
+import carb
+import numpy as np
+import torch
 from omni.isaac.core.robots.robot import Robot
 from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
-
-import numpy as np
-import torch
-import carb
 
 
 class Crazyflie(Robot):
@@ -46,11 +45,10 @@ class Crazyflie(Robot):
         usd_path: Optional[str] = None,
         translation: Optional[np.ndarray] = None,
         orientation: Optional[np.ndarray] = None,
-        scale: Optional[np.array] = None
+        scale: Optional[np.array] = None,
     ) -> None:
-        """[summary]
-        """
-        
+        """[summary]"""
+
         self._usd_path = usd_path
         self._name = name
 
@@ -63,10 +61,4 @@ class Crazyflie(Robot):
         add_reference_to_stage(self._usd_path, prim_path)
         scale = torch.tensor([5, 5, 5])
 
-        super().__init__(
-            prim_path=prim_path,
-            name=name,
-            translation=translation,
-            orientation=orientation,
-            scale=scale
-        )
+        super().__init__(prim_path=prim_path, name=name, translation=translation, orientation=orientation, scale=scale)

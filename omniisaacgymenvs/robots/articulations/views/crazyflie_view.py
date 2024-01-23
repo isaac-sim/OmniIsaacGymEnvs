@@ -28,23 +28,21 @@
 
 
 from typing import Optional
+
 from omni.isaac.core.articulations import ArticulationView
 from omni.isaac.core.prims import RigidPrimView
 
 
 class CrazyflieView(ArticulationView):
-    def __init__(
-        self,
-        prim_paths_expr: str,
-        name: Optional[str] = "CrazyflieView"
-    ) -> None:
-        """[summary]
-        """
+    def __init__(self, prim_paths_expr: str, name: Optional[str] = "CrazyflieView") -> None:
+        """[summary]"""
 
         super().__init__(
             prim_paths_expr=prim_paths_expr,
             name=name,
         )
 
-        self.physics_rotors = [RigidPrimView(prim_paths_expr=f"/World/envs/.*/Crazyflie/m{i}_prop",
-                                             name=f"m{i}_prop_view") for i in range(1, 5)]
+        self.physics_rotors = [
+            RigidPrimView(prim_paths_expr=f"/World/envs/.*/Crazyflie/m{i}_prop", name=f"m{i}_prop_view")
+            for i in range(1, 5)
+        ]

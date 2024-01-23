@@ -56,7 +56,7 @@ params:
     schedule_type: standard
     kl_threshold: 0.016
     score_to_win: 20000
-    max_epochs: ${resolve_default:500,${....max_iterations}}
+    max_epochs: ${resolve_default:200,${....max_iterations}}
     save_best_after: 50
     save_frequency: 100
     print_stats: True
@@ -64,10 +64,10 @@ params:
     entropy_coef: 0.0
     truncate_grads: False
     e_clip: 0.2
-    horizon_length: 240 #120
+    horizon_length: 128
     minibatch_size: 512
     mini_epochs: 8
     critic_coef: 2
     clip_value: True
-    seq_len: 4
+    seq_length: 4
     bounds_loss_coef: 0.0001

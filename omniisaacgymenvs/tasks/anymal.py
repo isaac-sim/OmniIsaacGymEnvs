@@ -26,28 +26,29 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
+
+import numpy as np
+import torch
+from omni.isaac.core.utils.prims import get_prim_at_path
+from omni.isaac.core.utils.torch.rotations import *
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omniisaacgymenvs.robots.articulations.anymal import Anymal
 from omniisaacgymenvs.robots.articulations.views.anymal_view import AnymalView
 from omniisaacgymenvs.tasks.utils.usd_utils import set_drive
 
-from omni.isaac.core.utils.prims import get_prim_at_path
-
-from omni.isaac.core.utils.torch.rotations import *
-
-import numpy as np
-import torch
-import math
-
 
 class AnymalTask(RLTask):
-    def __init__(
-        self,
-        name,
-        sim_config,
-        env,
-        offset=None
-    ) -> None:
+    def __init__(self, name, sim_config, env, offset=None) -> None:
+
+        self.update_config(sim_config)
+        self._num_observations = 48
+        self._num_actions = 12
+
+        RLTask.__init__(self, name, env)
+        return
+
+    def update_config(self, sim_config):
         self._sim_config = sim_config
         self._cfg = sim_config.config
         self._task_cfg = sim_config.task_config
@@ -98,11 +99,6 @@ class AnymalTask(RLTask):
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._anymal_translation = torch.tensor([0.0, 0.0, 0.62])
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._num_observations = 48
-        self._num_actions = 12
-
-        RLTask.__init__(self, name, env)
-        return
 
     def set_up_scene(self, scene) -> None:
         self.get_anymal()
@@ -114,9 +110,26 @@ class AnymalTask(RLTask):
 
         return
 
+    def initialize_views(self, scene):
+        super().initialize_views(scene)
+        if scene.object_exists("anymalview"):
+            scene.remove_object("anymalview", registry_only=True)
+        if scene.object_exists("knees_view"):
+            scene.remove_object("knees_view", registry_only=True)
+        if scene.object_exists("base_view"):
+            scene.remove_object("base_view", registry_only=True)
+        self._anymals = AnymalView(prim_paths_expr="/World/envs/.*/anymal", name="anymalview")
+        scene.add(self._anymals)
+        scene.add(self._anymals._knees)
+        scene.add(self._anymals._base)
+
     def get_anymal(self):
-        anymal = Anymal(prim_path=self.default_zero_env_path + "/anymal", name="Anymal", translation=self._anymal_translation)
-        self._sim_config.apply_articulation_settings("Anymal", get_prim_at_path(anymal.prim_path), self._sim_config.parse_actor_config("Anymal"))
+        anymal = Anymal(
+            prim_path=self.default_zero_env_path + "/anymal", name="Anymal", translation=self._anymal_translation
+        )
+        self._sim_config.apply_articulation_settings(
+            "Anymal", get_prim_at_path(anymal.prim_path), self._sim_config.parse_actor_config("Anymal")
+        )
 
         # Configure joint properties
         joint_paths = []
@@ -126,13 +139,6 @@ class AnymalTask(RLTask):
             joint_paths.append(f"base/{quadrant}_HAA")
         for joint_path in joint_paths:
             set_drive(f"{anymal.prim_path}/{joint_path}", "angular", "position", 0, 400, 40, 1000)
-
-        self.default_dof_pos = torch.zeros((self.num_envs, 12), dtype=torch.float, device=self.device, requires_grad=False)
-        dof_names = anymal.dof_names
-        for i in range(self.num_actions):
-            name = dof_names[i]
-            angle = self.named_default_joint_angles[name]
-            self.default_dof_pos[:, i] = angle
 
     def get_observations(self) -> dict:
         torso_position, torso_rotation = self._anymals.get_world_poses(clone=False)
@@ -168,15 +174,11 @@ class AnymalTask(RLTask):
         )
         self.obs_buf[:] = obs
 
-        observations = {
-            self._anymals.name: {
-                "obs_buf": self.obs_buf
-            }
-        }
+        observations = {self._anymals.name: {"obs_buf": self.obs_buf}}
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        if not self._env._world.is_playing():
+        if not self.world.is_playing():
             return
 
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
@@ -185,8 +187,10 @@ class AnymalTask(RLTask):
 
         indices = torch.arange(self._anymals.count, dtype=torch.int32, device=self._device)
         self.actions[:] = actions.clone().to(self._device)
-        current_targets = self.current_targets + self.action_scale * self.actions * self.dt 
-        self.current_targets[:] = tensor_clamp(current_targets, self.anymal_dof_lower_limits, self.anymal_dof_upper_limits)
+        current_targets = self.current_targets + self.action_scale * self.actions * self.dt
+        self.current_targets[:] = tensor_clamp(
+            current_targets, self.anymal_dof_lower_limits, self.anymal_dof_upper_limits
+        )
         self._anymals.set_joint_position_targets(self.current_targets, indices)
 
     def reset_idx(self, env_ids):
@@ -205,7 +209,9 @@ class AnymalTask(RLTask):
         self._anymals.set_joint_positions(dof_pos, indices)
         self._anymals.set_joint_velocities(dof_vel, indices)
 
-        self._anymals.set_world_poses(self.initial_root_pos[env_ids].clone(), self.initial_root_rot[env_ids].clone(), indices)
+        self._anymals.set_world_poses(
+            self.initial_root_pos[env_ids].clone(), self.initial_root_rot[env_ids].clone(), indices
+        )
         self._anymals.set_velocities(root_vel, indices)
 
         self.commands_x[env_ids] = torch_rand_float(
@@ -221,10 +227,19 @@ class AnymalTask(RLTask):
         # bookkeeping
         self.reset_buf[env_ids] = 0
         self.progress_buf[env_ids] = 0
-        self.last_actions[env_ids] = 0.
-        self.last_dof_vel[env_ids] = 0.
+        self.last_actions[env_ids] = 0.0
+        self.last_dof_vel[env_ids] = 0.0
 
     def post_reset(self):
+        self.default_dof_pos = torch.zeros(
+            (self.num_envs, 12), dtype=torch.float, device=self.device, requires_grad=False
+        )
+        dof_names = self._anymals.dof_names
+        for i in range(self.num_actions):
+            name = dof_names[i]
+            angle = self.named_default_joint_angles[name]
+            self.default_dof_pos[:, i] = angle
+
         self.initial_root_pos, self.initial_root_rot = self._anymals.get_world_poses()
         self.current_targets = self.default_dof_pos.clone()
 
@@ -239,14 +254,16 @@ class AnymalTask(RLTask):
 
         # initialize some data used later on
         self.extras = {}
-        self.gravity_vec = torch.tensor([0.0, 0.0, -1.0], device=self._device).repeat(
-            (self._num_envs, 1)
-        )
+        self.gravity_vec = torch.tensor([0.0, 0.0, -1.0], device=self._device).repeat((self._num_envs, 1))
         self.actions = torch.zeros(
             self._num_envs, self.num_actions, dtype=torch.float, device=self._device, requires_grad=False
         )
-        self.last_dof_vel = torch.zeros((self._num_envs, 12), dtype=torch.float, device=self._device, requires_grad=False)
-        self.last_actions = torch.zeros(self._num_envs, self.num_actions, dtype=torch.float, device=self._device, requires_grad=False)
+        self.last_dof_vel = torch.zeros(
+            (self._num_envs, 12), dtype=torch.float, device=self._device, requires_grad=False
+        )
+        self.last_actions = torch.zeros(
+            self._num_envs, self.num_actions, dtype=torch.float, device=self._device, requires_grad=False
+        )
 
         self.time_out_buf = torch.zeros_like(self.reset_buf)
 
@@ -274,10 +291,14 @@ class AnymalTask(RLTask):
 
         rew_lin_vel_z = torch.square(base_lin_vel[:, 2]) * self.rew_scales["lin_vel_z"]
         rew_joint_acc = torch.sum(torch.square(self.last_dof_vel - dof_vel), dim=1) * self.rew_scales["joint_acc"]
-        rew_action_rate = torch.sum(torch.square(self.last_actions - self.actions), dim=1) * self.rew_scales["action_rate"]
-        rew_cosmetic = torch.sum(torch.abs(dof_pos[:, 0:4] - self.default_dof_pos[:, 0:4]), dim=1) * self.rew_scales["cosmetic"]
+        rew_action_rate = (
+            torch.sum(torch.square(self.last_actions - self.actions), dim=1) * self.rew_scales["action_rate"]
+        )
+        rew_cosmetic = (
+            torch.sum(torch.abs(dof_pos[:, 0:4] - self.default_dof_pos[:, 0:4]), dim=1) * self.rew_scales["cosmetic"]
+        )
 
-        total_reward = rew_lin_vel_xy + rew_ang_vel_z + rew_joint_acc  + rew_action_rate + rew_cosmetic + rew_lin_vel_z
+        total_reward = rew_lin_vel_xy + rew_ang_vel_z + rew_joint_acc + rew_action_rate + rew_cosmetic + rew_lin_vel_z
         total_reward = torch.clip(total_reward, 0.0, None)
 
         self.last_actions[:] = self.actions[:]
@@ -287,9 +308,7 @@ class AnymalTask(RLTask):
         total_reward[torch.nonzero(self.fallen_over)] = -1
         self.rew_buf[:] = total_reward.detach()
 
-
     def is_done(self) -> None:
         # reset agents
         time_out = self.progress_buf >= self.max_episode_length - 1
         self.reset_buf[:] = time_out | self.fallen_over
-

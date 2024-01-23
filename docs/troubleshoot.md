@@ -10,7 +10,7 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 ```
 
 * When running with the GPU pipeline, updates to states in the scene will not sync to USD. Therefore, values in the UI may appear wrong when simulation is running. Although objects may be updating in the Viewport, attribute values in the UI will not update along with them. Similarly, during simulation, any updates made through the USD APIs will not be synced with physics.
-* To enable USD sync, please use the CPU pipeline with `pipeline=cpu` and disable flatcache by setting `use_flatcache: False` in the task config.
+* To enable USD sync, please use the CPU pipeline with `pipeline=cpu` and disable fabric by setting `use_fabric: False` in the task config.
 
 
 #### Load Time
@@ -35,9 +35,8 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 
 
 #### Interaction with the Environment
-* During training mode, we have set `enable_scene_query_support=False` in our task config files by default. This will prevent certain interactions with the environments in the UI. If you wish to allow interaction during training, set `enable_scene_query_support=True`. This variable will always be set to `True` in inference/test mode.
+* During training mode, we have set `enable_scene_query_support=False` in our task config files by default. This will prevent certain interactions with the environments, such as raycasting and manipulating objects with the UI. If you wish to allow interaction during training, set `enable_scene_query_support=True`. This variable will always be set to `True` in inference/test mode.
 * Please note that the single-threaded training script `rlgames_train.py` provides limited interaction with the UI during training. The main loop is controlled by the RL library and therefore, we have to terminate the process once the RL loop terminates. In both training and infrencing modes, once simulation is terminated from the UI, all views defined and used by the task will become invalid. Therefore, if we try to restart simulation from the UI, an error will occur.
-* The multi-threaded training script `rlgames_train_mt.py` will allow for better control in stopping and restarting simulation during training and inferencing.
 
 
 #### RL Training
@@ -45,3 +44,10 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 * In the train configuration `yaml` file (*e.g.* [HumanoidPPO.yaml](../omniisaacgymenvs/cfg/train/HumanoidPPO.yaml)), setting the parameter `mixed_precision` to
 `True` should only be used with gpu pipeline. It is recommended to set `mixed_precision` to `False` when using cpu pipeline to prevent crashes.
 * If running with the multi-threaded environment wrapper class `VecEnvMT`, you may see a timeout error that looks something like `Getting states: timeout occurred.`. If you hit this error with your environment, try increasing the timeout variable in `VecEnvMT`, which can be passed as a parameter on the `initialize()` call. It may also be easier to debug an environment using the single-threaded class first to iron out any bugs.
+
+
+### Known Issues
+* Terminating a training or inferencing process launched from python with ctrl-c may result in a segmentation fault error if multiple ctrl-c events occurred. To prevent the error, please use a single ctrl-c command to terminate the process.
+* SAC examples are currently broken due to a bug in rl-games v1.6.1. If you would like to run SAC, please use the latest master branch of rl-games: https://github.com/Denys88/rl_games.
+* OmniIsaacGymEnvs versions 2022.2.1 and prior will no longer work with Isaac Sim version 2023.1.0 and later. For best compatibility, please update OmniIsaacGymEnvs to the same version as Isaac Sim.
+* The following warning may appear at the beginning of training when loading assets from Nucleus: `[Warning] [omni.client.python] Detected a blocking function. This will cause hitches or hangs in the UI. Please switch to the async version`. The warning can be safely ignored.

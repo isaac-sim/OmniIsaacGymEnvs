@@ -74,7 +74,7 @@ params:
     mini_epochs: 5
     critic_coef: 2
     clip_value: True
-    seq_len: 4 # only for rnn
+    seq_length: 4 # only for rnn
     bounds_loss_coef: 0.
 
     max_epochs: ${resolve_default:2000,${....max_iterations}}

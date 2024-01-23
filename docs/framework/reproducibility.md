@@ -17,8 +17,6 @@ generate a random seed, which will override any seed values set in
 config files. By default, we have explicitly set all seed values in
 config files to be 42.
 
-We are aware of current non-deterministic behaviors in some of our environments, 
-including AllegroHand, ShadowHand, and AnymalTerrain.
 
 PyTorch Deterministic Training
 ------------------------------
