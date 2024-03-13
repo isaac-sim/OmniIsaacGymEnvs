@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+2023.1.1a - March 13, 2024
+--------------------------
+
+Fixes
+-----
+- Add workaround for nucleus hang issue on startup
+- Fix USD update flags being reset after creating new stage
+
+
 2023.1.1 - December 12, 2023
 ----------------------------
 
