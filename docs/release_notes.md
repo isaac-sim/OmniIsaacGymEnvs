@@ -1,13 +1,17 @@
 Release Notes
 =============
 
-2023.1.1a - March 13, 2024
+2023.1.1a - March 14, 2024
 --------------------------
 
 Fixes
 -----
 - Add workaround for nucleus hang issue on startup
-- Fix USD update flags being reset after creating new stage
+- Fix USD update flags being reset after creating new stage. This should fix the long hang when running the Humanoid environment with `headless=False`.
+
+Known Issues
+------------
+- A segmentation fault may occasionally occur at the end of a training run. This does not prevent the training from completing successfully.
 
 
 2023.1.1 - December 12, 2023

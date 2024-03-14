@@ -47,7 +47,7 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 
 
 ### Known Issues
+* A segmentation fault may occasionally occur at the end of a training run. This does not prevent the training from completing successfully.
 * Terminating a training or inferencing process launched from python with ctrl-c may result in a segmentation fault error if multiple ctrl-c events occurred. To prevent the error, please use a single ctrl-c command to terminate the process.
 * SAC examples are currently broken due to a bug in rl-games v1.6.1. If you would like to run SAC, please use the latest master branch of rl-games: https://github.com/Denys88/rl_games.
 * OmniIsaacGymEnvs versions 2022.2.1 and prior will no longer work with Isaac Sim version 2023.1.0 and later. For best compatibility, please update OmniIsaacGymEnvs to the same version as Isaac Sim.
-* The following warning may appear at the beginning of training when loading assets from Nucleus: `[Warning] [omni.client.python] Detected a blocking function. This will cause hitches or hangs in the UI. Please switch to the async version`. The warning can be safely ignored.
