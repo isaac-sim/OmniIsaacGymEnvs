@@ -73,6 +73,10 @@ class RLTask(RLTaskInterface):
         self.test = self._cfg["test"]
         self._device = self._cfg["sim_device"]
 
+        # ADDED LOG PATH
+        self._log = f"runs/{self._cfg['experiment']}/{self._cfg['experiment']}.txt"
+        self._step = 0
+
         # set up randomizer for DR
         self._dr_randomizer = Randomizer(self._cfg, self._task_cfg)
         if self._dr_randomizer.randomize:
@@ -271,6 +275,20 @@ class RLTask(RLTaskInterface):
             self.calculate_metrics()
             self.is_done()
             self.get_extras()
+
+            if self._step % 100 == 0:
+                with open(self._log, "a") as log_file:                                     # ADDED LOGGING
+                    log_file.write(f"Step {self._step}:\n")
+                    log_file.write(f"Ave Reward: {self.log_arr[0]}\n")
+                    log_file.write(f"Progress Reward: {self.log_arr[1]}\n")
+                    log_file.write(f"Alive Reward: {self.log_arr[2]}\n")
+                    log_file.write(f"Up Reward: {self.log_arr[3]}\n")
+                    log_file.write(f"Heading Reward: {self.log_arr[4]}\n")
+                    log_file.write(f"Action Cost: {self.log_arr[5]}\n")
+                    log_file.write(f"Energy Cost: {self.log_arr[6]}\n")
+                    log_file.write(f"DOF Limit Cost: {self.log_arr[7]}\n")
+                    log_file.write(f"Speed Reward: {self.log_arr[8]}\n")
+            self._step += 1
 
         return self.obs_buf, self.rew_buf, self.reset_buf, self.extras
 

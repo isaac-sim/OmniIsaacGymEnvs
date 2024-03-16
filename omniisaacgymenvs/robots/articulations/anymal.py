@@ -48,7 +48,7 @@ class Anymal(Robot):
     ) -> None:
         """[summary]"""
 
-        self._usd_path = usd_path
+        self._usd_path = "/home/alex/Desktop/Collected_anymal_instanceable/omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.0/Isaac/Robots/ANYbotics/anymal_instanceable.usd" # usd_path
         self._name = name
 
         if self._usd_path is None:
@@ -56,6 +56,7 @@ class Anymal(Robot):
             if assets_root_path is None:
                 carb.log_error("Could not find nucleus server with /Isaac folder")
             self._usd_path = assets_root_path + "/Isaac/Robots/ANYbotics/anymal_instanceable.usd"
+        print("\n\n usd path: ", self._usd_path)
         add_reference_to_stage(self._usd_path, prim_path)
 
         super().__init__(
@@ -89,7 +90,7 @@ class Anymal(Robot):
         for link_prim in prim.GetChildren():
             if link_prim.HasAPI(PhysxSchema.PhysxRigidBodyAPI):
                 rb = PhysxSchema.PhysxRigidBodyAPI.Get(stage, link_prim.GetPrimPath())
-                rb.GetDisableGravityAttr().Set(False)
+                rb.GetDisableGravityAttr().Set(True)    # Changed!
                 rb.GetRetainAccelerationsAttr().Set(False)
                 rb.GetLinearDampingAttr().Set(0.0)
                 rb.GetMaxLinearVelocityAttr().Set(1000.0)

@@ -126,6 +126,7 @@ class SimConfig:
         sim_cfg = self._cfg.get("sim", None)
         if sim_cfg is not None:
             for opt in sim_cfg.keys():
+                print('     ', opt)
                 if opt in self._sim_params:
                     if opt == "default_physics_material":
                         for material_opt in sim_cfg[opt]:
@@ -140,6 +141,7 @@ class SimConfig:
         self._physx_params = copy.deepcopy(default_physx_params)
         if sim_cfg is not None and "physx" in sim_cfg:
             for opt in sim_cfg["physx"].keys():
+                print('     ', opt)
                 if opt in self._physx_params:
                     self._physx_params[opt] = sim_cfg["physx"][opt]
                 else:

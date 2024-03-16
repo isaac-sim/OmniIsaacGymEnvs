@@ -55,6 +55,7 @@ class Cartpole(Robot):
             if assets_root_path is None:
                 carb.log_error("Could not find Isaac Sim assets folder")
             self._usd_path = assets_root_path + "/Isaac/Robots/Cartpole/cartpole.usd"
+            print("\n\nusd path: ", self._usd_path)
 
         add_reference_to_stage(self._usd_path, prim_path)
 

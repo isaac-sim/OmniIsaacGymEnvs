@@ -46,7 +46,7 @@ class HumanoidLocomotionTask(LocomotionTask):
 
         self.update_config(sim_config)
         self._num_observations = 87
-        self._num_actions = 21
+        self._num_actions = 21                                  # num drive under joints
         self._humanoid_positions = torch.tensor([0, 0, 1.34])
 
         LocomotionTask.__init__(self, name=name, env=env)
@@ -80,6 +80,7 @@ class HumanoidLocomotionTask(LocomotionTask):
         humanoid = Humanoid(
             prim_path=self.default_zero_env_path + "/Humanoid", name="Humanoid", translation=self._humanoid_positions
         )
+        print("humaoid prim path: ", humanoid.prim_path)
         self._sim_config.apply_articulation_settings(
             "Humanoid", get_prim_at_path(humanoid.prim_path), self._sim_config.parse_actor_config("Humanoid")
         )
