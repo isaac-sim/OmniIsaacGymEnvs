@@ -97,6 +97,28 @@ class SimConfig:
         if window:
             window.visible = False
 
+        # workaround for asset root search hang
+        carb.settings.get_settings().set_string(
+            "/persistent/isaac/asset_root/default",
+            "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.1",
+        )
+        carb.settings.get_settings().set_string(
+            "/persistent/isaac/asset_root/nvidia",
+            "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.1",
+        )
+
+        # make sure the correct USD update flags are set
+        if self._sim_params["use_fabric"]:
+            carb.settings.get_settings().set_bool("/physics/updateToUsd", False)
+            carb.settings.get_settings().set_bool("/physics/updateParticlesToUsd", False)
+            carb.settings.get_settings().set_bool("/physics/updateVelocitiesToUsd", False)
+            carb.settings.get_settings().set_bool("/physics/updateForceSensorsToUsd", False)
+            carb.settings.get_settings().set_bool("/physics/outputVelocitiesLocalSpace", False)
+            carb.settings.get_settings().set_bool("/physics/fabricUpdateTransformations", True)
+            carb.settings.get_settings().set_bool("/physics/fabricUpdateVelocities", False)
+            carb.settings.get_settings().set_bool("/physics/fabricUpdateForceSensors", False)
+            carb.settings.get_settings().set_bool("/physics/fabricUpdateJointStates", False)
+
     def _parse_config(self):
         # general sim parameter
         self._sim_params = copy.deepcopy(default_sim_params)

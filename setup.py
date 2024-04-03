@@ -52,7 +52,7 @@ INSTALL_REQUIRES = [
 setup(
     name="omniisaacgymenvs",
     author="NVIDIA",
-    version="2023.1.1",
+    version="2023.1.1a",
     description="RL environments for robot learning in NVIDIA Isaac Sim.",
     keywords=["robotics", "rl"],
     include_package_data=True,
