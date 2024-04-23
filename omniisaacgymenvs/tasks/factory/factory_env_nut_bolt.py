@@ -39,8 +39,8 @@ import numpy as np
 import torch
 
 from omni.isaac.core.prims import RigidPrimView, XFormPrim
-from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
+from omni.isaac.nucleus import get_assets_root_path
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
 from omni.physx.scripts import physicsUtils, utils
 

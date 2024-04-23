@@ -14,9 +14,9 @@ from omniisaacgymenvs.robots.articulations.views.franka_view import FrankaView
 from omni.isaac.core.prims import RigidPrim, RigidPrimView
 from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.stage import get_current_stage, add_reference_to_stage
-from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.torch.transformations import *
 from omni.isaac.core.utils.torch.rotations import *
+from omni.isaac.nucleus import get_assets_root_path
 
 import omni.isaac.core.utils.deformable_mesh_utils as deformableMeshUtils
 from omni.isaac.core.materials.deformable_material import DeformableMaterial

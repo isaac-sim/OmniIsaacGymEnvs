@@ -33,8 +33,8 @@ import carb
 import numpy as np
 import torch
 from omni.isaac.core.robots.robot import Robot
-from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
+from omni.isaac.nucleus import get_assets_root_path
 from pxr import Gf, PhysxSchema, Sdf, Usd, UsdGeom, UsdPhysics
 
 

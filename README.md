@@ -1,5 +1,9 @@
 # Omniverse Isaac Gym Reinforcement Learning Environments for Isaac Sim
 
+*PLEASE NOTE: Version 4.0.0 will be the last release of OmniIsaacGymEnvs. Moving forward, OmniIsaacGymEnvs will be merging with IsaacLab (https://github.com/isaac-sim/IsaacLab). All future updates will be available as part of the IsaacLab repository.*
+
+For tutorials on moving to IsaacLab, please visit: https://github.com/isaac-sim/IsaacLab.
+
 ## About this repository
 
 This repository contains Reinforcement Learning examples that can be run with the latest release of [Isaac Sim](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html). RL examples are trained using PPO from [rl_games](https://github.com/Denys88/rl_games) library and examples are built on top of Isaac Sim's `omni.isaac.core` and `omni.isaac.gym` frameworks.
@@ -26,7 +30,7 @@ It is recommended to have at least 32GB RAM and a GPU with at least 12GB VRAM. F
 
 Follow the Isaac Sim [documentation](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_workstation.html) to install the latest Isaac Sim release. 
 
-*Examples in this repository rely on features from the most recent Isaac Sim release. Please make sure to update any existing Isaac Sim build to the latest release version, 2023.1.1, to ensure examples work as expected.*
+*Examples in this repository rely on features from the most recent Isaac Sim release. Please make sure to update any existing Isaac Sim build to the latest release version, 4.0.0, to ensure examples work as expected.*
 
 Once installed, this repository can be used as a python module, `omniisaacgymenvs`, with the python executable provided in Isaac Sim.
 
@@ -97,6 +101,18 @@ Note: `isaac_sim_root` should be located in the same directory as `python.sh`.
 The UI window can be activated from `Isaac Examples > RL Examples` by navigating the top menu bar.
 For more details on the extension workflow, please refer to the [documentation](docs/framework/extension_workflow.md).
 
+If you are running into an issue where the `Isaac Examples` menu is missing, please modify `OmniIsaacGymEnvs/omniisaacgymenvs/__init__.py` as follow to expose the underlying error:
+
+```python
+import traceback
+try:
+    from .extension import RLExtension, get_instance
+except Exception:
+    print(traceback.format_exc())
+```
+
+In the case of a `ModuleNotFoundError` for `hydra`, please check your `C:\Users\user\AppData\Roaming\Python\Python310` directory and remove any `site-packages` directory that may contain the `hydra` package. Then, re-run the `pip install -e .` command for `OmniIsaacGymEnvs`.
+
 ### Loading trained models // Checkpoints
 
 Checkpoints are saved in the folder `runs/EXPERIMENT_NAME/nn` where `EXPERIMENT_NAME` 
@@ -120,19 +136,19 @@ Note that if there are special characters such as `[` or `=` in the checkpoint n
 you will need to escape them and put quotes around the string. For example,
 `checkpoint="runs/Ant/nn/last_Antep\=501rew\[5981.31\].pth"`
 
-We provide pre-trained checkpoints on the [Nucleus](https://docs.omniverse.nvidia.com/nucleus/latest/index.html) server under `Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints`. Run the following command
+We provide pre-trained checkpoints on the [Nucleus](https://docs.omniverse.nvidia.com/nucleus/latest/index.html) server under `Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints`. Run the following command
 to launch inference with pre-trained checkpoint:
 
 Localhost (To set up localhost, please refer to the [Isaac Sim installation guide](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/install_workstation.html)):
 
 ```bash
-PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth test=True num_envs=64
+PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth test=True num_envs=64
 ```
 
 Production server:
 
 ```bash
-PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth test=True num_envs=64
+PYTHON_PATH scripts/rlgames_train.py task=Ant checkpoint=http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth test=True num_envs=64
 ```
 
 When running with a pre-trained checkpoint for the first time, we will automatically download the checkpoint file to `omniisaacgymenvs/checkpoints`. For subsequent runs, we will re-use the file that has already been downloaded, and will not overwrite existing checkpoints with the same name in the `checkpoints` folder.
@@ -325,7 +341,7 @@ the ANYmals in the scene to go into third-person mode and manually control the r
 Launch this demo with the following command. Note that this demo limits the maximum number of ANYmals in the scene to 128.
 
 ```
-PYTHON_PATH scripts/rlgames_demo.py task=AnymalTerrain num_envs=64 checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth 
+PYTHON_PATH scripts/rlgames_demo.py task=AnymalTerrain num_envs=64 checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth 
 ```
 
 <img src="https://user-images.githubusercontent.com/34286328/184688654-6e7899b2-5847-4184-8944-2a96b129b1ff.gif" width="600" height="300"/>

@@ -1,6 +1,9 @@
 [gym]
 reloadable = true
 
+[deprecation]
+warning = "Extension deprecated since Isaac Sim 4.0.0. Replaced by IsaacLab."
+
 [package]
 version = "0.0.0"
 category = "Simulation"

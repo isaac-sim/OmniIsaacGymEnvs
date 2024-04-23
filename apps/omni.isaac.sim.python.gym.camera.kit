@@ -1,13 +1,17 @@
 [package]
 title = "Isaac Sim Python - Gym"
 description = "A simplifed app for running Gym examples with cameras"
-version = "2023.1.1"
+version = "4.0.0"
 
 # That makes it browsable in UI with "experience" filter
 keywords = ["experience", "app", "usd"]
 
 [dependencies]
 "omni.isaac.sim.python.gym" = {}
+"omni.rtx.shadercache.vulkan" = {}
+# Windows only extension
+[dependencies."filter:platform"."windows-x86_64"]
+"omni.rtx.shadercache.d3d12" = {}
 
 [settings]
 # set the default ros bridge to disable on startup

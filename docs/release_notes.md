@@ -1,9 +1,21 @@
 Release Notes
 =============
 
+4.0.0
+-----
+
+PLEASE NOTE: This will be the last release of OmniIsaacGymEnvs. Moving forward, OmniIsaacGymEnvs will be merging with IsaacLab (https://github.com/isaac-sim/IsaacLab). All future updates will be available as part of the IsaacLab repository.
+
+For tutorials on moving to IsaacLab, please visit: https://github.com/isaac-sim/IsaacLab.
+
 Additions
 ---------
 - Add `TargetFollowing` example with wheeled robot.
+
+Changes
+-------
+- omni.isaac.core.utils.nucleus has been moved to omni.isaac.nucleus.
+
 
 2023.1.1a - March 14, 2024
 --------------------------

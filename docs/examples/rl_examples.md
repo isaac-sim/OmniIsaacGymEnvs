@@ -41,7 +41,7 @@ and `set_joint_velocities`.
 Training can be launched with command line argument `task=Cartpole`.
 Training using the Warp backend can be launched with `task=Cartpole warp=True`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Cartpole test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/cartpole.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Cartpole test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/cartpole.pth`
 
 Config files used for this task are:
 
@@ -89,7 +89,7 @@ Training with PPO can be launched with command line argument `task=Ant`.
 Training with SAC with command line arguments `task=AntSAC train=AntSAC`.
 Training using the Warp backend can be launched with `task=Ant warp=True`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Ant test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Ant test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ant.pth`
 
 Config files used for this task are:
 
@@ -111,7 +111,7 @@ Training can be launched with command line argument `task=Humanoid`.
 Training with SAC with command line arguments `task=HumanoidSAC train=HumanoidSAC`.
 Training using the Warp backend can be launched with `task=Humanoid warp=True`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Humanoid test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/humanoid.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Humanoid test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/humanoid.pth`
 
 Config files used for this task are:
 
@@ -146,7 +146,7 @@ Training can be launched with command line argument `task=ShadowHand`.
 Training with Domain Randomization can be launched with command line argument `task.domain_randomization.randomize=True`.
 For best training results with DR, use `num_envs=16384`.
 
-Running inference with pre-trained model can be launched with command line argument `task=ShadowHand test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand.pth`
+Running inference with pre-trained model can be launched with command line argument `task=ShadowHand test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand.pth`
 
 Config files used for this task are:
 
@@ -160,7 +160,7 @@ In addition to the basic version of this task, there is an additional variant ma
 observations in the policy network, but asymmetric observations of the **full_state** in the value network.
 This can be launched with command line argument `task=ShadowHandOpenAI_FF`.
 
-Running inference with pre-trained model can be launched with command line argument `task=ShadowHandOpenAI_FF test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand_openai_ff.pth`
+Running inference with pre-trained model can be launched with command line argument `task=ShadowHandOpenAI_FF test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand_openai_ff.pth`
 
 Config files used for this are:
 
@@ -172,7 +172,7 @@ This variant uses LSTM policy and value networks instead of feed forward network
 LSTM critic designed for the OpenAI variant of the task. This can be launched with command line argument 
 `task=ShadowHandOpenAI_LSTM`.
 
-Running inference with pre-trained model can be launched with command line argument `task=ShadowHandOpenAI_LSTM test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand_openai_lstm.pth`
+Running inference with pre-trained model can be launched with command line argument `task=ShadowHandOpenAI_LSTM test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/shadow_hand_openai_lstm.pth`
 
 Config files used for this are:
 
@@ -189,7 +189,7 @@ but using the Allegro hand instead of the Shadow hand.
 
 Training can be launched with command line argument `task=AllegroHand`.
 
-Running inference with pre-trained model can be launched with command line argument `task=AllegroHand test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/allegro_hand.pth`
+Running inference with pre-trained model can be launched with command line argument `task=AllegroHand test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/allegro_hand.pth`
 
 Config files used for this task are:
 
@@ -206,7 +206,7 @@ to follow randomly chosen x, y, and yaw target velocities.
 
 Training can be launched with command line argument `task=Anymal`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Anymal test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Anymal test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal.pth`
 
 Config files used for this task are:
 
@@ -223,7 +223,7 @@ traversing various forms of rough terrain.
 
 Training can be launched with command line argument `task=AnymalTerrain`.
 
-Running inference with pre-trained model can be launched with command line argument `task=AnymalTerrain test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth`
+Running inference with pre-trained model can be launched with command line argument `task=AnymalTerrain test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/anymal_terrain.pth`
 
 -   **Task config**: [AnymalTerrain.yaml](../../omniisaacgymenvs/cfg/task/AnymalTerrain.yaml)
 -   **rl_games training config**: [AnymalTerrainPPO.yaml](../../omniisaacgymenvs/cfg/train/AnymalTerrainPPO.yaml)
@@ -256,7 +256,7 @@ Ingenuity Helicopter visual 3D Model courtesy of NASA: https://mars.nasa.gov/res
 
 Training can be launched with command line argument `task=Ingenuity`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Ingenuity test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ingenuity.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Ingenuity test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ingenuity.pth`
 
 Config files used for this task are:
 
@@ -273,7 +273,7 @@ In addition to thrust, the pitch and roll of each rotor is controlled using DOF 
 
 Training can be launched with command line argument `task=Quadcopter`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Quadcopter test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/quadcopter.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Quadcopter test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/quadcopter.pth`
 
 Config files used for this task are:
 
@@ -288,7 +288,7 @@ This example trains the Crazyflie drone model to hover near a fixed position. It
 
 Training can be launched with command line argument `task=Crazyflie`.
 
-Running inference with pre-trained model can be launched with command line argument `task=Crazyflie test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/crazyflie.pth`
+Running inference with pre-trained model can be launched with command line argument `task=Crazyflie test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/crazyflie.pth`
 
 Config files used for this task are:
 
@@ -306,7 +306,7 @@ We use the force sensor APIs to collect force and torque data on the legs, which
 
 Training can be launched with command line argument `task=BallBalance`.
 
-Running inference with pre-trained model can be launched with command line argument `task=BallBalance test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ball_balance.pth`
+Running inference with pre-trained model can be launched with command line argument `task=BallBalance test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/ball_balance.pth`
 
 Config files used for this task are:
 
@@ -324,7 +324,7 @@ Actions are applied as position targets to the Franka arm DOFs.
 
 Training can be launched with command line argument `task=FrankaCabinet`.
 
-Running inference with pre-trained model can be launched with command line argument `task=FrankaCabinet test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/franka_cabinet.pth`
+Running inference with pre-trained model can be launched with command line argument `task=FrankaCabinet test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/franka_cabinet.pth`
 
 Config files used for this task are:
 
@@ -339,7 +339,7 @@ This Franka example demonstrates interaction between Franka arm and a deformable
 
 Training can be launched with command line argument `task=FrankaDeformable`.
 
-Running inference with pre-trained model can be launched with command line argument `task=FrankaDeformable test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/franka_deformable.pth`
+Running inference with pre-trained model can be launched with command line argument `task=FrankaDeformable test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/franka_deformable.pth`
 
 Config files used for this task are:
 
@@ -356,21 +356,21 @@ We provide a set of Factory example tasks, [**FactoryTaskNutBoltPick**](../../om
 - The general configuration file for the above task is [FactoryTaskNutBoltPick.yaml](../../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPick.yaml).
 - The training configuration file for the above task is [FactoryTaskNutBoltPickPPO.yaml](../../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPickPPO.yaml).
 
-Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_pick.pth`
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPick test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_pick.pth`
 
 `FactoryTaskNutBoltPlace` can be executed with `python train.py task=FactoryTaskNutBoltPlace`. This task trains policy for the Place task.
 
 - The general configuration file for the above task is [FactoryTaskNutBoltPlace.yaml](../../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltPlace.yaml).
 - The training configuration file for the above task is [FactoryTaskNutBoltPlacePPO.yaml](../../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltPlacePPO.yaml).
 
-Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPlace test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_place.pth`
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltPlace test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_place.pth`
 
 `FactoryTaskNutBoltScrew` can be executed with `python train.py task=FactoryTaskNutBoltScrew`. This task trains policy for the Screw task.
 
 - The general configuration file for the above task is [FactoryTaskNutBoltScrew.yaml](../../omniisaacgymenvs/cfg/task/FactoryTaskNutBoltScrew.yaml).
 - The training configuration file for the above task is [FactoryTaskNutBoltScrewPPO.yaml](../../omniisaacgymenvs/cfg/train/FactoryTaskNutBoltScrewPPO.yaml).
 
-Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltScrew test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_screw.pth`
+Running inference with pre-trained model can be launched with command line argument `task=FactoryTaskNutBoltScrew test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/factory_task_nut_bolt_screw.pth`
 
 If you use the Factory simulation methods (e.g., SDF collisions, contact reduction) or Factory learning tools (e.g., assets, environments, or controllers) in your work, please cite the following paper:
 ```
@@ -393,7 +393,7 @@ This wheeled robot example demonstrates using vision observations to train the C
 
 Training can be launched with command line argument `task=TargetFollowing`.
 
-Running inference with pre-trained model can be launched with command line argument `task=TargetFollowing test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/2023.1.1/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/target_following.pth`
+Running inference with pre-trained model can be launched with command line argument `task=TargetFollowing test=True checkpoint=omniverse://localhost/NVIDIA/Assets/Isaac/4.0.0/Isaac/Samples/OmniIsaacGymEnvs/Checkpoints/target_following.pth`
 
 Config files used for this task are:
 

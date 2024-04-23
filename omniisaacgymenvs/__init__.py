@@ -30,7 +30,6 @@ import traceback
 try:
     from .extension import RLExtension, get_instance
     # import omniisaacgymenvs.tests
-except Exception as e:
+except Exception:
     pass
-    # print(e)
     # print(traceback.format_exc())

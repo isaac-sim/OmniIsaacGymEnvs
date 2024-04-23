@@ -44,10 +44,10 @@ from omni.isaac.core.prims import RigidPrimView, RigidPrim, XFormPrim
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicSphere
 from omni.isaac.core.utils.prims import define_prim, get_prim_at_path
-from omni.isaac.core.utils.nucleus import find_nucleus_server
 from omni.isaac.core.utils.stage import add_reference_to_stage, get_current_stage
 from omni.isaac.core.materials import PreviewSurface
 from omni.isaac.cloner import GridCloner
+from omni.isaac.nucleus import find_nucleus_server
 
 from pxr import UsdPhysics, UsdLux, UsdShade, Sdf, Gf, UsdGeom, PhysxSchema
 

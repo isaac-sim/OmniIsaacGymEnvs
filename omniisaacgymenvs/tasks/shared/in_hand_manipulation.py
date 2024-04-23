@@ -33,10 +33,10 @@ from abc import abstractmethod
 import numpy as np
 import torch
 from omni.isaac.core.prims import RigidPrimView, XFormPrim
-from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.prims import get_prim_at_path
 from omni.isaac.core.utils.stage import add_reference_to_stage, get_current_stage
 from omni.isaac.core.utils.torch import *
+from omni.isaac.nucleus import get_assets_root_path
 from omniisaacgymenvs.tasks.base.rl_task import RLTask
 
 
