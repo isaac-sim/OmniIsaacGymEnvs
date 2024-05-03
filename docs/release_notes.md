@@ -15,6 +15,7 @@ Additions
 Changes
 -------
 - omni.isaac.core.utils.nucleus has been moved to omni.isaac.nucleus.
+- Increase GPU buffer dimensions for FrankaDeformable environment.
 
 
 2023.1.1a - March 14, 2024
