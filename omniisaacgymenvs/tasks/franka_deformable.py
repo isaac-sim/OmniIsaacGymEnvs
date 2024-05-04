@@ -20,9 +20,8 @@ from omni.isaac.nucleus import get_assets_root_path
 
 import omni.isaac.core.utils.deformable_mesh_utils as deformableMeshUtils
 from omni.isaac.core.materials.deformable_material import DeformableMaterial
-from omni.isaac.core.prims.soft.deformable_prim import DeformablePrim
-from omni.isaac.core.prims.soft.deformable_prim_view import DeformablePrimView
-from omni.physx.scripts import deformableUtils, physicsUtils
+from omniisaacgymenvs.views.deformable_prim_view import DeformablePrimView
+from omni.physx.scripts import physicsUtils
 
 import numpy as np
 import torch
@@ -74,8 +73,9 @@ class FrankaDeformableTask(RLTask):
         super().set_up_scene(scene=scene, replicate_physics=False)
         self._frankas = FrankaView(prim_paths_expr="/World/envs/.*/franka", name="franka_view")
         self.deformableView = DeformablePrimView(
-            prim_paths_expr="/World/envs/.*/deformableTube/tube/mesh", name="deformabletube_view"
+            prim_paths_expr="/World/envs/.*/tube/mesh", name="deformabletube_view", reset_xform_properties=False
         )
+        self.deformableView._non_root_link = True # avoid XformPrimView post_reset
         
         scene.add(self.deformableView)
         scene.add(self._frankas)
@@ -101,8 +101,9 @@ class FrankaDeformableTask(RLTask):
             prim_paths_expr="/World/envs/.*/franka", name="franka_view"
         )
         self.deformableView = DeformablePrimView(
-            prim_paths_expr="/World/envs/.*/deformableTube/tube/mesh", name="deformabletube_view"
+            prim_paths_expr="/World/envs/.*/tube/mesh", name="deformabletube_view", reset_xform_properties=False
         )
+        self.deformableView._non_root_link = True # avoid XformPrimView post_reset
         scene.add(self._frankas)
         scene.add(self._frankas._hands)
         scene.add(self._frankas._lfingers)
@@ -139,7 +140,7 @@ class FrankaDeformableTask(RLTask):
 
     def get_deformable_tube(self):
         _usd_path = self.assets_root_path + "/Isaac/Props/DeformableTube/tube.usd"
-        mesh_path = self.default_zero_env_path + "/deformableTube/tube"
+        mesh_path = self.default_zero_env_path + "/tube"
         add_reference_to_stage(_usd_path, mesh_path)
 
         skin_mesh = get_prim_at_path(mesh_path)
@@ -212,7 +213,7 @@ class FrankaDeformableTask(RLTask):
         self.franka_dof_targets[:, -1] = self.franka_dof_targets[:, -2]
 
         env_ids_int32 = torch.arange(self._frankas.count, dtype=torch.int32, device=self._device)
-        self._frankas.set_joint_position_targets(self.franka_dof_targets, indices=env_ids_int32)
+        self._frankas.set_joint_position_targets(self.franka_dof_targets)
 
 
     def reset_idx(self, env_ids):
@@ -255,8 +256,8 @@ class FrankaDeformableTask(RLTask):
         self.initial_tube_positions = self.deformableView.get_simulation_mesh_nodal_positions()
         self.initial_tube_velocities = self.deformableView.get_simulation_mesh_nodal_velocities()
 
-        self.tube_front_positions = self.initial_tube_positions[:, 0, :] - self._env_pos
-        self.tube_front_velocities = self.initial_tube_velocities[:, 0, :]
+        self.tube_front_positions = self.initial_tube_positions[:, 200, :] - self._env_pos
+        self.tube_front_velocities = self.initial_tube_velocities[:, 200, :]
         self.tube_back_positions = self.initial_tube_positions[:, -1, :] - self._env_pos
         self.tube_back_velocities = self.initial_tube_velocities[:, -1, :]
 

@@ -11,6 +11,7 @@ For tutorials on moving to IsaacLab, please visit: https://github.com/isaac-sim/
 Additions
 ---------
 - Add `TargetFollowing` example with wheeled robot.
+- Add new inherited View classes from `omni.isaac.core` for performance benefits for `DeformableView`.
 
 Changes
 -------
