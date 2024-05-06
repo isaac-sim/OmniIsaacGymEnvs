@@ -100,11 +100,11 @@ class SimConfig:
         # workaround for asset root search hang
         carb.settings.get_settings().set_string(
             "/persistent/isaac/asset_root/default",
-            "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.0.0",
+            "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.0",
         )
         carb.settings.get_settings().set_string(
             "/persistent/isaac/asset_root/nvidia",
-            "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.0.0",
+            "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.0",
         )
 
         # make sure the correct USD update flags are set
