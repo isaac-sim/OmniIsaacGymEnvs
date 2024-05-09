@@ -67,6 +67,9 @@ wandb_project: 'omniisaacgymenvs'
 # path to a kit app file
 kit_app: ''
 
+# additional kit arguments
+extras: []
+
 # Warp
 warp: False
 

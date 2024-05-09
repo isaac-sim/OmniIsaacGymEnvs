@@ -31,6 +31,7 @@ import gym
 import hydra
 from omegaconf import DictConfig
 import os
+import sys
 import time
 
 import numpy as np
@@ -53,6 +54,10 @@ def parse_hydra_configs(cfg: DictConfig):
     headless = cfg.headless
     render = not headless
     enable_viewport = "enable_cameras" in cfg.task.sim and cfg.task.sim.enable_cameras
+
+    # process additional kit arguments and write them to argv
+    if cfg.extras and len(cfg.extras) > 0:
+        sys.argv += cfg.extras
 
     # select kit app file
     experience = get_experience(headless, cfg.enable_livestream, enable_viewport, cfg.enable_recording, cfg.kit_app)

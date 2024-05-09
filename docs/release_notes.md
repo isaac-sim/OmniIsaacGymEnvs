@@ -12,11 +12,13 @@ Additions
 ---------
 - Add `TargetFollowing` example with wheeled robot.
 - Add new inherited View classes from `omni.isaac.core` for performance benefits for `DeformableView`.
+- Add `extras` argument to Hydra for specifying additional kit arguments (e.g. `extras=[--reset-user]`).
 
 Changes
 -------
 - omni.isaac.core.utils.nucleus has been moved to omni.isaac.nucleus.
 - Increase GPU buffer dimensions for FrankaDeformable environment.
+- Use full `omni.isaac.sim.python.kit` app when running with viewer.
 
 
 2023.1.1a - March 14, 2024

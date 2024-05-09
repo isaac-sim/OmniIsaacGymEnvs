@@ -31,6 +31,7 @@ import datetime
 import os
 import gym
 import hydra
+import sys
 import torch
 from omegaconf import DictConfig
 import omniisaacgymenvs
@@ -84,6 +85,10 @@ def parse_hydra_configs(cfg: DictConfig):
     time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     headless = cfg.headless
+
+    # process additional kit arguments and write them to argv
+    if cfg.extras and len(cfg.extras) > 0:
+        sys.argv += cfg.extras
 
     # local rank (GPU id) in a current multi-gpu mode
     local_rank = int(os.getenv("LOCAL_RANK", "0"))
