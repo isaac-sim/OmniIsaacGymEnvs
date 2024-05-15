@@ -45,7 +45,8 @@ INSTALL_REQUIRES = [
     "hydra-core==1.3.2",
     "urllib3==1.26.16",
     "rl-games==1.6.1",
-    "moviepy==1.0.3"
+    "moviepy==1.0.3",
+    "gymnasium==0.28.1"
 ]
 
 # Installation operation

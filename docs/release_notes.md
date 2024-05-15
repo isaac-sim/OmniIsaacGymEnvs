@@ -13,6 +13,7 @@ Additions
 - Add `TargetFollowing` example with wheeled robot.
 - Add new inherited View classes from `omni.isaac.core` for performance benefits for `DeformableView`.
 - Add `extras` argument to Hydra for specifying additional kit arguments (e.g. `extras=[--reset-user]`).
+- Enable scene graph instancing flag in `SimConfig`.
 
 Changes
 -------

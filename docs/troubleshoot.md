@@ -53,3 +53,4 @@ PhysX error: the application need to increase the PxgDynamicsMemoryConfig::found
 * SAC examples are currently broken due to a bug in rl-games v1.6.1. If you would like to run SAC, please use the latest master branch of rl-games: https://github.com/Denys88/rl_games.
 * OmniIsaacGymEnvs versions 2022.2.1 and prior will no longer work with Isaac Sim version 2023.1.0 and later. For best compatibility, please update OmniIsaacGymEnvs to the same version as Isaac Sim.
 * Due to a bug in Gymnasium v0.23.1, the video recorder will always record at 30fps. A workaround for this issue was provided in https://github.com/NVIDIA-Omniverse/OmniIsaacGymEnvs/issues/149.
+* Livestream and extension workflow features are currently not supported for environments using camera sensors with `enable_cameras: True`. This affects the `CartpoleCamera` environment.

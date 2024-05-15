@@ -77,6 +77,8 @@ class SimConfig:
         carb.settings.get_settings().set("/app/viewport/grid/enabled", False)
         # Disable framerate limiting which might cause rendering slowdowns
         carb.settings.get_settings().set("/app/runLoops/main/rateLimitEnabled", False)
+        # enable scene graph instancing
+        carb.settings.get_settings().set("/persistent/omnihydra/useSceneGraphInstancing", True)
 
         import omni.ui 
         # Dock floating UIs this might not be needed anymore as extensions dock themselves
