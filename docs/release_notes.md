@@ -20,6 +20,7 @@ Changes
 - omni.isaac.core.utils.nucleus has been moved to omni.isaac.nucleus.
 - Increase GPU buffer dimensions for FrankaDeformable environment.
 - Use full `omni.isaac.sim.python.kit` app when running with viewer.
+- Remove deprecated `flush()` call in Factory environments.
 
 
 2023.1.1a - March 14, 2024

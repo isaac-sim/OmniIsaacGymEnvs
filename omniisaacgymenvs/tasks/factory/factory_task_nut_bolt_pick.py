@@ -589,7 +589,6 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
 
         # Step sim
         for _ in range(sim_steps):
-            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
     async def _lift_gripper_async(
@@ -605,7 +604,6 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
             self._apply_actions_as_ctrl_targets(
                 delta_hand_pose, franka_gripper_width, do_scale=False
             )
-            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
     def _check_lift_success(self, height_multiple) -> torch.Tensor:
@@ -797,7 +795,6 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
@@ -806,5 +803,4 @@ class FactoryTaskNutBoltPick(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # step once to update physx with the newly set joint velocities
-        self.world.physics_sim_view.flush()
         await omni.kit.app.get_app().next_update_async()

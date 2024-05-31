@@ -598,7 +598,6 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
         """Move gripper to random pose."""
 
         # Step once to update PhysX with new joint positions and velocities from reset_franka()
-        self.world.physics_sim_view.flush()
         await omni.kit.app.get_app().next_update_async()
 
         # Set target pos above table
@@ -676,7 +675,6 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
                 do_scale=False,
             )
 
-            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
         self.dof_vel[env_ids, :] = torch.zeros_like(self.dof_vel[env_ids])
@@ -685,7 +683,6 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
         self.frankas.set_joint_velocities(self.dof_vel[env_ids], indices=indices)
 
         # Step once to update PhysX with new joint velocities
-        self.world.physics_sim_view.flush()
         await omni.kit.app.get_app().next_update_async()
 
     def _close_gripper(self, sim_steps) -> None:
@@ -727,7 +724,6 @@ class FactoryTaskNutBoltPlace(FactoryEnvNutBolt, FactoryABCTask):
             self._apply_actions_as_ctrl_targets(
                 delta_hand_pose, gripper_dof_pos, do_scale=False
             )
-            self.world.physics_sim_view.flush()
             await omni.kit.app.get_app().next_update_async()
 
     def _check_nut_close_to_bolt(self) -> torch.Tensor:
