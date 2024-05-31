@@ -199,7 +199,7 @@ Then, training can be launched from the container with:
 
 ### Isaac Sim Automator
 
-Cloud instances for AWS, Azure, or GCP can be setup using [Isaac Automator](https://github.com/isaac-sim/Isaac-Automator?tab=readme-ov-file#omniverse-isaac-gym-environments).
+Cloud instances for AWS, Azure, or GCP can be setup using [Isaac Automator](https://github.com/isaac-sim/IsaacAutomator?tab=readme-ov-file#omniverse-isaac-gym-environments).
 
 ## Livestream
 
