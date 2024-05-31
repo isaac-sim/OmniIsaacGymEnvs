@@ -2,7 +2,7 @@
 
 *PLEASE NOTE: Version 4.0.0 will be the last release of OmniIsaacGymEnvs. Moving forward, OmniIsaacGymEnvs will be merging with IsaacLab (https://github.com/isaac-sim/IsaacLab). All future updates will be available as part of the IsaacLab repository.*
 
-For tutorials on moving to IsaacLab, please visit: https://github.com/isaac-sim/IsaacLab.
+For tutorials on migrating to IsaacLab, please visit: https://isaac-sim.github.io/IsaacLab/source/migration/migrating_from_omniisaacgymenvs.html.
 
 ## About this repository
 
@@ -199,7 +199,7 @@ Then, training can be launched from the container with:
 
 ### Isaac Sim Automator
 
-Cloud instances for AWS, Azure, or GCP can be setup using [IsaacSim Automator](https://github.com/NVIDIA-Omniverse/IsaacSim-Automator/tree/main#omniverse-isaac-gym).
+Cloud instances for AWS, Azure, or GCP can be setup using [Isaac Automator](https://github.com/isaac-sim/Isaac-Automator?tab=readme-ov-file#omniverse-isaac-gym-environments).
 
 ## Livestream
 

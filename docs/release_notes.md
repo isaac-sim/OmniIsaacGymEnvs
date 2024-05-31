@@ -1,12 +1,12 @@
 Release Notes
 =============
 
-4.0.0
------
+4.0.0 - May 31, 2024
+--------------------
 
 PLEASE NOTE: This will be the last release of OmniIsaacGymEnvs. Moving forward, OmniIsaacGymEnvs will be merging with IsaacLab (https://github.com/isaac-sim/IsaacLab). All future updates will be available as part of the IsaacLab repository.
 
-For tutorials on moving to IsaacLab, please visit: https://github.com/isaac-sim/IsaacLab.
+For tutorials on migrating to IsaacLab, please visit: https://isaac-sim.github.io/IsaacLab/source/migration/migrating_from_omniisaacgymenvs.html.
 
 Additions
 ---------
