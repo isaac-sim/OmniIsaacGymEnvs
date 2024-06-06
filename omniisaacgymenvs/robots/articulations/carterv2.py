@@ -39,7 +39,7 @@ from omni.isaac.core.utils.extensions import enable_extension
 enable_extension("omni.isaac.wheeled_robots")
 from omni.isaac.wheeled_robots.controllers.differential_controller import DifferentialController
 from omni.isaac.wheeled_robots.robots import WheeledRobot
-from omni.isaac.core.utils.stage import get_current_stage
+from omni.isaac.core.utils.stage import add_reference_to_stage, get_current_stage
 from omni.isaac.nucleus import get_assets_root_path
 
 class CarterV2(WheeledRobot):

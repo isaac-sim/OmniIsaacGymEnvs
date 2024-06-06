@@ -39,6 +39,8 @@ from omni.isaac.core.utils.stage import get_current_stage
 from pxr import UsdLux
 from omni.isaac.core.utils.torch.rotations import euler_angles_to_quats
 
+enable_extension("omni.isaac.sensor")
+
 class TargetFollowingTask(RLTask):
     def __init__(self, name, sim_config, env, offset=None) -> None:
 
@@ -147,8 +149,6 @@ class TargetFollowingTask(RLTask):
         # set up cameras
         self.render_products = []
         self.instance_seg_list = []
-
-        enable_extension("omni.isaac.sensor")
 
         ## Camera positions can be obtained by getting current robot position
         for i in range(self._num_envs):
