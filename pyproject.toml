@@ -1,0 +1,103 @@
+[tool.poetry]
+name = "omniisaacgymenvs"
+version = "4.0.0"
+description = "RL environments for robot learning in NVIDIA Isaac Sim."
+authors = ["NVIDIA"]
+readme = "README.md"
+license = "BSD-3-Clause"
+keywords = ["robotics", "rl"]
+classifiers = [
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+packages = [{include = "omniisaacgymenvs"}]
+
+[tool.poetry.dependencies]
+python = ">=3.7.1,<3.12"
+numpy = "1.23.5"
+protobuf = "3.20.2"
+omegaconf = "2.3.0"
+hydra-core = "1.3.2"
+urllib3 = "1.26.16"
+rl-games = "1.6.1"
+moviepy = "1.0.3"
+gymnasium = "0.28.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.11.1"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=omniisaacgymenvs",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+    "-v",
+]
+markers = [
+    "unit: marks tests as unit tests (fast, isolated)",
+    "integration: marks tests as integration tests (may require external resources)",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["omniisaacgymenvs"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/setup.py",
+    "*/config/*",
+    "*/scripts/*",
+]
+
+[tool.coverage.report]
+precision = 2
+skip_empty = true
+skip_covered = false
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.poetry.scripts]
+test = "pytest:main"
+tests = "pytest:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
