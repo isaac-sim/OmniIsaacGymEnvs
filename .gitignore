@@ -4,3 +4,55 @@ runs
 omniisaacgymenvs.egg-info/
 checkpoints
 omniisaacgymenvs/wandb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.coverage
+*.cover
+.hypothesis/
+.tox/
+nosetests.xml
+test-results/
+junit.xml
+
+# Claude settings
+.claude/*
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+tmp/
+temp/
